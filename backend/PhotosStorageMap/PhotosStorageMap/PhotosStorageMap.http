@@ -1,0 +1,6 @@
+@PhotosStorageMap_HostAddress = http://localhost:5008
+
+GET {{PhotosStorageMap_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

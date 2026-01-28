@@ -1,0 +1,30 @@
+# IDE
+**/.vs/
+**/.vscode/
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+appsettings.Development.json
+appsettings.Production.json
+
+# Node / React
+**/node_modules/
+dist/
+.vite/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Uploads
+uploads/
+**/uploads/
+
+# Logs
+*.log
