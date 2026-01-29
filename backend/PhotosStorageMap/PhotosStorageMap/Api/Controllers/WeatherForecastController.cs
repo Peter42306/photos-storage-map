@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Web.Resource;
 
-namespace PhotosStorageMap.Controllers
+
+namespace PhotosStorageMap.Api.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("[controller]")]
-    [RequiredScope(RequiredScopesConfigurationKey = "AzureAd:Scopes")]
+    [Route("[controller]")]    
     [AllowAnonymous]
     public class WeatherForecastController : ControllerBase
     {

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Identity.Web;
-using PhotosStorageMap.Infrastructure;
+using PhotosStorageMap.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 

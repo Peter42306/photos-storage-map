@@ -1,4 +1,4 @@
-﻿namespace PhotosStorageMap.Infrastructure
+﻿namespace PhotosStorageMap.Api
 {
     public static class CorsPolicies
     {
