@@ -21,12 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Api\Authorization\" />
+    <Folder Include="Application\Interfaces\" />
+    <Folder Include="Application\DTOs\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Domain\Enums\" />
     <Folder Include="Domain\ValueObjects\" />
-    <Folder Include="Infrastructure\Identity\" />
-    <Folder Include="Application\" />
-    <Folder Include="Infrastructure\" />
+    <Folder Include="Infrastructure\Email\" />
+    <Folder Include="Infrastructure\Storage\" />
   </ItemGroup>
 
 </Project>
