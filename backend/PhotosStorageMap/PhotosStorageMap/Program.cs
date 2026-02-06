@@ -1,10 +1,14 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PhotosStorageMap.Api;
+using PhotosStorageMap.Api.Services;
+using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Data;
+using PhotosStorageMap.Infrastructure.Email;
 using PhotosStorageMap.Infrastructure.Identity;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +34,7 @@ builder.Services
     options.Lockout.AllowedForNewUsers = true;
 
     options.Password.RequiredLength = 8;
-    options.Password.RequireDigit = false;
+    options.Password.RequireDigit = true;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireUppercase = false;
@@ -52,9 +56,70 @@ builder.Services.AddCors(options =>
     });
 });
 
+var jwt = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwt["Issuer"],
+            ValidAudience = jwt["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services
+    .AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new()
+        { 
+            Title = "PhotosStorageMap",
+            Version = "v1"
+        });
+
+        c.AddSecurityDefinition("Bearer", new()
+        {
+            Name = "Authorization",
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Description = "Enter JWT token"
+        });
+
+        c.AddSecurityRequirement(new()
+        {
+            {
+                new()
+                {
+                    Reference = new()
+                    {
+                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+    });
+
+builder.Services.AddScoped<JwtTokenService>();
+builder.Services.AddScoped<IEmailService, DevEmailService>();
+
+
 
 var app = builder.Build();
 
