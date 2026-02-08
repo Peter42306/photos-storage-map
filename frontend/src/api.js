@@ -56,6 +56,21 @@ export function login(email, password) {
     });
 }
 
+export function register(email, password, fullName) {
+    return request("/api/auth/register",{
+        method: "POST",
+        body: {email, password, fullName},
+        auth: false,
+    });
+}
+
+export function confirmEmail(userId, token) {
+    const qs = new URLSearchParams({userId, token}).toString();
+    return request(`/api/auth/confirm-email?${qs}`,{
+        method: "GET", 
+        auth: false});
+}
+
 export function me() {
     return request("/api/me");
 }
