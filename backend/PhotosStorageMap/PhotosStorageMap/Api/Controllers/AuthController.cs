@@ -89,9 +89,8 @@ namespace PhotosStorageMap.Api.Controllers
                 return BadRequest(new MessageResponse("Invalid confirmation."));
             }
 
-            //var decodedToken = WebUtility.UrlDecode(token);
-
-            var result = await _userManager.ConfirmEmailAsync(user, token);
+            var decodedToken = WebUtility.UrlDecode(token);
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
             if (!result.Succeeded)
             {
                 return BadRequest(new
@@ -144,6 +143,8 @@ namespace PhotosStorageMap.Api.Controllers
 
             return Ok(new AuthResponse(token, expiresAtUtc));
         }
+
+
 
 
         // Helper
