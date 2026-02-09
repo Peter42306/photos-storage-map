@@ -31,18 +31,13 @@ export default function LoginPage() {
     }
 
     return(
-        <div className="container py-4">
+        <div className="container py-4" style={{maxWidth: 560}}>
             <div className="card shadow-sm">
                 <div className="card-body">
                     <h2 className="card-title mb-3">Login</h2>
 
-                    {error && (
-                        <div className="alert alert-danger py-2">{error}</div>
-                    )}
-
-                    {status && (
-                        <div className="alert alert-info py-2">{status}</div>
-                    )}
+                    {error && <div className="alert alert-danger py-2">{error}</div>}
+                    {status && <div className="alert alert-info py-2">{status}</div>}
 
                     <form onSubmit={handleLogin}>
                         <div className="mb-3">
