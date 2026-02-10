@@ -5,18 +5,30 @@ import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
 import ConfirmEmailPage from './pages/ConfirmEmailPage';
 import CheckEmailPage from './pages/CheckEmailPage';
+import ProtectedRoute from './routes/ProtectedRoute';
 
 function App() {  
 
   return (
     <BrowserRouter>
       <Routes>        
-        <Route path='/' element={<Navigate to="/dashboard" replace/>}/>
+        {/* public */}
+        
         <Route path='/login' element={<LoginPage/>}/>
         <Route path='/register' element={<RegisterPage/>}/>
         <Route path='/check-email' element={<CheckEmailPage/>}/>
         <Route path='/confirm-email' element={<ConfirmEmailPage/>}/>
-        <Route path='/dashboard' element={<DashboardPage/>}/>
+
+          {/* protected */}
+          <Route element={<ProtectedRoute/>}>
+            <Route path='/' element={<Navigate to="/dashboard" replace/>}/>
+            <Route path='/dashboard' element={<DashboardPage/>}/>
+          </Route>
+            
+            
+            
+            
+            
       </Routes>
     </BrowserRouter>    
   )

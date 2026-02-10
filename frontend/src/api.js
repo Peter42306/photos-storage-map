@@ -1,4 +1,7 @@
-const BASE_URL = "https://localhost:7067";
+const API_PORT = 5008;
+const BASE_URL = 
+    import.meta.env.VITE_API_BASE_URL || 
+    `${window.location.protocol}//${window.location.hostname}:${API_PORT}`; 
 
 export function getToken(){
     return localStorage.getItem("accessToken");

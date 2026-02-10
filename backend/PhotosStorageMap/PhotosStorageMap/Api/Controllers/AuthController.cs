@@ -118,7 +118,7 @@ namespace PhotosStorageMap.Api.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user is null)
             {
-                return Unauthorized(new MessageResponse("Invalid credentials."));
+                return Unauthorized(new MessageResponse("Invalid email or password."));
             }
 
             if (!user.IsActive)
@@ -138,7 +138,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (!signIn.Succeeded)
             {
-                return Unauthorized(new MessageResponse("Invalid credentials."));
+                return Unauthorized(new MessageResponse("Invalid email or password."));
             }
 
             user.LastLoginAt = DateTime.UtcNow;

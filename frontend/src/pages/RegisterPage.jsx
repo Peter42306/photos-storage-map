@@ -12,6 +12,9 @@ export default function RegisterPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const navigate = useNavigate();
 
     async function handleRegister(e){
@@ -68,6 +71,7 @@ export default function RegisterPage() {
                             <input
                                 className="form-control"
                                 type="email"
+                                name="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}                                
                                 required
@@ -75,23 +79,55 @@ export default function RegisterPage() {
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Password</label>
-                            <input
-                                className="form-control"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}                                
-                                required
-                            />
+                            <div className="input-group">
+                                <input
+                                    className="form-control"
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}                                
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <span
+                                    className="input-group-text bg-white"
+                                    role="button"
+                                    onClick={() => setShowPassword(v => !v)}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                    title={showPassword ? "Hide password" : "Show password"}
+                                    style={{ cursor: "pointer" }}
+                                    >
+                                    <i className={showPassword ? "bi bi-eye-slash" : "bi bi-eye"} />
+                                </span>
+                            </div>                            
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Confirm Password</label>
-                            <input
-                                className="form-control"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}                                
-                                required
-                            />
+                            <div className="input-group">
+                                <input
+                                    className="form-control"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}                                
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <span
+                                    className="input-group-text bg-white"
+                                    role="button"
+                                    onClick={() => setShowConfirmPassword(v => !v)}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                                    style={{ cursor: "pointer" }}
+                                    >
+                                    <i className={showConfirmPassword ? "bi bi-eye-slash" : "bi bi-eye"} />
+                                </span>
+                            </div>
+                            
+                            
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Full Name (optional)</label>
