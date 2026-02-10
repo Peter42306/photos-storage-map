@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { register } from "../api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function RegisterPage() {
     const [fullName, setFullName] = useState("");
@@ -9,10 +9,17 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [status, setStatus] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+
+    const navigate = useNavigate();
 
     async function handleRegister(e){
         e.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
 
         setError("");
         setStatus("");
@@ -22,15 +29,25 @@ export default function RegisterPage() {
             return;
         }
 
+        setIsSubmitting(true);
         setStatus("Registering...");
 
         try {
-            const res = await register(email, password, fullName);
-            setStatus(res?.message ?? "Registration successful. Please confirm your email.")
+            await register(email, password, fullName);
+            navigate("/check-email", { state: { email }});
         } catch (ex) {
             setStatus("");
             setError(ex.message);
+            setIsSubmitting(false);
         }
+
+        // try {
+        //     const res = await register(email, password, fullName);
+        //     setStatus(res?.message ?? "Registration successful. Please confirm your email.")
+        // } catch (ex) {
+        //     setStatus("");
+        //     setError(ex.message);
+        // }
     }
 
     return(
@@ -89,6 +106,7 @@ export default function RegisterPage() {
                         <button
                             className="btn btn-primary"
                             type="submit"
+                            disabled={isSubmitting}
                         >
                             Create account
                         </button>

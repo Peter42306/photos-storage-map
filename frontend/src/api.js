@@ -65,7 +65,7 @@ export function register(email, password, fullName) {
 }
 
 export function confirmEmail(userId, token) {
-    const qs = new URLSearchParams({userId, token}).toString();
+    const qs = new URLSearchParams({ userId, token }).toString();
     return request(`/api/auth/confirm-email?${qs}`,{
         method: "GET", 
         auth: false});

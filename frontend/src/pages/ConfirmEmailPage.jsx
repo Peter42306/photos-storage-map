@@ -4,38 +4,52 @@ import { confirmEmail } from "../api";
 
 export default function ConfirmEmailPage() {
     const [sp] = useSearchParams();
-    const [status, setStatus] = useState("Confirming...");
-    const [error, setError] = useState("");
+
+    const userId = sp.get("userId");
+    const token = sp.get("token");
+
+    const missingParams = !userId || !token;
+
+    const [status, setStatus] = useState(missingParams ? "" : "Confirming your email...");
+    const [error, setError] = useState(missingParams ? "Missing userId or token in URL." : "");    
 
     useEffect(() => {
-        const userId = sp.get("userId");
-        const token = sp.get("token");
-
-        if (!userId || !token) {
-            setStatus("");
-            setError("Missing userId or token in URL.");
+        if (missingParams) {            
             return;
         }
 
         confirmEmail(userId, token)
-            .then((res) => setStatus(res?.message ?? "Email confirmed."))
+            .then((res) =>{
+                setError("");
+                setStatus((res?.message) ?? "Your email has been confirmed.")
+            })
             .catch((ex) => {
                 setStatus("");
-                setError(ex.message);
-            })
-    }, [sp]);
+                setError(ex?.message ?? "Email confirmation failed.");
+            });
+    }, [missingParams, userId, token]);
+
+    // const title = error 
+    //     ? "Email confirmation failed"
+    //     : status && status.startsWith("Confirming")
+    //         ? "Confirming your email"
+    //         : "Email confirmed";
+
 
     return(
         <div className="container py-4" style={{ maxWidth: 560 }}>
             <div className="card shadow-sm">
                 <div className="card-body">
-                    <h2 className="card-title mb-3">Confirm Email</h2>
+                    <h2 className="card-title mb-3">Email Confirmation Status</h2>
                     <hr/>
 
                     {error && <div className="alert alert-danger py-2">{error}</div>}
                     {status && <div className="alert alert-info py-2">{status}</div>}
 
-                    <Link to="/login">Go to login</Link>
+                    {!missingParams &&(
+                        <Link className="btn btn-primary" to="/login">Sign in</Link>
+                    )}
+                    
 
                 </div>
             </div>

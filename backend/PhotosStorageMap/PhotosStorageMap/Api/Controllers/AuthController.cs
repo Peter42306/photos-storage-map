@@ -17,19 +17,22 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly JwtTokenService _jwt;
         private readonly IEmailService _emailService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IConfiguration _configuration;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             JwtTokenService jwt,
             IEmailService emailService,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwt = jwt;
             _emailService = emailService;
             _logger = logger;
+            _configuration=configuration;
         }
 
         [HttpPost("register")]
@@ -63,8 +66,10 @@ namespace PhotosStorageMap.Api.Controllers
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebUtility.UrlEncode(token);
 
-            var confirmUrl =
-                $"{Request.Scheme}://{Request.Host}/api/auth/confirm-email?userId={user.Id}&token={encodedToken}";
+            var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+
+            var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={encodedToken}";
+            //var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={token}";            
 
             await _emailService.SendAsync(
                 toEmail: email,
@@ -89,8 +94,10 @@ namespace PhotosStorageMap.Api.Controllers
                 return BadRequest(new MessageResponse("Invalid confirmation."));
             }
 
-            var decodedToken = WebUtility.UrlDecode(token);
-            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            //var decodedToken = WebUtility.UrlDecode(token);
+            //var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
             if (!result.Succeeded)
             {
                 return BadRequest(new
