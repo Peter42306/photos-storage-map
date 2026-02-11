@@ -145,19 +145,15 @@ export default function RegisterPage() {
                             disabled={isSubmitting}
                         >
                             Create account
-                        </button>
-
-                        <div className="mt-3">
-                            <Link to="/login">Back to login</Link>
-                        </div>
+                        </button>                        
                     </form>
+
+                    <div className="mt-3">
+                        <Link to="/login">Back to login</Link>
+                    </div>
+                    
                 </div>
-            </div>
-            
-
-            
-
-            
+            </div>            
         </div>
     );
 }

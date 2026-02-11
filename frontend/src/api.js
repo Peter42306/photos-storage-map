@@ -1,7 +1,7 @@
 const API_PORT = 5008;
 const BASE_URL = 
     import.meta.env.VITE_API_BASE_URL || 
-    `${window.location.protocol}//${window.location.hostname}:${API_PORT}`; 
+    `${window.location.protocol}//${window.location.hostname}:${API_PORT}`;
 
 export function getToken(){
     return localStorage.getItem("accessToken");
@@ -72,6 +72,14 @@ export function confirmEmail(userId, token) {
     return request(`/api/auth/confirm-email?${qs}`,{
         method: "GET", 
         auth: false});
+}
+
+export function resendConfirmation(email) {
+    return request("/api/auth/resend-confirmation",{
+        method: "POST",
+        body: {email},
+        auth: false,
+    });
 }
 
 export function me() {

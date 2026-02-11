@@ -29,13 +29,6 @@ export default function ConfirmEmailPage() {
             });
     }, [missingParams, userId, token]);
 
-    // const title = error 
-    //     ? "Email confirmation failed"
-    //     : status && status.startsWith("Confirming")
-    //         ? "Confirming your email"
-    //         : "Email confirmed";
-
-
     return(
         <div className="container py-4" style={{ maxWidth: 560 }}>
             <div className="card shadow-sm">

@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using PhotosStorageMap.Api.Services;
 using PhotosStorageMap.Application.DTOs.Auth;
 using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Identity;
 using System.Net;
+using System.Text;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -32,7 +34,7 @@ namespace PhotosStorageMap.Api.Controllers
             _jwt = jwt;
             _emailService = emailService;
             _logger = logger;
-            _configuration=configuration;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -61,15 +63,12 @@ namespace PhotosStorageMap.Api.Controllers
                     errors = result.Errors.Select(e => e.Description)
                 });
             }
-
-            // TODO - Generate confirm email token and log link (later will send via SendGrid)
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var encodedToken = WebUtility.UrlEncode(token);
+            
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);            
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
             var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
-
-            var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={encodedToken}";
-            //var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={token}";            
+            var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={encodedToken}";            
 
             await _emailService.SendAsync(
                 toEmail: email,
@@ -77,7 +76,7 @@ namespace PhotosStorageMap.Api.Controllers
                 htmlBody: $"<p>Click to confirm your email:</p><p><a href=\"{confirmUrl}\">{confirmUrl}</a></p>"
                 );
 
-            _logger.LogInformation("User registered: {Email}. Confirmation link sent.", email);
+            _logger.LogInformation("User registered: {Email}. Confirmation link sent.", email);            
 
             return Ok(new MessageResponse("Registration successful. Please confirm your email."));
         }
@@ -93,10 +92,10 @@ namespace PhotosStorageMap.Api.Controllers
             {
                 return BadRequest(new MessageResponse("Invalid confirmation."));
             }
+            
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
 
-            //var decodedToken = WebUtility.UrlDecode(token);
-            //var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
-            var result = await _userManager.ConfirmEmailAsync(user, token);
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);            
 
             if (!result.Succeeded)
             {
@@ -104,7 +103,7 @@ namespace PhotosStorageMap.Api.Controllers
                 {
                     errors = result.Errors.Select(e => e.Description)
                 });
-            }
+            }            
 
             return Ok(new MessageResponse("Email confirmed."));
         }
@@ -149,6 +148,42 @@ namespace PhotosStorageMap.Api.Controllers
             var (token, expiresAtUtc) = _jwt.CreateToken(user, roles);
 
             return Ok(new AuthResponse(token, expiresAtUtc));
+        }
+
+        [HttpPost("resend-confirmation")]
+        public async Task<ActionResult<MessageResponse>> ResendConfirmation(ResendConfirmationRequest request)
+        {
+            var email = request.Email.Trim().ToLowerInvariant();
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            // If not exists, we do not show explicitly
+            if (user is null)
+            {
+                return Ok(new MessageResponse("If an account exists, a confirmation email has been sent."));
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return Ok(new MessageResponse("If an account exists, a confirmation email has been sent."));
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={encodedToken}";
+
+            await _emailService.SendAsync(
+                toEmail: email,
+                subject: "Confirm your email",
+                htmlBody: $"<p>Click to confirm your email:</p><p><a href=\"{confirmUrl}\">{confirmUrl}</a></p>"
+            );
+
+            _logger.LogInformation("Resend confirmation link sent to: {Email}", email);
+
+            return Ok(new MessageResponse("If an account exists, a confirmation email has been sent."));
         }
 
 

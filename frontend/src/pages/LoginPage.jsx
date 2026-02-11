@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { login, setToken } from "../api";
 
 export default function LoginPage() {
@@ -36,7 +36,7 @@ export default function LoginPage() {
         <div className="container py-4" style={{maxWidth: 560}}>
             <div className="card shadow-sm">
                 <div className="card-body">
-                    <h2 className="card-title mb-3">Login</h2>
+                    <h2 className="card-title mb-3">Log in</h2>
                     <hr/>
 
                     {error && <div className="alert alert-danger py-2">{error}</div>}
@@ -100,9 +100,34 @@ export default function LoginPage() {
                             className="btn btn-primary"
                             type="submit"
                         >
-                            Login
+                            Log in
                         </button>
+
+                        
                     </form>
+
+                    <hr/>
+
+                    <div className="mb-2">
+                        <Link to="/forgot-password">
+                            Forgot your password?
+                        </Link>                        
+                    </div>
+
+                    <div className="mb-2">
+                        <Link to="/register">
+                            Register as a new user
+                        </Link>                        
+                    </div>
+
+                    <div className="mb-2">
+                        <Link to="/resend-confirmation">
+                            Resend email confirmation
+                        </Link>                        
+                    </div>
+
+                    
+
                 </div>
             </div>
         </div>
