@@ -148,8 +148,9 @@ export default function RegisterPage() {
                         </button>                        
                     </form>
 
+                    <hr/>
                     <div className="mt-3">
-                        <Link to="/login">Back to login</Link>
+                        <Link to="/">Back to Home</Link>
                     </div>
                     
                 </div>

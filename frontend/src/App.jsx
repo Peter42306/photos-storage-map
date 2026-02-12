@@ -10,6 +10,7 @@ import LandingPage from './pages/LandingPage';
 import Navbar from './components/Navbar';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResendConfirmationPage from './pages/ResendConfirmation';
+import ResetPasswordPage from './pages/ResetPassword';
 
 function App() {  
 
@@ -26,6 +27,7 @@ function App() {
         <Route path='/confirm-email' element={<ConfirmEmailPage/>}/>
         <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
         <Route path='/resend-confirmation' element={<ResendConfirmationPage/>}/>        
+        <Route path='/reset-password' element={<ResetPasswordPage/>}/>        
 
           {/* protected */}
           <Route element={<ProtectedRoute/>}>

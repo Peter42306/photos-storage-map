@@ -46,11 +46,14 @@ export default function DashboardPage() {
         <div className="container py-4" style={{maxWidth: 560}}>
             <div className="d-flex align-items-center justify-content-between mb-3">
                 <h2 className="mb-0">Dashboard</h2>
+                
 
-                <button className="btn btn-outline-danger" onClick={logout}>
+                {/* <button className="btn btn-outline-danger" onClick={logout}>
                     Logout
-                </button>
+                </button> */}
             </div>            
+
+            <hr/>
 
             {status && (<div className="alert alert-info py-2">{status}</div>)}
             {error && (<div className="alert alert-danger py-2">{error}</div>)}

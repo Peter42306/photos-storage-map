@@ -25,7 +25,7 @@ export default function CheckEmailPage() {
                         Please open it and click the confirmation link.
                     </div>
 
-                    <Link to="/login">Back to login</Link>
+                    <Link to="/login">Back to sign in</Link>
                 </div>
             </div>
         </div>

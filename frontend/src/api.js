@@ -82,6 +82,22 @@ export function resendConfirmation(email) {
     });
 }
 
+export function forgotPassword(email){
+    return request("/api/auth/forgot-password",{
+        method: "POST",
+        body: {email},
+        auth: false,
+    });
+}
+
+export function resetPassword(userId, token, newPassword){
+    return request("/api/auth/reset-password",{
+        method: "POST",
+        body: {userId, token, newPassword},
+        auth: false,
+    });
+}
+
 export function me() {
     return request("/api/me");
 }
