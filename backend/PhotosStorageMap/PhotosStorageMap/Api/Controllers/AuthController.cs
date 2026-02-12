@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using PhotosStorageMap.Api.Services;
+using PhotosStorageMap.Application.Common.Encoding;
 using PhotosStorageMap.Application.DTOs.Auth;
 using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Identity;
@@ -64,8 +65,10 @@ namespace PhotosStorageMap.Api.Controllers
                 });
             }
             
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);            
-            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            
+            //var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var encodedToken = TokenEncoding.Encode(token);
 
             var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
             var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={encodedToken}";            
@@ -92,8 +95,9 @@ namespace PhotosStorageMap.Api.Controllers
             {
                 return BadRequest(new MessageResponse("Invalid confirmation."));
             }
-            
-            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+
+            //var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            var decodedToken = TokenEncoding.Decode(token);
 
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);            
 
@@ -169,8 +173,9 @@ namespace PhotosStorageMap.Api.Controllers
             }
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            
-            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            //var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var encodedToken = TokenEncoding.Encode(token);
 
             var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
             var confirmUrl = $"{frontendBaseUrl}/confirm-email?userId={user.Id}&token={encodedToken}";
