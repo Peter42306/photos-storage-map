@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using PhotosStorageMap.Api.Services;
 using PhotosStorageMap.Application.Common.Encoding;
 using PhotosStorageMap.Application.DTOs.Auth;
 using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Identity;
-using System.Net;
-using System.Text;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -65,9 +62,8 @@ namespace PhotosStorageMap.Api.Controllers
                 });
             }
             
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);            
             
-            //var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             var encodedToken = TokenEncoding.Encode(token);
 
             var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
@@ -91,12 +87,16 @@ namespace PhotosStorageMap.Api.Controllers
             [FromQuery] string token)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user is null)
+            if (user is null || !user.IsActive)
             {
                 return BadRequest(new MessageResponse("Invalid confirmation."));
             }
 
-            //var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            if (user.EmailConfirmed)
+            {
+                return Ok(new MessageResponse("Email confirmed."));
+            }
+            
             var decodedToken = TokenEncoding.Decode(token);
 
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);            
@@ -107,7 +107,9 @@ namespace PhotosStorageMap.Api.Controllers
                 {
                     errors = result.Errors.Select(e => e.Description)
                 });
-            }            
+            }
+
+            _logger.LogInformation("Email confirmed successfully for user: {UserId}", user.Id);
 
             return Ok(new MessageResponse("Email confirmed."));
         }
@@ -160,21 +162,15 @@ namespace PhotosStorageMap.Api.Controllers
             var email = request.Email.Trim().ToLowerInvariant();
 
             var user = await _userManager.FindByEmailAsync(email);
-
-            // If not exists, we do not show explicitly
-            if (user is null)
+            
+            if (user is null || !user.IsActive || user.EmailConfirmed)
             {
                 return Ok(new MessageResponse("If an account exists, a confirmation email has been sent."));
             }
 
-            if (user.EmailConfirmed)
-            {
-                return Ok(new MessageResponse("If an account exists, a confirmation email has been sent."));
-            }
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            //var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            
             var encodedToken = TokenEncoding.Encode(token);
 
             var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
@@ -192,12 +188,67 @@ namespace PhotosStorageMap.Api.Controllers
         }
 
 
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult<MessageResponse>> ForgotPassword(ForgotPasswordRequest request)
+        {
+            var email = request.Email.Trim().ToLowerInvariant();
 
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user is null || !user.IsActive || !user.EmailConfirmed)
+            {
+                return Ok(new MessageResponse("If an account exists, a reset email has been sent."));
+            }
+            
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = TokenEncoding.Encode(token);
+
+            var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            var resetUrl = $"{frontendBaseUrl}/reset-password?userId={user.Id}&token={encodedToken}";
+
+            await _emailService.SendAsync(
+                toEmail: email,
+                subject: "Reset your password",
+                htmlBody: $"<p>Click to reset your password:</p><p><a href=\"{resetUrl}\">{resetUrl}</a></p>"
+            );
+
+            _logger.LogInformation("Password reset link sent to: {Email}", email);
+
+            return Ok(new MessageResponse("If an account exists, a reset email has been sent."));
+        }
+
+
+        [HttpPost("reset-password")]
+        public async Task<ActionResult<MessageResponse>> ResetPassword(ResetPasswordRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId);
+            if (user is null || !user.IsActive || !user.EmailConfirmed)
+            {
+                return BadRequest(new MessageResponse("Invalid reset request"));
+            }
+
+            var decodedToken = TokenEncoding.Decode(request.Token);
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    errors = result.Errors.Select(e => e.Description)
+                });
+            }
+
+            _logger.LogInformation("Password reset successful for user: {UserId}", user.Id);
+
+            return Ok(new MessageResponse("Password has been reset. You can sign in now."));
+
+        }
 
         // Helper
         private bool IsConfirmedEmailRequired()
         {
             return _signInManager.Options.SignIn.RequireConfirmedEmail;
         }
+
     }
 }
