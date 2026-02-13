@@ -7,7 +7,6 @@ export default function ConfirmEmailPage() {
 
     const userId = sp.get("userId");
     const token = sp.get("token");
-
     const missingParams = !userId || !token;
 
     const [status, setStatus] = useState(missingParams ? "" : "Confirming your email...");

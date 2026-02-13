@@ -165,6 +165,7 @@ namespace PhotosStorageMap.Api.Controllers
             
             if (user is null || !user.IsActive || user.EmailConfirmed)
             {
+                _logger.LogInformation("Resend confirmation link sent to: {Email}, but email was already confirmed.", email);
                 return Ok(new MessageResponse("If an account exists, a confirmation email has been sent."));
             }
 
@@ -192,8 +193,10 @@ namespace PhotosStorageMap.Api.Controllers
         public async Task<ActionResult<MessageResponse>> ForgotPassword(ForgotPasswordRequest request)
         {
             var email = request.Email.Trim().ToLowerInvariant();
+            _logger.LogInformation($"Forgot password: {email}");
 
             var user = await _userManager.FindByEmailAsync(email);
+            _logger.LogInformation($"UserId: {user.Id}, User email: {user.Email}.");
 
             if (user is null || !user.IsActive || !user.EmailConfirmed)
             {

@@ -9,8 +9,8 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [status, setStatus] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);    
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,7 +40,8 @@ export default function RegisterPage() {
             navigate("/check-email", { state: { email }});
         } catch (ex) {
             setStatus("");
-            setError(ex.message);
+            setError(ex.message);            
+        } finally {
             setIsSubmitting(false);
         }
 
@@ -64,8 +65,7 @@ export default function RegisterPage() {
                     {error && <div className="alert alert-danger py-2">{error}</div>}
                     {status && <div className="alert alert-info py-2">{status}</div>}
 
-                    <form onSubmit={handleRegister}>
-                        
+                    <form onSubmit={handleRegister}>                        
                         <div className="mb-3">
                             <label className="form-label">Email</label>
                             <input
@@ -125,9 +125,7 @@ export default function RegisterPage() {
                                     >
                                     <i className={showConfirmPassword ? "bi bi-eye-slash" : "bi bi-eye"} />
                                 </span>
-                            </div>
-                            
-                            
+                            </div>                            
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Full Name (optional)</label>
@@ -137,8 +135,7 @@ export default function RegisterPage() {
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}                                
                             />
-                        </div>
-                        
+                        </div>                        
                         <button
                             className="btn btn-primary"
                             type="submit"

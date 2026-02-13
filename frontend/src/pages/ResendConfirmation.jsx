@@ -40,7 +40,7 @@ export default function ResendConfirmationPage() {
 
                     {error && <div className="alert alert-danger py-2">{error}</div>}
                     {status && <div className="alert alert-info py-2">{status}</div>}
-                    {isSubmitting && <div className="alert alert-info py-2">Sending...</div>}
+                    {/* {isSubmitting && <div className="alert alert-info py-2">Sending...</div>} */}
 
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
@@ -48,6 +48,7 @@ export default function ResendConfirmationPage() {
                             <input
                                 className="form-control"
                                 type="email"
+                                name="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 autoComplete="email"
@@ -58,6 +59,7 @@ export default function ResendConfirmationPage() {
                         <button
                             className="btn btn-primary"
                             type="submit"
+                            disabled={isSubmitting}
                         >
                             Resend
                         </button>
