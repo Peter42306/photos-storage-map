@@ -16,15 +16,16 @@ export default function ForgotPasswordPage() {
 
         setError("");
         setStatus("");
+        
         setIsSubmitting(true);
+        setStatus("Sending reset link...");
 
         try {
-            await forgotPassword();
-            setStatus("If an account exists, we have sent a password reset link to your email.");
+            const res = await forgotPassword(email);
+            setStatus(res?.message ?? "If an account exists, we have sent a password reset link to your email.");
         } catch (ex) {
+            setStatus("");
             setError(ex?.message ?? "Failed to send reset email");
-        } finally {
-            setIsSubmitting(false);
         }
     }
 
@@ -51,6 +52,7 @@ export default function ForgotPasswordPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 autoComplete="email"
+                                disabled={isSubmitting}
                                 required
                             />
                         </div>

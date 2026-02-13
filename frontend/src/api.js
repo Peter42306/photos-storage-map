@@ -14,6 +14,9 @@ export function clearToken() {
 }
 
 async function request(path, {method = "GET", body, auth = true} = {}) {
+    console.log("REQUEST:", method, path);
+    console.log("REQUEST BODY:", body);
+
     const headers = {};
 
     if(body){

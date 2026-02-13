@@ -196,7 +196,7 @@ namespace PhotosStorageMap.Api.Controllers
             _logger.LogInformation($"Forgot password: {email}");
 
             var user = await _userManager.FindByEmailAsync(email);
-            _logger.LogInformation($"UserId: {user.Id}, User email: {user.Email}.");
+            _logger.LogInformation($"UserId: {user?.Id}, User email: {user?.Email}.");
 
             if (user is null || !user.IsActive || !user.EmailConfirmed)
             {

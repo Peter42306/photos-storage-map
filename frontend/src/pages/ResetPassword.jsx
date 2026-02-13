@@ -45,9 +45,9 @@ export default function ResetPasswordPage() {
         setStatus("Resetting password...");
 
         try {
-            await resetPassword(userId, token, password);
-            setStatus("Password has been reset. You can sign in now.");
-            //navigate("/login", { replace: true });
+            const res = await resetPassword(userId, token, password);
+            setStatus(res?.message ?? "Password has been reset. You can sign in now.");
+            navigate("/login", { replace: true });
         } catch (ex) {
             setStatus("");
             setError(ex?.message ?? "Failed to reset password.");

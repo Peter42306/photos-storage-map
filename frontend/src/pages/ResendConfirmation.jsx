@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, replace, useNavigate } from "react-router-dom";
 import { resendConfirmation } from "../api";
 
 export default function ResendConfirmationPage() {
@@ -7,6 +7,7 @@ export default function ResendConfirmationPage() {
     const [status, setStatus] = useState("");
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -21,10 +22,10 @@ export default function ResendConfirmationPage() {
         try {
             const res = await resendConfirmation(email);
             setStatus(res?.message ?? "If an account exists, a confirmation email has been sent.")
+            //navigate("/login", { replace: true });
         } catch (ex) {
+            setStatus("");
             setError(ex.message);
-        } finally {
-            setIsSubmitting(false);
         }
     }
 
@@ -52,6 +53,7 @@ export default function ResendConfirmationPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 autoComplete="email"
+                                disabled={isSubmitting}
                                 required
                             />
                         </div>
