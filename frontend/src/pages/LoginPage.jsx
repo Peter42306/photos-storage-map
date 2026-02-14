@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login, setToken } from "../api";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -96,12 +97,23 @@ export default function LoginPage() {
                             
                         </div>
 
-                        <button
-                            className="btn btn-primary"
+                        <div className="d-flex justify-content-center">
+                            <button
+                            className="btn btn-outline-primary"
                             type="submit"
+                            style={{ width: 250 }}
+                        
                         >
-                            Sign in
+                            Sign in with your email
                         </button>
+                        </div>
+
+                        
+
+                        <GoogleLoginButton                         
+                            onLoggedIn={() => navigate("/")}
+                            width={320}
+                        />
 
                         
                     </form>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { register } from "../api";
 import { Link, useNavigate } from "react-router-dom";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function RegisterPage() {
     const [fullName, setFullName] = useState("");
@@ -136,14 +137,23 @@ export default function RegisterPage() {
                                 onChange={(e) => setFullName(e.target.value)}                                
                             />
                         </div>                        
-                        <button
-                            className="btn btn-primary"
-                            type="submit"
-                            disabled={isSubmitting}
-                        >
-                            Create account
-                        </button>                        
+                        <div className="d-flex justify-content-center">
+                            <button
+                                className="btn btn-outline-secondary"
+                                type="submit"
+                                disabled={isSubmitting}
+                                style={{ width: 250 }}
+                            >
+                                Create account
+                            </button>                        
+                        </div>
+                        
                     </form>
+
+                    <GoogleLoginButton
+                        onLoggedIn={() => navigate("/")}
+                        width={320}
+                    />
 
                     <hr/>
                     <div className="mt-3">

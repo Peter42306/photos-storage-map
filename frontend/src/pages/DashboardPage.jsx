@@ -25,13 +25,13 @@ export default function DashboardPage() {
         }
     }
 
-    function logout() {
-        clearToken();
-        setMeData(null);
-        setStatus("Logged out");
-        setError("");
-        navigate("/login", { replace: true });
-    }
+    // function logout() {
+    //     clearToken();
+    //     setMeData(null);
+    //     setStatus("Logged out");
+    //     setError("");
+    //     navigate("/login", { replace: true });
+    // }
 
     useEffect(() => {
         if (!token) {

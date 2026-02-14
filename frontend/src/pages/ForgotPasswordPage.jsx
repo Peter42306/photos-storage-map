@@ -57,13 +57,18 @@ export default function ForgotPasswordPage() {
                             />
                         </div>
 
-                        <button 
-                            className="btn btn-primary"
-                            type="submit"
-                            disabled={isSubmitting}
-                        >
-                            Send reset link
-                        </button>
+                        <dib className="d-flex justify-content-center">
+                            <button 
+                                className="btn btn-outline-primary"
+                                type="submit"
+                                disabled={isSubmitting}
+                                style={{ width: 250 }}
+                            >
+                                Send reset link
+                            </button>
+                        </dib>
+
+                        
                     </form>
                     <hr/>
                     <Link to="/login">

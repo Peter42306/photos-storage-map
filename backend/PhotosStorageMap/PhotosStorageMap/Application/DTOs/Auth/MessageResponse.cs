@@ -1,4 +1,4 @@
 ﻿namespace PhotosStorageMap.Application.DTOs.Auth
 {
-    public record MessageResponse(string Message);
+    public sealed record MessageResponse(string Message);
 }

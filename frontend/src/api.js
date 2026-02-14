@@ -14,9 +14,6 @@ export function clearToken() {
 }
 
 async function request(path, {method = "GET", body, auth = true} = {}) {
-    console.log("REQUEST:", method, path);
-    console.log("REQUEST BODY:", body);
-
     const headers = {};
 
     if(body){
@@ -59,7 +56,7 @@ function tryJson(text) {
 export function login(email, password) {
     return request("/api/auth/login",{
         method:"POST",
-        body:{email,password},
+        body:{email, password},
         auth:false,
     });
 }
@@ -101,6 +98,21 @@ export function resetPassword(userId, token, newPassword){
         body: {userId, token, newPassword},
         auth: false,
     });
+}
+
+export async function googleLogin(idToken) {
+    const res = await fetch(`${BASE_URL}/api/auth/google`,{
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+    });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Google login failed.");        
+    }
+
+    return await res.json();
 }
 
 export function me() {

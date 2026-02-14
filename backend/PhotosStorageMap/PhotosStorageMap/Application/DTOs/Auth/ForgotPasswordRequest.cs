@@ -1,4 +1,4 @@
 ﻿namespace PhotosStorageMap.Application.DTOs.Auth
 {
-    public record ForgotPasswordRequest(string Email);
+    public sealed record ForgotPasswordRequest(string Email);
 }
