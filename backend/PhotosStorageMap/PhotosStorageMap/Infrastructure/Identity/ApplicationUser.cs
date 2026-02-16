@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using PhotosStorageMap.Domain.Enums;
 
 namespace PhotosStorageMap.Infrastructure.Identity
 {
@@ -10,5 +11,6 @@ namespace PhotosStorageMap.Infrastructure.Identity
         public DateTime? LastLoginAt { get; set; }
         public int LoginCount { get; set; } = 0;
         public string? AdminNote { get; set; }
+        public StoragePlan StoragePlan { get; set; } = StoragePlan.Free;
     }
 }

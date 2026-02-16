@@ -23,8 +23,6 @@
 
   <ItemGroup>
     <Folder Include="Api\Authorization\" />
-    <Folder Include="Domain\Entities\" />
-    <Folder Include="Domain\Enums\" />
     <Folder Include="Domain\ValueObjects\" />
     <Folder Include="Infrastructure\Storage\" />
   </ItemGroup>

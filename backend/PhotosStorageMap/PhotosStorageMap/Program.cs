@@ -4,6 +4,7 @@ using PhotosStorageMap.Api.Services;
 using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Email;
 using PhotosStorageMap.Infrastructure.Extensions;
+using PhotosStorageMap.Infrastructure.Policies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,7 @@ builder.Services.AddApplicationSwagger();
 
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<IEmailService, DevEmailService>();
+builder.Services.AddScoped<IRetentionPolicy, DefaultRetentionPolicy>();
 
 
 
