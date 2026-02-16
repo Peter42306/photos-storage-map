@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getToken, googleLogin, setToken } from "../api";
+import { googleLogin, setToken } from "../api";
 
 export default function GoogleLoginButton({ onLoggedIn }){
     const btnRef = useRef(null);
@@ -14,13 +14,23 @@ export default function GoogleLoginButton({ onLoggedIn }){
             return;
         }
 
+        // for the 1st wrong loading of button
         if (!window.google?.accounts?.id) {
+            const key = "google_reload_attempted";
+            if (!sessionStorage.getItem(key)) {
+                sessionStorage.setItem(key, "1");
+                window.location.reload();
+                return;
+            }
             setError("Google Identity script not loaded.")
             return;
         }
-        
-        
 
+        // for the 1st wrong loading of button, manually
+        // if (!window.google?.accounts?.id) {                        
+        //     setError("Google Identity script not loaded.");
+        //     return;
+        // }
 
         window.google.accounts.id.initialize({
             client_id: clientId,
@@ -59,9 +69,9 @@ export default function GoogleLoginButton({ onLoggedIn }){
     }, []);
 
     return(
-        <div className="mt-3 d-flex justify-content-center">
+        <div className="mt-3 d-flex flex-column align-items-center">
             <div ref={btnRef}></div>
-            {error && <div className="text-danger mt-2">{error}</div>}            
+             {error && <div className="text-danger mt-2">{error}</div>}                      
         </div>
     );
 }
