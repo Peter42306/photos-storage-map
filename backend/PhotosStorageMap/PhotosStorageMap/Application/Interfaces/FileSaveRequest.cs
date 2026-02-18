@@ -1,8 +1,9 @@
 ﻿namespace PhotosStorageMap.Application.Interfaces
 {
     public record FileSaveRequest(
-        Stream Content,
-        string FileName,
-        string ContentType,
-        string Folder);
+        string StorageKey,  // "userId/collectionId/photoId.jpg"
+        Stream Content,        
+        string? ContentType = null,
+        string? ContentLength = null
+    );
 }
