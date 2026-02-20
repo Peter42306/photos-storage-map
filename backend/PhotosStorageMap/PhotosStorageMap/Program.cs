@@ -1,7 +1,10 @@
+using Amazon.S3;
+using Microsoft.Extensions.Options;
 using PhotosStorageMap.Api;
 using PhotosStorageMap.Api.Extensions;
 using PhotosStorageMap.Api.Services;
 using PhotosStorageMap.Application.Interfaces;
+using PhotosStorageMap.Infrastructure.BackgroundProcessing;
 using PhotosStorageMap.Infrastructure.Email;
 using PhotosStorageMap.Infrastructure.Extensions;
 using PhotosStorageMap.Infrastructure.Policies;
@@ -34,9 +37,23 @@ builder.Services.AddApplicationSwagger();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<IEmailService, DevEmailService>();
 builder.Services.AddScoped<IRetentionPolicy, DefaultRetentionPolicy>();
-builder.Services.AddScoped<IFileStorage, DiskFileStorage>();
 
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<StorageOptions>>().Value.S3;
 
+    var config = new AmazonS3Config
+    {
+        ServiceURL = options.ServiceUrl,
+        ForcePathStyle = options.ForcePathStyle,
+    };
+
+    return new AmazonS3Client(options.AccessKey, options.SecretKey, config);
+});
+builder.Services.AddScoped<IFileStorage, S3FileStorage>();
+
+builder.Services.AddSingleton<IPhotoProcessingQueue, InMemoryPhotoProcessingQueue>();
 
 var app = builder.Build();
 

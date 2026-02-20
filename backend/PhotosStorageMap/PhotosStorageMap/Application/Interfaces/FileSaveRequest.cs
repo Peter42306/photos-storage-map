@@ -4,6 +4,6 @@
         string StorageKey,  // "userId/collectionId/photoId.jpg"
         Stream Content,        
         string? ContentType = null,
-        string? ContentLength = null
+        long? ContentLength = null
     );
 }
