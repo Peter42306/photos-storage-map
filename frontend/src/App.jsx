@@ -11,6 +11,7 @@ import Navbar from './components/Navbar';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResendConfirmationPage from './pages/ResendConfirmation';
 import ResetPasswordPage from './pages/ResetPassword';
+import UploadTestpage from './pages/UploadTestPage';
 
 function App() {  
 
@@ -33,6 +34,7 @@ function App() {
           <Route element={<ProtectedRoute/>}>
             {/* <Route path='/' element={<Navigate to="/dashboard" replace/>}/> */}
             <Route path='/app' element={<DashboardPage/>}/>
+            <Route path='/app/upload-test' element={<UploadTestpage/>}/>
           </Route>
 
           {/* fallback */}

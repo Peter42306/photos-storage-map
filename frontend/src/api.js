@@ -118,3 +118,44 @@ export async function googleLogin(idToken) {
 export function me() {
     return request("/api/me");
 }
+
+
+// Uploads (presigned flow)
+export function createCollection() {
+    return request("/api/uploads/collection",{
+        method: "POST",
+        auth: true,
+    });
+}
+
+export function initUpload(collectionId) {
+    const qs = new URLSearchParams({ collectionId}).toString();
+    return request(`/api/uploads/init?${qs}`,{
+        method: "POST",
+        auth: true,
+    });
+}
+
+export function completeUpload(photoId) {
+    return request(`/api/uploads/${photoId}/complete`,{
+        method: "POST",
+        auth: true,
+    });
+}
+
+// IMPORTANT: presigned PUT goes directly to S3
+export async function putToPresignedUrl(uploadUrl, file) {
+    const res = await fetch(uploadUrl,{
+        method: "PUT",
+        body: file,
+        // TODO Content-Type ???
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`S3 PUT faied: ${res.status} ${text}`);
+        
+    }
+
+    return {status: res.status, etag: res.headers.get("ETag")};
+}

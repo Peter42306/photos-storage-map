@@ -21,19 +21,25 @@ namespace PhotosStorageMap.Infrastructure.Images
                 throw new ArgumentNullException(nameof(original));
             }
 
-            // 1) EXIF/GPS
-            var exif = ReadExifWithMetadataExtractor(original);
+            await using var buffered = new MemoryStream();
+            await original.CopyToAsync(buffered, ct);
+            buffered.Position = 0;
+
+            // 1) EXIF/GPS (will read from buffered)
+            var exif = ReadExifWithMetadataExtractor(buffered);
 
             // Need to rewind for ImageSharp
-            if (!original.CanSeek)
-            {
-                throw new InvalidOperationException("Original stream must be seekable.");
-            }
+            buffered.Position = 0;
+            
+            //if (!original.CanSeek)
+            //{
+            //    throw new InvalidOperationException("Original stream must be seekable.");
+            //}
 
-            original.Position = 0;
+            //original.Position = 0;
 
             // 2) Image processing
-            using var image = await Image.LoadAsync(original, ct);
+            using var image = await Image.LoadAsync(buffered, ct);
             image.Mutate(x => x.AutoOrient());
 
             var width = image.Width;

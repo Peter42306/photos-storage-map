@@ -7,6 +7,7 @@ using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.BackgroundProcessing;
 using PhotosStorageMap.Infrastructure.Email;
 using PhotosStorageMap.Infrastructure.Extensions;
+using PhotosStorageMap.Infrastructure.Images;
 using PhotosStorageMap.Infrastructure.Policies;
 using PhotosStorageMap.Infrastructure.Storage;
 
@@ -54,6 +55,8 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
 builder.Services.AddScoped<IFileStorage, S3FileStorage>();
 
 builder.Services.AddSingleton<IPhotoProcessingQueue, InMemoryPhotoProcessingQueue>();
+builder.Services.AddScoped<IImageProcessor, ImageSharpImageProcessor>();
+builder.Services.AddHostedService<PhotoProcessingWorker>();
 
 var app = builder.Build();
 
