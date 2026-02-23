@@ -26,7 +26,7 @@ export default function LoginPage() {
             setToken(res.accessToken);
 
             setStatus("");
-            navigate("/dashboard");
+            navigate("/collections");
         } catch (ex) {
             setStatus("");
             setError(ex.message);
@@ -111,7 +111,7 @@ export default function LoginPage() {
                         
 
                         <GoogleLoginButton                         
-                            onLoggedIn={() => navigate("/")}
+                            onLoggedIn={() => navigate("/collections", { replace: true })}
                             width={320}
                         />
 

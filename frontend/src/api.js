@@ -120,13 +120,7 @@ export function me() {
 }
 
 
-// Uploads (presigned flow)
-export function createCollection() {
-    return request("/api/uploads/collection",{
-        method: "POST",
-        auth: true,
-    });
-}
+// UploadsController (presigned flow)
 
 export function initUpload(collectionId) {
     const qs = new URLSearchParams({ collectionId}).toString();
@@ -158,4 +152,34 @@ export async function putToPresignedUrl(uploadUrl, file) {
     }
 
     return {status: res.status, etag: res.headers.get("ETag")};
+}
+
+// for CollectionsController
+export function createCollection(title = null, description = null) {
+    return request("/api/collections",{
+        method: "POST",
+        auth: true,
+        body: { title, description },
+    });
+}
+
+export function getCollections() {
+    return request(`/api/collections`,{
+        method: "GET",
+        auth: true,
+    });
+}
+
+export function getCollection(id) {
+    return request(`/api/collections/${id}`,{
+        method: "GET",
+        auth: true,
+    });
+}
+
+export function deleteCollection(id) {
+    return request(`/api/collections/${id}`,{
+        method: "DELETE",
+        auth: true,
+    });
 }

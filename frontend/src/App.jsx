@@ -12,6 +12,8 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResendConfirmationPage from './pages/ResendConfirmation';
 import ResetPasswordPage from './pages/ResetPassword';
 import UploadTestpage from './pages/UploadTestPage';
+import CollectionsPage from './pages/CollectionsPage';
+import CollectionPage from './pages/CollectionPage';
 
 function App() {  
 
@@ -33,8 +35,16 @@ function App() {
           {/* protected */}
           <Route element={<ProtectedRoute/>}>
             {/* <Route path='/' element={<Navigate to="/dashboard" replace/>}/> */}
-            <Route path='/app' element={<DashboardPage/>}/>
-            <Route path='/app/upload-test' element={<UploadTestpage/>}/>
+            
+            {/* <Route path='/app' element={<DashboardPage/>}/> */}
+            <Route path='/upload-test' element={<UploadTestpage/>}/> 
+            <Route path='/dashboard' element={<DashboardPage/>}/>
+
+            <Route path='/collections' element={<CollectionsPage/>}/>
+            <Route path='/collections/:id' element={<CollectionPage/>}/>
+
+
+
           </Route>
 
           {/* fallback */}

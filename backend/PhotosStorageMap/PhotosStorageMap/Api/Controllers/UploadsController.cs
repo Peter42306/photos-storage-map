@@ -33,23 +33,23 @@ namespace PhotosStorageMap.Api.Controllers
             _logger = logger;
         }
 
-        [HttpPost("collection")]
-        public async Task<ActionResult<Guid>> CreateCollection(CancellationToken ct)
-        {
-            var userId = GetUserId();
-            if(string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+        //[HttpPost("collection")]
+        //public async Task<ActionResult<Guid>> CreateCollection(CancellationToken ct)
+        //{
+        //    var userId = GetUserId();
+        //    if(string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            var collection = new UploadCollection
-            {
-                OwnerUserId = userId,
-                CreatedAtUtc = DateTime.UtcNow
-            };
+        //    var collection = new UploadCollection
+        //    {
+        //        OwnerUserId = userId,
+        //        CreatedAtUtc = DateTime.UtcNow
+        //    };
 
-            _db.UploadCollections.Add(collection);
-            await _db.SaveChangesAsync();
+        //    _db.UploadCollections.Add(collection);
+        //    await _db.SaveChangesAsync();
 
-            return Ok(collection.Id);
-        }
+        //    return Ok(collection.Id);
+        //}
 
         [HttpPost("init")]
         public async Task<ActionResult> InitUpload([FromQuery] Guid collectionId, CancellationToken ct)

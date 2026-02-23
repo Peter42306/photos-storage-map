@@ -60,13 +60,18 @@ export default function Navbar(){
                         {token ? (
                             <>
                                 <li className="nav-item">
-                                    <NavLink className="nav-link" to="/app">
+                                    <NavLink className="nav-link" to="/dashboard">
                                         Dashboard
                                     </NavLink>
                                 </li>
                                 <li className="nav-item">
-                                    <NavLink className="nav-link" to="/app/upload-test">
+                                    <NavLink className="nav-link" to="/upload-test">
                                         Upload Test
+                                    </NavLink>
+                                </li>
+                                <li className="nav-item">
+                                    <NavLink className="nav-link" to="/collections">
+                                        My Collections
                                     </NavLink>
                                 </li>
                             </>                            
