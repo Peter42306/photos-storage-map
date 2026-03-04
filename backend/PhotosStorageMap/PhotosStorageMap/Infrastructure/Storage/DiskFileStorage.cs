@@ -188,6 +188,11 @@ namespace PhotosStorageMap.Infrastructure.Storage
             throw new NotImplementedException();
         }
 
+        public Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<string> GeneratePresignedUploadUrlAsync(string storageKey, TimeSpan expiresIn)
         {
             throw new NotImplementedException();

@@ -23,7 +23,7 @@ async function request(path, {method = "GET", body, auth = true} = {}) {
     if(auth){
         const token = getToken();
         if(token) headers.Authorization = `Bearer ${token}`;
-    }
+    }    
 
     const res = await fetch(`${BASE_URL}${path}`, {
         method,
@@ -34,11 +34,20 @@ async function request(path, {method = "GET", body, auth = true} = {}) {
     const text = await res.text();
     const data = text ? tryJson(text) : null;
 
-    if(!res.ok){
+    if(!res.ok){       
+
+
+        if (res.status === 401) {
+            clearToken();
+            window.location.href = "/login";
+            return;
+        }
+
         const msg = 
             (data && (data.message || data.error || data.title)) || 
             (typeof data === "string" ? data : "") || 
             `HTTP ${res.status}`;
+
         throw new Error(msg);
     }
 
@@ -122,8 +131,8 @@ export function me() {
 
 // UploadsController (presigned flow)
 
-export function initUpload(collectionId) {
-    const qs = new URLSearchParams({ collectionId}).toString();
+export function initUpload(collectionId, fileName) {
+    const qs = new URLSearchParams({ collectionId, fileName }).toString();
     return request(`/api/uploads/init?${qs}`,{
         method: "POST",
         auth: true,
@@ -142,7 +151,9 @@ export async function putToPresignedUrl(uploadUrl, file) {
     const res = await fetch(uploadUrl,{
         method: "PUT",
         body: file,
-        // TODO Content-Type ???
+        headers:{
+            "Content-Type": file.type || "application/octet-stream",
+        }
     });
 
     if (!res.ok) {
@@ -177,9 +188,45 @@ export function getCollection(id) {
     });
 }
 
-export function deleteCollection(id) {
-    return request(`/api/collections/${id}`,{
+export function updateCollection(id, title, description) {
+    return request(`/api/collections/${id}`, {
+        method: "PUT",
+        auth: true,
+        body: { title, description },
+    });
+}
+
+export function deleteCollection(collectionId) {
+    return request(`/api/collections/${collectionId}`,{
         method: "DELETE",
+        auth: true,
+    });
+}
+
+export function deletePhoto(photoId) {
+    return request(`/api/photos/${photoId}`,{
+        method: "DELETE",
+        auth: true,
+    });
+}
+
+export function getThumbUrl(photoId) {
+    return request(`/api/photos/${photoId}/thumb-url`, {
+        method: "GET",
+        auth: true,
+    });
+}
+
+export function getStandardUrl(photoId) {
+    return request(`/api/photos/${photoId}/standard-url`, {
+        method: "GET",
+        auth: true,
+    });
+}
+
+export function getPhotoStatus(photoId) {
+    return request(`/api/photos/${photoId}/status`, {
+        method: "GET",
         auth: true,
     });
 }

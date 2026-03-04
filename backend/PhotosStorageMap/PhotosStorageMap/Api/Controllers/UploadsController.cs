@@ -33,26 +33,29 @@ namespace PhotosStorageMap.Api.Controllers
             _logger = logger;
         }
 
-        //[HttpPost("collection")]
-        //public async Task<ActionResult<Guid>> CreateCollection(CancellationToken ct)
-        //{
-        //    var userId = GetUserId();
-        //    if(string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+        [HttpPost("collection")]
+        public async Task<ActionResult<Guid>> CreateCollection(CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if(string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-        //    var collection = new UploadCollection
-        //    {
-        //        OwnerUserId = userId,
-        //        CreatedAtUtc = DateTime.UtcNow
-        //    };
+            var collection = new UploadCollection
+            {
+                OwnerUserId = userId,
+                CreatedAtUtc = DateTime.UtcNow
+            };
 
-        //    _db.UploadCollections.Add(collection);
-        //    await _db.SaveChangesAsync();
+            _db.UploadCollections.Add(collection);
+            await _db.SaveChangesAsync();
 
-        //    return Ok(collection.Id);
-        //}
+            return Ok(collection.Id);
+        }
 
         [HttpPost("init")]
-        public async Task<ActionResult> InitUpload([FromQuery] Guid collectionId, CancellationToken ct)
+        public async Task<ActionResult> InitUpload(
+            [FromQuery] Guid collectionId, 
+            [FromQuery] string? fileName,
+            CancellationToken ct)
         {
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
@@ -61,25 +64,30 @@ namespace PhotosStorageMap.Api.Controllers
             if (collection is null) return NotFound();
             if (collection.OwnerUserId != userId) return Forbid();
 
+            var safeName = string.IsNullOrWhiteSpace(fileName) ? $"photo_{DateTime.UtcNow:yyyyMMdd_HHmmss}.jpg" : fileName.Trim();
+
+            var photoId = Guid.NewGuid();
+            var storageKey = StorageKeys.Original(userId, collectionId, photoId);
+            var uploadUrl = await _fileStorage.GeneratePresignedUploadUrlAsync(storageKey, TimeSpan.FromMinutes(50));
+
             var photo = new PhotoItem
             {
+                Id = photoId,
                 UploadCollectionId = collectionId,
+                OriginalFileName = safeName,
+                OriginalKey = storageKey,
                 Status = PhotoStatus.Uploaded,
                 CreatedAtUtc = DateTime.UtcNow,
             };
 
-            var storageKey = StorageKeys.Original(userId, collectionId, photo.Id);
-
-            var uploadUrl = await _fileStorage.GeneratePresignedUploadUrlAsync(storageKey, TimeSpan.FromMinutes(5));
-
-            photo.OriginalKey = storageKey;
-
             _db.PhotoItems.Add(photo);
             await _db.SaveChangesAsync(ct);
 
+            _logger.LogInformation("UPLOAD: InitUpload photoId={PhotoId}", photoId);
+
             return Ok(new
             {
-                photoId = photo.Id,
+                photoId,
                 uploadUrl
             });
         }
@@ -100,6 +108,8 @@ namespace PhotosStorageMap.Api.Controllers
 
             await _db.SaveChangesAsync(ct);
             await _queue.EnqueueAsync(photoId, ct);
+
+            _logger.LogInformation("UPLOAD: CompleteUpload photoId={PhotoId}", photoId);
 
             return Ok();
         }

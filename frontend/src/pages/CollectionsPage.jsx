@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createCollection, deleteCollection, getCollection, getCollections, getToken, me } from "../api";
+import { createCollection, deleteCollection, getCollection, getCollections, getThumbUrl, getToken, me } from "../api";
 
 export default function CollectionsPage() {
     const navigate = useNavigate();
     
-    const [token] = useState(getToken() || "");
+    // const [token] = useState(getToken() || "");
     const [meData, setMeData] = useState(null);
     const [status, setStatus] = useState("");
     const [error, setError] = useState("");
 
     const [collections, setCollections] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [deletingId, setDeletingId] = useState(null);
 
     async function loadMe() {
             setError("");
@@ -46,23 +48,45 @@ export default function CollectionsPage() {
             navigate(`/collections/${id}`);
     }
 
+    // async function onDeleteCollection(id) {
+    //         if (!confirm("Delete collection?")) {
+    //             return;
+    //         }
+    //         try {
+    //             await deleteCollection(id);
+    //             await loadCollections();                
+    //         } catch (err) {
+    //             setError(err.message)
+    //         }            
+    // }
+
     async function onDeleteCollection(id) {
-            if (!confirm("Delete collection?")) {
-                return;
-            }
-            try {
-                await deleteCollection(id);
-                await loadCollections();                
-            } catch (err) {
-                setError(err.message)
-            }            
+        if (!confirm("Delete collection with all photos?")) {
+            return;
+        }
+
+        try {
+            setDeletingId(id);
+            await deleteCollection(id);
+            await loadCollections();
+
+        } catch (err) {
+            alert(err.message)
+        } finally {
+            setDeletingId(null);
+        }        
     }
 
+
+    
+
     useEffect(() => {
-            if (!token) {
-                navigate("/login", { replace: true });
-                return;
-            }
+        const token = getToken();
+
+        if (!token) {
+            navigate("/login", { replace: true });
+            return;
+        }
             loadMe();
             loadCollections();            
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,6 +98,7 @@ export default function CollectionsPage() {
                 <h2 className="mb-0">My Collections</h2>
                 <button 
                     className="btn btn-primary" 
+                    disabled={!!deletingId}
                     onClick={onCreateCollection}
                 >
                     Create Collection
@@ -102,6 +127,9 @@ export default function CollectionsPage() {
                                         {new Date(c.createdAtUtc).toLocaleString()}
                                     </div>
                                     <div className="text-muted small">
+                                        Id: {c.id}
+                                    </div>
+                                    <div className="text-muted small">
                                         Photos: {c.totalPhotos}
                                     </div>
                                     <div className="text-muted small mb-2">
@@ -110,16 +138,24 @@ export default function CollectionsPage() {
                                     <div className="mt-auto d-flex gap-2">
                                         <button
                                             className="btn btn-primary"
+                                            disabled={!!deletingId}
                                             onClick={() => navigate(`/collections/${c.id}`)}
                                         >
                                             Open
                                         </button>
-                                        <button                                           
+                                        <button
                                             className="btn btn-danger"
+                                            disabled={!!deletingId}
                                             onClick={() => onDeleteCollection(c.id)}
                                         >
                                             Delete
                                         </button>
+                                        {/* <button                                           
+                                            className="btn btn-danger"
+                                            onClick={() => onDeleteCollection(c.id)}
+                                        >
+                                            Delete
+                                        </button> */}
                                     </div>
                                 </div>                                
                             </div>

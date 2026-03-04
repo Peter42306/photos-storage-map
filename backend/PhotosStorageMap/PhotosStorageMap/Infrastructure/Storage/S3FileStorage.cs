@@ -83,12 +83,24 @@ namespace PhotosStorageMap.Infrastructure.Storage
             };
 
             var url = _s3.GetPreSignedURL(req);
-
             return Task.FromResult(url);
         }
 
-        
+        public Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn)
+        {
+            if (string.IsNullOrWhiteSpace(storageKey))
+                throw new ArgumentException("Storage key is required.", nameof(storageKey));
 
-        
+            var req = new GetPreSignedUrlRequest
+            {
+                BucketName = _options.Bucket,
+                Key = storageKey,
+                Verb = HttpVerb.GET,
+                Expires = DateTime.UtcNow.Add(expiresIn)
+            };
+
+            var url = _s3.GetPreSignedURL(req);
+            return Task.FromResult(url);
+        }
     }
 }

@@ -9,12 +9,12 @@
 
         public static string Standard(string userId, Guid collectionId, Guid photoId)
         {
-            return $"{userId}/{collectionId}/{photoId}.jpg";
+            return $"{userId}/{collectionId}/{photoId}_standard.jpg";
         }
 
         public static string Thumb(string userId, Guid collectionId, Guid photoId)
         {
-            return $"{userId}/{collectionId}/{photoId}_thumb.jpg";
+            return $"{userId}/{collectionId}/{photoId}_thumbnail.jpg";
         }
     }
 }
