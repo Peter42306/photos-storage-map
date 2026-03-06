@@ -4,20 +4,25 @@ namespace PhotosStorageMap.Domain.Entities
 {
     public class PhotoItem
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
 
         public Guid UploadCollectionId { get; set; }
         public UploadCollection UploadCollection { get; set; } = null!;        
 
         public string OriginalFileName { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
         // processed images
-        public string StandardKey { get; set; } = string.Empty; // resized image, standard size photos 1280, userId/uploadId/photoId.jpg
-        public string ThumbKey { get; set; } = string.Empty; // resized image, thumbnail size photos 320, userId/uploadId/photoId_thumb.jpg
+        public string? StandardKey { get; set; } // resized image, standard size photos 1280, userId/uploadId/photoId.jpg
+        public string? ThumbKey { get; set; } // resized image, thumbnail size photos 320, userId/uploadId/photoId_thumb.jpg
 
         public int? Width { get; set; }
         public int? Height { get; set; }
-        public long? SizeBytes { get; set; }
+        
+        public long? OriginalSizeBytes { get; set; }
+        public long? StandardSizeBytes { get; set; }
+        public long? ThumbSizeBytes { get; set; }
+        public long? TotalSizeBytes { get; set; }
 
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 

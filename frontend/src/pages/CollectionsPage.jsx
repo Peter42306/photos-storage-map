@@ -77,7 +77,17 @@ export default function CollectionsPage() {
         }        
     }
 
+    useEffect(() => {
+        const handler = (e) => {
+            if (deletingId) {
+                e.preventDefault();
+                e.returnValue = "";
+            }
+        }
 
+        window.addEventListener("beforeunload", handler);
+        return () => window.removeEventListener("beforeunload", handler);
+    }, [deletingId]);
     
 
     useEffect(() => {
@@ -133,7 +143,7 @@ export default function CollectionsPage() {
                                         Photos: {c.totalPhotos}
                                     </div>
                                     <div className="text-muted small mb-2">
-                                        Size:{" "}{(c.totalBytes / (1024 * 1024)).toFixed(2)} MB
+                                        Size: {(c.totalBytes / (1024 * 1024)).toFixed(2)} MB
                                     </div>
                                     <div className="mt-auto d-flex gap-2">
                                         <button
@@ -162,6 +172,24 @@ export default function CollectionsPage() {
                         </div>
                     ))}
                 </div>
+            )}
+
+            {deletingId && (
+            <div
+                style={{
+                position: "fixed",
+                inset: 0,                
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                }}
+                //onClick={(e) => e.stopPropagation()}
+            >
+                <div className="alert alert-danger">
+                Deleting collection… please wait
+                </div>
+            </div>
             )}
 
 

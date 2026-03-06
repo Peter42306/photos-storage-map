@@ -46,7 +46,7 @@ namespace PhotosStorageMap.Api.Controllers
             };
 
             _db.UploadCollections.Add(collection);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
 
             return Ok(collection.Id);
         }
@@ -55,6 +55,7 @@ namespace PhotosStorageMap.Api.Controllers
         public async Task<ActionResult> InitUpload(
             [FromQuery] Guid collectionId, 
             [FromQuery] string? fileName,
+            [FromQuery] long? fileSize,
             CancellationToken ct)
         {
             var userId = GetUserId();
@@ -76,6 +77,7 @@ namespace PhotosStorageMap.Api.Controllers
                 UploadCollectionId = collectionId,
                 OriginalFileName = safeName,
                 OriginalKey = storageKey,
+                OriginalSizeBytes = (fileSize.HasValue && fileSize.Value > 0) ? fileSize.Value : null,
                 Status = PhotoStatus.Uploaded,
                 CreatedAtUtc = DateTime.UtcNow,
             };

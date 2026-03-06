@@ -163,8 +163,13 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("Error")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<int?>("Height")
                         .HasColumnType("integer");
@@ -181,18 +186,21 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("OriginalKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
 
-                    b.Property<long?>("SizeBytes")
+                    b.Property<long?>("OriginalSizeBytes")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("StandardDeletedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("StandardKey")
-                        .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
+
+                    b.Property<long?>("StandardSizeBytes")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -201,9 +209,14 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ThumbKey")
-                        .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
+
+                    b.Property<long?>("ThumbSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("TotalSizeBytes")
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("UploadCollectionId")
                         .HasColumnType("uuid");
@@ -213,7 +226,13 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TakenAt");
+
                     b.HasIndex("UploadCollectionId");
+
+                    b.HasIndex("UploadCollectionId", "Status");
 
                     b.ToTable("PhotoItems");
                 });

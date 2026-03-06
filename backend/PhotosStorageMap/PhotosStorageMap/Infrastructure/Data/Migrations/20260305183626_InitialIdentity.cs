@@ -37,6 +37,7 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                     LastLoginAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     LoginCount = table.Column<int>(type: "integer", nullable: false),
                     AdminNote = table.Column<string>(type: "text", nullable: true),
+                    StoragePlan = table.Column<int>(type: "integer", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -55,6 +56,27 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UploadCollections",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OwnerUserId = table.Column<string>(type: "text", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Description = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpiresAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PhotosPreviewCount = table.Column<int>(type: "integer", nullable: false),
+                    PhotosDownloadCount = table.Column<int>(type: "integer", nullable: false),
+                    MapPreviewCount = table.Column<int>(type: "integer", nullable: false),
+                    TotalPhotos = table.Column<int>(type: "integer", nullable: false),
+                    TotalBytes = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UploadCollections", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -163,6 +185,65 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "PhotoItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UploadCollectionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OriginalFileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    StandardKey = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true),
+                    ThumbKey = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true),
+                    Width = table.Column<int>(type: "integer", nullable: true),
+                    Height = table.Column<int>(type: "integer", nullable: true),
+                    OriginalSizeBytes = table.Column<long>(type: "bigint", nullable: true),
+                    StandardSizeBytes = table.Column<long>(type: "bigint", nullable: true),
+                    ThumbSizeBytes = table.Column<long>(type: "bigint", nullable: true),
+                    TotalSizeBytes = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TakenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
+                    OriginalKey = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    Error = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    StandardDeletedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PhotoItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PhotoItems_UploadCollections_UploadCollectionId",
+                        column: x => x.UploadCollectionId,
+                        principalTable: "UploadCollections",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShareLinks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UploadCollectionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Token = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpiresAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsRevoked = table.Column<bool>(type: "boolean", nullable: false),
+                    AllowDownload = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShareLinks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShareLinks_UploadCollections_UploadCollectionId",
+                        column: x => x.UploadCollectionId,
+                        principalTable: "UploadCollections",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -199,6 +280,58 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PhotoItems_Status",
+                table: "PhotoItems",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PhotoItems_TakenAt",
+                table: "PhotoItems",
+                column: "TakenAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PhotoItems_UploadCollectionId",
+                table: "PhotoItems",
+                column: "UploadCollectionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PhotoItems_UploadCollectionId_Status",
+                table: "PhotoItems",
+                columns: new[] { "UploadCollectionId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShareLinks_Token",
+                table: "ShareLinks",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShareLinks_UploadCollectionId",
+                table: "ShareLinks",
+                column: "UploadCollectionId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UploadCollections_OwnerUserId_CreatedAtUtc",
+                table: "UploadCollections",
+                columns: new[] { "OwnerUserId", "CreatedAtUtc" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UploadCollections_OwnerUserId_ExpiresAtUtc",
+                table: "UploadCollections",
+                columns: new[] { "OwnerUserId", "ExpiresAtUtc" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UploadCollections_OwnerUserId_TotalBytes",
+                table: "UploadCollections",
+                columns: new[] { "OwnerUserId", "TotalBytes" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UploadCollections_OwnerUserId_TotalPhotos",
+                table: "UploadCollections",
+                columns: new[] { "OwnerUserId", "TotalPhotos" });
         }
 
         /// <inheritdoc />
@@ -220,10 +353,19 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "PhotoItems");
+
+            migrationBuilder.DropTable(
+                name: "ShareLinks");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "UploadCollections");
         }
     }
 }

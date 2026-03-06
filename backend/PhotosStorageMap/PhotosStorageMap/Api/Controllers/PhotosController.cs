@@ -117,9 +117,9 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (photo.UploadCollection is not null)
             {
-                if (photo.SizeBytes.HasValue)
+                if (photo.TotalSizeBytes.HasValue)
                 {
-                    photo.UploadCollection.TotalBytes = Math.Max(0, photo.UploadCollection.TotalBytes - photo.SizeBytes.Value);
+                    photo.UploadCollection.TotalBytes = Math.Max(0, photo.UploadCollection.TotalBytes - photo.TotalSizeBytes.Value);
                 }
 
                 photo.UploadCollection.TotalPhotos = Math.Max(0, photo.UploadCollection.TotalPhotos - 1);

@@ -54,15 +54,25 @@ namespace PhotosStorageMap.Infrastructure.Data
                     .IsRequired()
                     .HasMaxLength(FieldLimits.PhotoItem.OriginalFileName);
 
-                entity.Property(e => e.StandardKey)
-                    .IsRequired()
+                entity.Property(e => e.Description)
+                    .HasMaxLength(FieldLimits.PhotoItem.Description);
+
+                entity.Property(e => e.Error)
+                    .HasMaxLength(FieldLimits.PhotoItem.Error);
+
+                entity.Property(e => e.OriginalKey)
                     .HasMaxLength(FieldLimits.PhotoItem.StorageKey);
 
-                entity.Property(e => e.ThumbKey)
-                    .IsRequired()
+                entity.Property(e => e.StandardKey)                    
+                    .HasMaxLength(FieldLimits.PhotoItem.StorageKey);
+
+                entity.Property(e => e.ThumbKey)                    
                     .HasMaxLength(FieldLimits.PhotoItem.StorageKey);
                 
                 entity.HasIndex(e => e.UploadCollectionId);
+                entity.HasIndex(e => new { e.UploadCollectionId, e.Status });
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.TakenAt);
             });
 
             builder.Entity<ShareLink>(entity =>

@@ -14,6 +14,7 @@ import ResetPasswordPage from './pages/ResetPassword';
 import UploadTestpage from './pages/UploadTestPage';
 import CollectionsPage from './pages/CollectionsPage';
 import CollectionPage from './pages/CollectionPage';
+import MapPage from './pages/MapPage';
 
 function App() {  
 
@@ -42,6 +43,7 @@ function App() {
 
             <Route path='/collections' element={<CollectionsPage/>}/>
             <Route path='/collections/:id' element={<CollectionPage/>}/>
+            <Route path='/collections/:id/map' element={<MapPage/>}/>
 
 
 

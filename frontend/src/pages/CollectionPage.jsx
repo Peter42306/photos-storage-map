@@ -22,7 +22,7 @@ export default function CollectionPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState("");
 
-    const [deletingId, setDeletingId] = useState(null);
+    
 
     async function load() {
         console.log("load() called, id =", id);
@@ -129,13 +129,13 @@ export default function CollectionPage() {
             const uploaded = await runWithConcurrency(files, UPLOAD_CONCURRENCY, async(file, i) => {
 
                 // init
-                const { photoId, uploadUrl } = await initUpload(id, file.name);
+                const { photoId, uploadUrl } = await initUpload(id, file.name, file.size);
 
                 // put to S3
                 await putToPresignedUrl(uploadUrl, file);
 
                 done++;
-                setUploadStatus(`Uploading original: ${done}/${total1} (last: ${file.name})`);
+                setUploadStatus(`Uploading original: ${done}/${total1} (last: ${file.name}/${file.size} MB)`);
 
                 return { photoId, fileName: file.name };
             });
@@ -365,24 +365,7 @@ export default function CollectionPage() {
             </div>
         );
     }
-
-    async function onDeleteCollection(id) {
-        if (!confirm("Delete collection with all photos?")) {
-            return;
-        }
-
-        try {
-            setDeletingId(id);
-            await deleteCollection(id);
-            await load();
-
-        } catch (err) {
-            alert(err.message)
-        } finally {
-            setDeletingId(null);
-        }        
-    }
-
+    
     const photos = collection?.photos ?? collection?.Photos ?? [];
 
     if (loading) {
@@ -399,9 +382,9 @@ export default function CollectionPage() {
                      {error ? <div className="alert alert-danger">{error}</div> : null}
                     {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
-                    <p>{collection?.title}</p>
+                    <h5>{collection?.title}</h5>
                     <p>{collection?.description || "-"}</p>
-                    <p>Collection Id: {collection?.id}</p>
+                    {/* <p>Collection Id: {collection?.id}</p> */}
 
                     <div className='mb-2'>
                         {!isEditing ? (
@@ -458,6 +441,27 @@ export default function CollectionPage() {
                         )}
                     </div>  
 
+                    <hr/>
+                    <div className='d-flex gap-2'>
+                        <button
+                            className='btn btn-primary'
+                            onClick={() => navigate(`/collections/${collection.id}/map`)}
+                        >
+                            Map view
+                        </button>
+                        <button className='btn btn-primary'>
+                            Download originals
+                        </button>
+                        <button className='btn btn-primary'>
+                            Download standard
+                        </button>
+                        <button className='btn btn-primary'>
+                            Share link
+                        </button>
+                        
+                    </div>
+                    <hr/>
+
                     {/* <hr/>                             */}
                             {uploadStatus ? <div className='alert alert-info py-2'>{uploadStatus}</div> : null}
 
@@ -485,6 +489,8 @@ export default function CollectionPage() {
                             ))}
                         </div>
                     )}
+
+                    
                     
                     
 

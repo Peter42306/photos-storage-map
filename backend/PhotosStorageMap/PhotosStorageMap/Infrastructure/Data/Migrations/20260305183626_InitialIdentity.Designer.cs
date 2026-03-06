@@ -12,7 +12,7 @@ using PhotosStorageMap.Infrastructure.Data;
 namespace PhotosStorageMap.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260206081744_InitialIdentity")]
+    [Migration("20260305183626_InitialIdentity")]
     partial class InitialIdentity
     {
         /// <inheritdoc />
@@ -157,6 +157,178 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PhotosStorageMap.Domain.Entities.PhotoItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("OriginalKey")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<long?>("OriginalSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("StandardDeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StandardKey")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<long?>("StandardSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("TakenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ThumbKey")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<long?>("ThumbSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("TotalSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("UploadCollectionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TakenAt");
+
+                    b.HasIndex("UploadCollectionId");
+
+                    b.HasIndex("UploadCollectionId", "Status");
+
+                    b.ToTable("PhotoItems");
+                });
+
+            modelBuilder.Entity("PhotosStorageMap.Domain.Entities.ShareLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowDownload")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("UploadCollectionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UploadCollectionId")
+                        .IsUnique();
+
+                    b.ToTable("ShareLinks");
+                });
+
+            modelBuilder.Entity("PhotosStorageMap.Domain.Entities.UploadCollection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTime?>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MapPreviewCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OwnerUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PhotosDownloadCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PhotosPreviewCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("TotalBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TotalPhotos")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId", "CreatedAtUtc");
+
+                    b.HasIndex("OwnerUserId", "ExpiresAtUtc");
+
+                    b.HasIndex("OwnerUserId", "TotalBytes");
+
+                    b.HasIndex("OwnerUserId", "TotalPhotos");
+
+                    b.ToTable("UploadCollections");
+                });
+
             modelBuilder.Entity("PhotosStorageMap.Infrastructure.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -219,6 +391,9 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
+
+                    b.Property<int>("StoragePlan")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
@@ -288,6 +463,35 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PhotosStorageMap.Domain.Entities.PhotoItem", b =>
+                {
+                    b.HasOne("PhotosStorageMap.Domain.Entities.UploadCollection", "UploadCollection")
+                        .WithMany("Photos")
+                        .HasForeignKey("UploadCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UploadCollection");
+                });
+
+            modelBuilder.Entity("PhotosStorageMap.Domain.Entities.ShareLink", b =>
+                {
+                    b.HasOne("PhotosStorageMap.Domain.Entities.UploadCollection", "UploadCollection")
+                        .WithOne("ShareLink")
+                        .HasForeignKey("PhotosStorageMap.Domain.Entities.ShareLink", "UploadCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UploadCollection");
+                });
+
+            modelBuilder.Entity("PhotosStorageMap.Domain.Entities.UploadCollection", b =>
+                {
+                    b.Navigation("Photos");
+
+                    b.Navigation("ShareLink");
                 });
 #pragma warning restore 612, 618
         }

@@ -101,9 +101,36 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 photo.Error = null;
                 await db.SaveChangesAsync(ct);
 
-                await using var originalStream = await storage.OpenReadAsync(photo.OriginalKey, ct);
+                await using var originalStream = await storage.OpenReadAsync(photo.OriginalKey, ct);                
 
                 var result = await processor.ProcessAsync(originalStream, ct);
+
+                long originalBytes = photo.OriginalSizeBytes ?? 0;
+                long standardBytes = 0;
+                long thumbnailBytes = 0;
+                
+                if (result.StandardJpeg.CanSeek)
+                {
+                    result.StandardJpeg.Position = 0;
+                    standardBytes = result.StandardJpeg.Length;
+                }
+                if (result.ThumbJpeg.CanSeek)
+                {
+                    result.ThumbJpeg.Position = 0;
+                    thumbnailBytes = result.ThumbJpeg.Length;
+                }                
+                var wasCounted = photo.TotalSizeBytes is not null;
+                var totalBytes = originalBytes + standardBytes + thumbnailBytes;
+
+                if (!wasCounted)
+                {
+                    photo.UploadCollection.TotalPhotos += 1;
+                    photo.UploadCollection.TotalBytes += totalBytes;
+                }
+
+                photo.TotalSizeBytes = totalBytes;
+                photo.StandardSizeBytes = standardBytes;
+                photo.ThumbSizeBytes = thumbnailBytes;
 
                 var userId = photo.UploadCollection.OwnerUserId;
                 var collectionId = photo.UploadCollectionId;
@@ -118,20 +145,22 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     StorageKey: standardKey,
                     Content: result.StandardJpeg,
                     ContentType: ContentType.ImageJpeg,
-                    ContentLength: result.StandardJpeg.CanSeek ? result.StandardJpeg.Length : null
+                    ContentLength: standardBytes
                 ), ct);
 
                 await storage.PutAsync(new FileSaveRequest(
                     StorageKey: thumbKey,
                     Content: result.ThumbJpeg,
                     ContentType: ContentType.ImageJpeg,
-                    ContentLength: result.ThumbJpeg.CanSeek ? result.ThumbJpeg.Length : null
+                    ContentLength: thumbnailBytes
                 ), ct);
 
                 photo.StandardKey = standardKey;
                 photo.ThumbKey = thumbKey;
                 photo.Width = result.Width;
                 photo.Height = result.Height;                
+
+                
 
                 var takenAt = result.Exif.TakenAt;
                 if (takenAt.HasValue)
@@ -152,24 +181,24 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 }
 
                 photo.Latitude = result.Exif.Latitude;
-                photo.Longitude = result.Exif.Longitude;
+                photo.Longitude = result.Exif.Longitude;                
 
-                if (photo.SizeBytes is null)
-                {
-                    var totalBytes =
-                        (result.StandardJpeg.CanSeek ? result.StandardJpeg.Length : 0) +
-                        (result.ThumbJpeg.CanSeek ? result.ThumbJpeg.Length : 0);
-
-                    photo.SizeBytes = totalBytes;
-                    photo.UploadCollection.TotalPhotos += 1;
-                    photo.UploadCollection.TotalBytes += totalBytes;
-                }                
+                _logger.LogInformation("Latitude: {Latitude}, Longitude: {Longitude}", photo.Latitude, photo.Longitude);
+                                
+                //if (photo.TotalSizeBytes is null)
+                //{
+                //    //photo.TotalSizeBytes = totalBytes;
+                //    photo.UploadCollection.TotalPhotos += 1;
+                //    photo.UploadCollection.TotalBytes += totalBytes;
+                //}                
 
                 photo.Status = PhotoStatus.Ready;
 
                 await db.SaveChangesAsync(ct);
 
                 _logger.LogInformation("Processed photoId={Photoid}", photoId);
+                _logger.LogInformation("Original size: {OriginalBytes}, standard size: {StandardBytes}, thumbnail size: {ThumbnailBytes}", originalBytes, standardBytes, thumbnailBytes);
+                _logger.LogInformation("Total photos {TotalPhotos}, total bytes {TotalBytes}", photo.UploadCollection.TotalPhotos, photo.UploadCollection.TotalBytes);
             }
             catch (Exception ex)
             {

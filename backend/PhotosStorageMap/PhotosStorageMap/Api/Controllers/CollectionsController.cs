@@ -80,7 +80,9 @@ namespace PhotosStorageMap.Api.Controllers
                             p.StandardKey,
                             p.Width,
                             p.Height,
-                            p.SizeBytes,
+                            p.TotalSizeBytes,
+                            p.ThumbSizeBytes,
+                            p.StandardSizeBytes,
                             p.CreatedAtUtc,
                             p.TakenAt,
                             p.Latitude,
@@ -191,6 +193,60 @@ namespace PhotosStorageMap.Api.Controllers
 
             _logger.LogInformation("DELETE COLLECTION: deleted collectionId={CollectionId}", id);
             return NoContent();
+        }
+
+        [HttpGet("{id:guid}/map")]
+        public async Task<ActionResult> GetCollectionMap(Guid id, CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var collectionExists = await _db.UploadCollections
+                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId, ct);
+
+            if (!collectionExists) return NotFound();
+            
+            var photos = await _db.PhotoItems
+                .Where(p => 
+                    p.UploadCollectionId == id && 
+                    p.Status == Domain.Enums.PhotoStatus.Ready && 
+                    p.Latitude.HasValue && 
+                    p.Longitude.HasValue)
+                .OrderBy(p => p.TakenAt ?? p.CreatedAtUtc)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    originalFileName = p.OriginalFileName,
+                    latitude = p.Latitude,
+                    longitude = p.Longitude,
+                    takenAt = p.TakenAt,
+                    thumbKey = p.ThumbKey
+                })
+                .ToListAsync(ct);
+
+            var result = new List<object>();
+
+            foreach (var photo in photos)
+            {
+                string? thumbUrl = null;
+
+                if (!string.IsNullOrWhiteSpace(photo.thumbKey))
+                {
+                    thumbUrl = await _storage.GeneratePresignedDownloadUrlAsync(photo.thumbKey, TimeSpan.FromMinutes(30));
+                }
+
+                result.Add(new
+                {
+                    photo.id,
+                    photo.originalFileName,
+                    photo.latitude,
+                    photo.longitude,
+                    photo.takenAt,
+                    thumbUrl
+                });
+            }
+
+            return Ok(result);
         }
 
 

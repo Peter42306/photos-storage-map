@@ -2,7 +2,7 @@
 {
     public class UploadCollection
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
         public string OwnerUserId { get; set; } = string.Empty;
 
         public string? Title { get; set; }

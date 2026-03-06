@@ -131,8 +131,8 @@ export function me() {
 
 // UploadsController (presigned flow)
 
-export function initUpload(collectionId, fileName) {
-    const qs = new URLSearchParams({ collectionId, fileName }).toString();
+export function initUpload(collectionId, fileName, fileSize) {
+    const qs = new URLSearchParams({ collectionId, fileName, fileSize }).toString();
     return request(`/api/uploads/init?${qs}`,{
         method: "POST",
         auth: true,
@@ -226,6 +226,13 @@ export function getStandardUrl(photoId) {
 
 export function getPhotoStatus(photoId) {
     return request(`/api/photos/${photoId}/status`, {
+        method: "GET",
+        auth: true,
+    });
+}
+
+export function getCollectionMap(collectionId){
+    return request(`/api/collections/${collectionId}/map`, {
         method: "GET",
         auth: true,
     });
