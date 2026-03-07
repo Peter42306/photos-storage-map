@@ -186,9 +186,9 @@ namespace PhotosStorageMap.Infrastructure.Storage
         public Task<bool> DeleteAsync(string storageKey, CancellationToken ct = default)
         {
             throw new NotImplementedException();
-        }
+        }        
 
-        public Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn)
+        public Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn, string? downloadFileName = null, bool forceDownload = false)
         {
             throw new NotImplementedException();
         }

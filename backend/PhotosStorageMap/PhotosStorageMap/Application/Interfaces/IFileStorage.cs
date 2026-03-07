@@ -6,6 +6,6 @@
         Task<Stream> OpenReadAsync(string storageKey, CancellationToken ct = default);
         Task<bool> DeleteAsync(string storageKey, CancellationToken ct = default);        
         Task<string> GeneratePresignedUploadUrlAsync(string storageKey, TimeSpan expiresIn);
-        Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn);
+        Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn, string? downloadFileName = null, bool forceDownload = false);
     }
 }

@@ -231,6 +231,13 @@ export function getOriginalUrl(photoId){
     });
 }
 
+export function getOriginalDownloadUrl(photoId){
+    return request(`/api/photos/${photoId}/original-download-url`, {
+        method: "GET",
+        auth: true,
+    });
+}
+
 export function getPhotoStatus(photoId) {
     return request(`/api/photos/${photoId}/status`, {
         method: "GET",

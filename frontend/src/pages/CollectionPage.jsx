@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeUpload, deleteCollection, deletePhoto, getCollection, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection } from "../api";
+import { completeUpload, deleteCollection, deletePhoto, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection } from "../api";
 
 
 
@@ -276,7 +276,12 @@ export default function CollectionPage() {
     //     }
     // }    
 
-    async function deletePhotoHandler(photoId) {
+    async function deletePhotoHandler(photoId, fileName) {
+        const confirmed = confirm(`Delete this photo?\n${fileName ?? "photo"}`);
+        if (!confirmed) {
+            return;
+        }
+        
         try {
             setError("");
             await deletePhoto(photoId);
@@ -297,7 +302,12 @@ export default function CollectionPage() {
         }
     }    
 
-    async function viewOriginalHandler(photoId) {
+    async function viewOriginalHandler(photoId, fileName) {
+        const confirmed = confirm(`View original in brower?\n${fileName ?? "photo"}`);
+        if (!confirmed) {
+            return;
+        }
+
         try {
             const res = await getOriginalUrl(photoId);
             const url = typeof res === "string" ? res : res?.url;
@@ -311,7 +321,25 @@ export default function CollectionPage() {
         }
     }
 
-    function PhotoCard({ photo, onDeleted, onViewOriginal }) {
+    async function downloadOriginalHandler(photoId, fileName) {
+        const confirmed = confirm(`Download original file?\n${fileName ?? "photo"}`);
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const res = await getOriginalDownloadUrl(photoId);
+            const url = typeof res === "string" ? res : res?.url;
+
+            if (url) {
+                window.location.href = url;
+            }
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    function PhotoCard({ photo, onDeleted, onViewOriginal, onDownloadOriginal }) {
         const [thumbUrl, setThumbUrl] = useState("");
         const photoId = photo.id ?? photo.Id;
 
@@ -366,26 +394,21 @@ export default function CollectionPage() {
                 <div>
                     <button
                         className='btn btn-danger'
-                        onClick={async () => {
-                            if (!confirm("Delete this photo?")) {
-                                return;
-                            }                            
-                            onDeleted?.(photoId);
-                        }}
+                        onClick={async () => onDeleted?.(photoId, photo.originalFileName)}
                     >
                         Delete
                     </button>
                     <button
                         className='btn btn-primary'
-                        onClick={async () => {
-                            if (!confirm("View this photo in brower?")) {
-                                return;
-                            }
-                            onViewOriginal?.(photoId);
-                        }}
-
+                        onClick={async () => onViewOriginal?.(photoId, photo.originalFileName)}
                     >
                         View original
+                    </button>
+                    <button
+                        className='btn btn-primary'
+                        onClick={async () => onDownloadOriginal?.(photoId, photo.originalFileName)}
+                    >
+                        Download original
                     </button>
                 </div>
             </div>
@@ -510,7 +533,12 @@ export default function CollectionPage() {
                         <div className='row'>
                             {photos.map((p) => (
                                 <div key={p.id ?? p.Id} className='col-md-3 mb-3'>
-                                    <PhotoCard photo={p} onDeleted={deletePhotoHandler} onViewOriginal={viewOriginalHandler}/>
+                                    <PhotoCard 
+                                        photo={p} 
+                                        onDeleted={deletePhotoHandler} 
+                                        onViewOriginal={viewOriginalHandler}
+                                        onDownloadOriginal={downloadOriginalHandler}
+                                    />
                                 </div>
                             ))}
                         </div>

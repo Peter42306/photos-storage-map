@@ -2,6 +2,7 @@
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using PhotosStorageMap.Application.Interfaces;
+using System.Net;
 
 namespace PhotosStorageMap.Infrastructure.Storage
 {
@@ -86,10 +87,14 @@ namespace PhotosStorageMap.Infrastructure.Storage
             return Task.FromResult(url);
         }
 
-        public Task<string> GeneratePresignedDownloadUrlAsync(string storageKey, TimeSpan expiresIn)
+        public Task<string> GeneratePresignedDownloadUrlAsync(
+            string storageKey, 
+            TimeSpan expiresIn,
+            string? downloadFileName = null, 
+            bool forceDownload = false)
         {
             if (string.IsNullOrWhiteSpace(storageKey))
-                throw new ArgumentException("Storage key is required.", nameof(storageKey));
+                throw new ArgumentException("Storage key is required.", nameof(storageKey));            
 
             var req = new GetPreSignedUrlRequest
             {
@@ -98,6 +103,32 @@ namespace PhotosStorageMap.Infrastructure.Storage
                 Verb = HttpVerb.GET,
                 Expires = DateTime.UtcNow.Add(expiresIn)
             };
+
+            if (forceDownload || !string.IsNullOrWhiteSpace(downloadFileName))
+            {
+                req.ResponseHeaderOverrides = new ResponseHeaderOverrides();
+
+                if (!string.IsNullOrWhiteSpace(downloadFileName))
+                {
+                    var safeFileName = downloadFileName.Replace("\"", "");
+                    var encodedFileName = WebUtility.UrlEncode(safeFileName);
+
+                    if (forceDownload)
+                    {
+                        req.ResponseHeaderOverrides.ContentDisposition = 
+                            $"attachment; filename=\"{safeFileName}\"; filename*=UTF-8''{encodedFileName}";
+                    }
+                    else
+                    {
+                        req.ResponseHeaderOverrides.ContentDisposition =
+                            $"inline; filename=\"{safeFileName}\"; filename*=UTF-8''{encodedFileName}";
+                    }
+                }
+                else if (forceDownload)
+                {
+                    req.ResponseHeaderOverrides.ContentDisposition = "attachment";
+                }
+            }
 
             var url = _s3.GetPreSignedURL(req);
             return Task.FromResult(url);
