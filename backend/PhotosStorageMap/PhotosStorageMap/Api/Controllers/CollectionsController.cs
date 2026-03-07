@@ -71,7 +71,7 @@ namespace PhotosStorageMap.Api.Controllers
                     c.TotalPhotos,
                     c.TotalBytes,
                     Photos = c.Photos
-                        .OrderByDescending(p => p.CreatedAtUtc)
+                        .OrderBy(p => p.CreatedAtUtc)
                         .Select(p => new
                         {
                             p.Id,

@@ -155,6 +155,26 @@ namespace PhotosStorageMap.Api.Controllers
             return Ok(photo);
         }
 
+        // to download original
+        [HttpGet("{photoId:guid}/original-url")]
+        public async Task<ActionResult> GetOriginalUrl(Guid photoId, CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var photo = await _db.PhotoItems
+                .Include(p => p.UploadCollection)
+                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId);
+
+            if (photo is null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(photo.OriginalKey)) return BadRequest("Original file is not available");
+
+            var url = await _storage.GeneratePresignedDownloadUrlAsync(photo.OriginalKey, TimeSpan.FromMinutes(3));
+
+            return Ok(new { url });
+        }
+
 
 
         //-------------------------------------------------------

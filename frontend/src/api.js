@@ -224,6 +224,13 @@ export function getStandardUrl(photoId) {
     });
 }
 
+export function getOriginalUrl(photoId){
+    return request(`/api/photos/${photoId}/original-url`, {
+        method: "GET",
+        auth: true,
+    });
+}
+
 export function getPhotoStatus(photoId) {
     return request(`/api/photos/${photoId}/status`, {
         method: "GET",

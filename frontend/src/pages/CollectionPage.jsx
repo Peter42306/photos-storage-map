@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeUpload, deleteCollection, deletePhoto, getCollection, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection } from "../api";
+import { completeUpload, deleteCollection, deletePhoto, getCollection, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection } from "../api";
 
 
 
@@ -276,7 +276,7 @@ export default function CollectionPage() {
     //     }
     // }    
 
-    async function onDeletePhoto(photoId) {
+    async function deletePhotoHandler(photoId) {
         try {
             setError("");
             await deletePhoto(photoId);
@@ -297,7 +297,21 @@ export default function CollectionPage() {
         }
     }    
 
-    function PhotoCard({ photo, onDeleted }) {
+    async function viewOriginalHandler(photoId) {
+        try {
+            const res = await getOriginalUrl(photoId);
+            const url = typeof res === "string" ? res : res?.url;
+
+            if (url) {
+                window.open(url, "_blank");
+            }
+
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    function PhotoCard({ photo, onDeleted, onViewOriginal }) {
         const [thumbUrl, setThumbUrl] = useState("");
         const photoId = photo.id ?? photo.Id;
 
@@ -360,6 +374,18 @@ export default function CollectionPage() {
                         }}
                     >
                         Delete
+                    </button>
+                    <button
+                        className='btn btn-primary'
+                        onClick={async () => {
+                            if (!confirm("View this photo in brower?")) {
+                                return;
+                            }
+                            onViewOriginal?.(photoId);
+                        }}
+
+                    >
+                        View original
                     </button>
                 </div>
             </div>
@@ -484,7 +510,7 @@ export default function CollectionPage() {
                         <div className='row'>
                             {photos.map((p) => (
                                 <div key={p.id ?? p.Id} className='col-md-3 mb-3'>
-                                    <PhotoCard photo={p} onDeleted={onDeletePhoto}/>
+                                    <PhotoCard photo={p} onDeleted={deletePhotoHandler} onViewOriginal={viewOriginalHandler}/>
                                 </div>
                             ))}
                         </div>
