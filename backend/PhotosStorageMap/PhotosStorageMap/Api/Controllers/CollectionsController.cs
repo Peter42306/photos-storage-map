@@ -76,6 +76,7 @@ namespace PhotosStorageMap.Api.Controllers
                         {
                             p.Id,
                             p.OriginalFileName,
+                            p.Description,
                             p.ThumbKey,
                             p.StandardKey,
                             p.Width,

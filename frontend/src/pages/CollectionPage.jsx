@@ -339,7 +339,20 @@ export default function CollectionPage() {
         }
     }
 
-    function PhotoCard({ photo, onDeleted, onViewOriginal, onDownloadOriginal }) {
+    function showLocationHandler(photo) {
+        const latitude = photo.latitude ?? photo.Latitude;
+        const longitude = photo.longitude ?? photo.Longitude;
+
+        if (latitude == null || longitude == null) {
+            alert("Location is not available for this photo.");
+            return;
+        }
+
+        const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        window.open(url, "_blank");
+    }
+
+    function PhotoCard({ photo, onDeleted, onViewOriginal, onDownloadOriginal, onLocation }) {
         const [thumbUrl, setThumbUrl] = useState("");
         const photoId = photo.id ?? photo.Id;
 
@@ -409,6 +422,12 @@ export default function CollectionPage() {
                         onClick={async () => onDownloadOriginal?.(photoId, photo.originalFileName)}
                     >
                         Download original
+                    </button>
+                    <button
+                        className='btn btn-primary'
+                        onClick={() => onLocation?.(photo)}
+                    >
+                        Location
                     </button>
                 </div>
             </div>
@@ -538,6 +557,7 @@ export default function CollectionPage() {
                                         onDeleted={deletePhotoHandler} 
                                         onViewOriginal={viewOriginalHandler}
                                         onDownloadOriginal={downloadOriginalHandler}
+                                        onLocation={showLocationHandler}
                                     />
                                 </div>
                             ))}
