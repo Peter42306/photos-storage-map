@@ -16,6 +16,7 @@ import CollectionsPage from './pages/CollectionsPage';
 import CollectionPage from './pages/CollectionPage';
 import MapPage from './pages/MapPage';
 
+
 function App() {  
 
   return (

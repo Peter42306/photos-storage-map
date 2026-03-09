@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PhotosStorageMap.Application.DTOs;
 using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Domain.Entities;
 using PhotosStorageMap.Infrastructure.Data;
@@ -185,7 +186,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId);
+                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
 
             if (photo is null) return NotFound();
             if (string.IsNullOrWhiteSpace(photo.OriginalKey)) return NotFound();
@@ -202,6 +203,36 @@ namespace PhotosStorageMap.Api.Controllers
 
             return Ok(new { url });
         }
+
+        // photo description
+        [HttpPut("{photoId:guid}/description")]
+        public async Task<ActionResult> UpdateDescription(
+            Guid photoId, 
+            [FromBody] UpdatePhotoDescriptionRequest request,
+            CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var photo = await _db.PhotoItems
+                .Include(p => p.UploadCollection)
+                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
+
+            if (photo is null) return NotFound();
+
+            photo.Description = string.IsNullOrWhiteSpace(request.Description) 
+                ? null
+                : request.Description.Trim();
+
+            await _db.SaveChangesAsync(ct);
+
+            return Ok( new
+            {
+                message = "Photo description updated.",
+                description = photo.Description
+            });
+        }        
+        
 
 
         //-------------------------------------------------------

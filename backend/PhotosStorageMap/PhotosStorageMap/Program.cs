@@ -9,6 +9,7 @@ using PhotosStorageMap.Infrastructure.Email;
 using PhotosStorageMap.Infrastructure.Extensions;
 using PhotosStorageMap.Infrastructure.Images;
 using PhotosStorageMap.Infrastructure.Policies;
+using PhotosStorageMap.Infrastructure.Services;
 using PhotosStorageMap.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +58,7 @@ builder.Services.AddScoped<IFileStorage, S3FileStorage>();
 builder.Services.AddSingleton<IPhotoProcessingQueue, InMemoryPhotoProcessingQueue>();
 builder.Services.AddScoped<IImageProcessor, ImageSharpImageProcessor>();
 builder.Services.AddHostedService<PhotoProcessingWorker>();
+builder.Services.AddScoped<IArchiveCollectionService, ArchiveCollectionService>();
 
 var app = builder.Build();
 

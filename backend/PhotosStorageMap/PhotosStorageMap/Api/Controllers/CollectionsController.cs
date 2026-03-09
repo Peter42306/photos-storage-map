@@ -17,15 +17,18 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IFileStorage _storage;
         private readonly ILogger<CollectionsController> _logger;
+        private readonly IArchiveCollectionService _archiveCollectionService;
 
         public CollectionsController(
             ApplicationDbContext db,
             IFileStorage storage,
-            ILogger<CollectionsController> logger)
+            ILogger<CollectionsController> logger,
+            IArchiveCollectionService archiveCollectionService)
         {
             _db = db;
             _storage = storage;
-            _logger = logger;
+            _logger = logger;            
+            _archiveCollectionService = archiveCollectionService;
         }
 
 
@@ -248,6 +251,63 @@ namespace PhotosStorageMap.Api.Controllers
             }
 
             return Ok(result);
+        }
+
+        // download standard side photos to zip
+        [HttpGet("{id:guid}/download-standard-zip")]
+        public async Task<IActionResult> DownloadStandardZip(Guid id, CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var collectionExists = await _db.UploadCollections
+                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId, ct);
+
+            if (!collectionExists) return NotFound();
+
+            try
+            {
+                var result = await _archiveCollectionService.BuildStandardZipAsync(id, ct);
+                
+                _logger.LogInformation(
+                    "Standard ZIP built. CollectionId={CollectionId}, FilesCount={FilesCount}, TotalBytes={TotalBytes}", id,
+                    result.FilesCount,
+                    result.TotalBytes);
+
+                Response.OnCompleted(() =>
+                {
+                    try
+                    {
+                        result.Stream.Dispose();
+
+                        if (result.Stream is FileStream fileStream)
+                        {
+                            var path = fileStream.Name;
+                            if (System.IO.File.Exists(path))
+                            {
+                                System.IO.File.Delete(path);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to cleanup temp archive file for CollectionId={CollectionId}", id);
+                    }
+
+                    return Task.CompletedTask;
+                });
+
+                return File(result.Stream, result.ContentType, result.FileName);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Failed to build standard ZIP for CollectionId={CollectionId}", id);
+                return StatusCode(500, "Failed to create ZIP archive");
+            }
         }
 
 

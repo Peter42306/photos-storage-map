@@ -1,4 +1,9 @@
-﻿namespace PhotosStorageMap.Application.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace PhotosStorageMap.Application.DTOs
 {
-    public sealed record UpdateCollectionRequest(string? Title, string? Description);
+    public sealed record UpdateCollectionRequest(        
+        string? Title,        
+        string? Description
+    );
 }

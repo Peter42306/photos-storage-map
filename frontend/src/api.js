@@ -251,3 +251,71 @@ export function getCollectionMap(collectionId){
         auth: true,
     });
 }
+
+export function updatePhotoDescription(photoId, description) {
+    return request(`/api/photos/${photoId}/description`, {
+        method: "PUT",
+        auth: true,
+        body: { description }
+    });
+}
+
+export async function downloadCollectionStandardZip(collectionId) {
+    const token = getToken();
+
+    const res = await fetch(`${BASE_URL}/api/collections/${collectionId}/download-standard-zip`,{
+        method: "GET",
+        headers:{
+            Authorization:`Bearer ${token}`
+        }
+    });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+
+    const blob = await res.blob();
+
+    let fileName = "collection_standard.zip";
+    const contentDisposition = res.headers.get("Content-Disposition");
+
+    const parsedFileName = getFileNameFromContentDisposition(contentDisposition);
+    if (parsedFileName) {
+        fileName = parsedFileName;
+    }    
+
+    const objectUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(objectUrl);
+}
+
+function getFileNameFromContentDisposition(contentDisposition) {
+    if (!contentDisposition) {
+        return null;
+    }
+
+    const utf8Match = contentDisposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+        return decodeURIComponent(utf8Match[1]);
+    }
+
+    const simpleMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
+    if (simpleMatch?.[1]) {
+        return simpleMatch[1];
+    }
+
+    const unquotedMatch = contentDisposition.match(/filename\s*=\s*([^;]+)/i);
+    if (unquotedMatch?.[1]) {
+        return unquotedMatch[1].trim();
+    }
+
+    return null;
+}

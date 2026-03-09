@@ -125,14 +125,19 @@ export default function MapPage() {
 
     return(
         <div className="container py-4">
-            <h2>Collection Map</h2>            
+            <div className="d-flex align-items-center justify-content-between">
+                <h2 className="mb-0">Collection Map</h2>            
+                <button
+                    className="btn btn-primary mb-3"
+                    onClick={() => navigate(`/Collections/${id}`)}
+                >
+                    Back to collection
+                </button>
+            </div>
+            <hr/>
+            
 
-            <button
-                className="btn btn-primary mb-3"
-                onClick={() => navigate(`/Collections/${id}`)}
-            >
-                Back to collection
-            </button>
+            
 
 
 

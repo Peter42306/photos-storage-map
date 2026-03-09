@@ -103,8 +103,9 @@ export default function CollectionsPage() {
     }, []);
 
     return(
-        <div className="container py-4" style={{maxWidth: 900}}>
-            <div className="d-flex align-items-center justify-content-between mb-3">
+        <div className="container py-4">
+        {/* <div className="container py-4" style={{maxWidth: 900}}> */}
+            <div className="d-flex align-items-center justify-content-between">
                 <h2 className="mb-0">My Collections</h2>
                 <button 
                     className="btn btn-primary" 

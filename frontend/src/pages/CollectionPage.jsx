@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeUpload, deleteCollection, deletePhoto, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection } from "../api";
+import { completeUpload, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection, updatePhotoDescription } from "../api";
 
 
 
@@ -303,7 +303,7 @@ export default function CollectionPage() {
     }    
 
     async function viewOriginalHandler(photoId, fileName) {
-        const confirmed = confirm(`View original in brower?\n${fileName ?? "photo"}`);
+        const confirmed = confirm(`View original in browser?\n${fileName ?? "photo"}`);
         if (!confirmed) {
             return;
         }
@@ -350,17 +350,89 @@ export default function CollectionPage() {
 
         const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
         window.open(url, "_blank");
+    }       
+
+    async function savePhotoDescriptionHandler(photoId, descriptionValue) {
+        try {
+            setError("");
+            const trimmed = descriptionValue?.trim() ?? "";
+
+            const res = await updatePhotoDescription(
+                photoId,
+                trimmed === "" ? null : trimmed
+            );
+
+            const newDescription = res?.description ?? (trimmed === "" ? null : trimmed);
+
+            setCollection(prev => {
+                if (!prev) {
+                    return prev;
+                }
+
+                const photos = prev.photos ?? prev.Photos ?? [];
+
+                const updatedPhotos = photos.map(p =>{
+                    const currentId = p.id ?? p.Id;
+                    if (currentId !== photoId) {
+                        return p;
+                    }
+
+                    if (prev.photos) {
+                        return { ...p, description: newDescription };
+                    }
+
+                    return { ...p, Description: newDescription };
+                });
+
+                return prev.photos 
+                    ? { ...prev, photos: updatedPhotos } 
+                    : { ...prev, Photos: updatedPhotos };
+            });
+
+        } catch (err) {
+            setError(err.message);
+        }
     }
 
-    function PhotoCard({ photo, onDeleted, onViewOriginal, onDownloadOriginal, onLocation }) {
+    async function downloadStandardZipHandler() {
+        const confirmed = confirm("Download all standard photos as ZIP archive?");
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setError("");
+            await downloadCollectionStandardZip(id);
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
+
+
+    function PhotoCard({ 
+        photo, 
+        onDeleted, 
+        onViewOriginal, 
+        onDownloadOriginal, 
+        onLocation, 
+        onSaveDescription 
+    }) {
         const [thumbUrl, setThumbUrl] = useState("");
+        const [isEditingDescriptionPhoto, setIsEditingDescriptionPhoto] = useState(false);
+        const [descriptionPhoto, setDescriptionPhoto] = useState(photo.description ?? photo.Description ?? "");
+
         const photoId = photo.id ?? photo.Id;
+        const status = photo.status ?? photo.Status;
+        const originalFileName = photo.originalFileName ?? photo.OriginalFileName;
+        const latitude = photo.latitude ?? photo.Latitude;
+        const longitude = photo.longitude ?? photo.Longitude;
 
         useEffect(() => {
             let cancelled = false;            
 
             async function loadThumb() {
-                if (photo.status !== "Ready") {
+                if (status !== "Ready") {
                     setThumbUrl("");
                     return;
                 }
@@ -382,53 +454,128 @@ export default function CollectionPage() {
             return () => {
                 cancelled = true;
             };
-        }, [photoId, photo.status]);        
+        }, [photoId, status]);        
+
+        async function handleSaveDescription() {
+            await onSaveDescription?.(photoId, descriptionPhoto);
+            setIsEditingDescriptionPhoto(false);
+        }
+        
+
+        
 
         return(
-            <div className="card shadow-sm h-100">
+            <div className="card shadow-sm h-100 position-relative">
+
+                {/* Photo */}
                 {thumbUrl ? (
                     <img
                         src={thumbUrl}
-                        alt={photo.originalFileName || "photo"}
+                        alt={originalFileName || "photo"}
                         loading='lazy'
                         style={{ width: "100%", height: 160, objectFit: "cover" }}
                     />
                 ) : (
-                    <div className="d-flex align-items-center justify-content-center" style={{ height: 160}}>
-                        <span>{photo.status ?? photo.Status}</span>
+                    <div 
+                        className="d-flex align-items-center justify-content-center" 
+                        style={{ height: 160}}
+                    >
+                        <span>{status}</span>
                     </div>
                 )}
 
+                {/* Photo original name */}
                 <div className="card-body p-2">
                     <div className="small text-truncate">
-                        {photo.originalFileName || "(no name)"}
+                        {originalFileName || "(no name)"}
+                    </div>                
+
+                    {/* Photo description */}
+                    {!isEditingDescriptionPhoto 
+                        ? (descriptionPhoto) 
+                            ? (<div className='small text-muted text-truncate'>{descriptionPhoto}</div>) 
+                            : null
+                        : (
+                            <div className='mt-2'>
+                                <TextareaAutosize
+                                    className='form-control form-control-sm'                                    
+                                    minRows={2}
+                                    value={descriptionPhoto}
+                                    style={{overflow: "hidden"}}
+                                    onChange={(e) => setDescriptionPhoto(e.target.value)}
+                                    placeholder='Add photo description'
+                                />
+                                <div className='d-flex gap-2 mt-2'>
+                                    <button
+                                        className='btn btn-outline-secondary btn-sm'
+                                        onClick={handleSaveDescription}
+                                        title='Save description'
+                                    >
+                                        {/* <i className="bi bi-check me-1"></i> */}
+                                        Save
+                                    </button>
+                                    <button
+                                        className='btn btn-outline-secondary btn-sm'
+                                        onClick={() => {
+                                            setDescriptionPhoto(photo.description ?? photo.Description ?? "");
+                                            setIsEditingDescriptionPhoto(false);
+                                        }}
+                                        title='Cancel description'
+                                    >
+                                        {/* <i className="bi bi-x me-1"></i> */}
+                                        Cancel
+                                    </button>
+                                </div>                                
+                            </div>
+                        )
+                    }
+
+                    <hr/>
+                    <div className="d-flex flex-wrap gap-1 mt-2">
+                        <button
+                            // className='btn btn-outline-danger btn-sm'
+                            className='btn-close position-absolute top-0 end-0 m-2'
+                            onClick={() => onDeleted?.(photoId, photo.originalFileName)}
+                            title='Delete photo'
+                        >                            
+                        </button>
+
+                        <button
+                            className='btn btn-outline-secondary btn-sm'
+                            onClick={() => onViewOriginal?.(photoId, photo.originalFileName)}
+                            title='View original'
+                        >
+                            <i className='bi bi-eye'></i>
+                        </button>
+
+                        <button
+                            className='btn btn-outline-secondary btn-sm'
+                            onClick={() => onDownloadOriginal?.(photoId, photo.originalFileName)}
+                            title='Download original'
+                        >
+                            <i className='bi bi-download'></i>
+                        </button>
+
+                        {latitude != null && longitude != null && (
+                            <button
+                                className='btn btn-outline-secondary btn-sm'
+                                onClick={() => onLocation?.(photo)}
+                                title='Show location'
+                            >
+                                <i className='bi bi-geo-alt'></i>
+                            </button>
+                        )}                        
+
+                        <button
+                            className='btn btn-outline-secondary btn-sm'
+                            onClick={() => setIsEditingDescriptionPhoto((v) => !v)}
+                            title='Edit description'
+
+                        >
+                            <i className='bi bi-pencil'></i>
+                        </button>
                     </div>
-                </div>
-                <div>
-                    <button
-                        className='btn btn-danger'
-                        onClick={async () => onDeleted?.(photoId, photo.originalFileName)}
-                    >
-                        Delete
-                    </button>
-                    <button
-                        className='btn btn-primary'
-                        onClick={async () => onViewOriginal?.(photoId, photo.originalFileName)}
-                    >
-                        View original
-                    </button>
-                    <button
-                        className='btn btn-primary'
-                        onClick={async () => onDownloadOriginal?.(photoId, photo.originalFileName)}
-                    >
-                        Download original
-                    </button>
-                    <button
-                        className='btn btn-primary'
-                        onClick={() => onLocation?.(photo)}
-                    >
-                        Location
-                    </button>
+
                 </div>
             </div>
         );
@@ -441,23 +588,33 @@ export default function CollectionPage() {
     }
 
     return(
-        <div className="container py-4" style={{ maxWidth: 900 }}>
-            <div className="card shadow-sm">
-                <div className="card-body">
-                    <h2>Collection</h2>                    
+        <div className="container py-4">
+        {/* <div className="container py-4" style={{ maxWidth: 900 }}> */}
+            {/* <div className="card shadow-sm"> */}
+                {/* <div className="card-body"> */}
+                    <div className="d-flex align-items-center justify-content-between">
+                        <h2 className='mb-0'>{collection?.title || "-"}</h2>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => navigate("/collections")}
+                        >
+                            Back to My Collections
+                        </button>
+                    </div>
+                    
                     <hr/>
 
                      {error ? <div className="alert alert-danger">{error}</div> : null}
                     {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
-                    <h5>{collection?.title}</h5>
+                    {/* <h5>{collection?.title}</h5> */}
                     <p>{collection?.description || "-"}</p>
                     {/* <p>Collection Id: {collection?.id}</p> */}
 
                     <div className='mb-2'>
                         {!isEditing ? (
                             <button
-                                className='btn btn-primary'
+                                className='btn btn-outline-secondary'
                                 onClick={() => setIsEditing(true)}
                             >Edit Collection Title & Description</button>
                         ) : (
@@ -489,7 +646,7 @@ export default function CollectionPage() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label">Description</label>
+                                    <label className="form-label">Collection Description</label>
                                     <TextareaAutosize
                                         className="form-control"
                                         minRows={2}
@@ -520,7 +677,10 @@ export default function CollectionPage() {
                         <button className='btn btn-primary'>
                             Download originals
                         </button>
-                        <button className='btn btn-primary'>
+                        <button
+                            className='btn btn-primary'
+                            onClick={downloadStandardZipHandler}
+                        >
                             Download standard
                         </button>
                         <button className='btn btn-primary'>
@@ -558,6 +718,7 @@ export default function CollectionPage() {
                                         onViewOriginal={viewOriginalHandler}
                                         onDownloadOriginal={downloadOriginalHandler}
                                         onLocation={showLocationHandler}
+                                        onSaveDescription={savePhotoDescriptionHandler}
                                     />
                                 </div>
                             ))}
@@ -565,20 +726,10 @@ export default function CollectionPage() {
                     )}
 
                     
-                    
-                    
-
-
-                    
                     <hr/>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => navigate("/collections")}
-                    >
-                        Back to My Collections
-                    </button>
-                </div>                
-            </div>
+                    
+                {/* </div>                 */}
+            {/* </div> */}
         </div>        
     );
 }
