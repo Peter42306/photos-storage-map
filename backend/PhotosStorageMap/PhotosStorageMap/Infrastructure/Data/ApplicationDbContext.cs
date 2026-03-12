@@ -29,10 +29,10 @@ namespace PhotosStorageMap.Infrastructure.Data
                     .IsRequired();
                 
                 entity.Property(e => e.Title)
-                    .HasMaxLength(FieldLimits.UploadCollection.Title);
+                    .HasMaxLength(Limits.UploadCollection.Title);
                 
                 entity.Property(e => e.Description)
-                    .HasMaxLength(FieldLimits.UploadCollection.Description);
+                    .HasMaxLength(Limits.UploadCollection.Description);
 
                 // 1 : N, UploadCollection <-> PhotoItem
                 entity.HasMany(e => e.Photos)
@@ -52,22 +52,22 @@ namespace PhotosStorageMap.Infrastructure.Data
 
                 entity.Property(e => e.OriginalFileName)
                     .IsRequired()
-                    .HasMaxLength(FieldLimits.PhotoItem.OriginalFileName);
+                    .HasMaxLength(Limits.PhotoItem.OriginalFileName);
 
                 entity.Property(e => e.Description)
-                    .HasMaxLength(FieldLimits.PhotoItem.Description);
+                    .HasMaxLength(Limits.PhotoItem.Description);
 
                 entity.Property(e => e.Error)
-                    .HasMaxLength(FieldLimits.PhotoItem.Error);
+                    .HasMaxLength(Limits.PhotoItem.Error);
 
                 entity.Property(e => e.OriginalKey)
-                    .HasMaxLength(FieldLimits.PhotoItem.StorageKey);
+                    .HasMaxLength(Limits.PhotoItem.StorageKey);
 
                 entity.Property(e => e.StandardKey)                    
-                    .HasMaxLength(FieldLimits.PhotoItem.StorageKey);
+                    .HasMaxLength(Limits.PhotoItem.StorageKey);
 
                 entity.Property(e => e.ThumbKey)                    
-                    .HasMaxLength(FieldLimits.PhotoItem.StorageKey);
+                    .HasMaxLength(Limits.PhotoItem.StorageKey);
                 
                 entity.HasIndex(e => e.UploadCollectionId);
                 entity.HasIndex(e => new { e.UploadCollectionId, e.Status });
@@ -81,7 +81,7 @@ namespace PhotosStorageMap.Infrastructure.Data
 
                 entity.Property(e => e.Token)
                     .IsRequired()
-                    .HasMaxLength(FieldLimits.ShareLink.Token);
+                    .HasMaxLength(Limits.ShareLink.Token);
                 
                 entity.HasOne(e => e.UploadCollection)
                     .WithOne(c => c.ShareLink)

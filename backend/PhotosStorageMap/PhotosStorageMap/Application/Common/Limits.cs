@@ -1,11 +1,13 @@
 ﻿namespace PhotosStorageMap.Application.Common
 {
-    public static class FieldLimits
+    public static class Limits
     {
         public static class UploadCollection
         {
             public const int Title = 200;
             public const int Description = 4000;
+            public const int MaxPhotosPerCollectionPro = 1500; // 1500
+            public const int MaxPhotosPerCollectionFree = 500; // 500
         }
 
         public static class PhotoItem
@@ -19,6 +21,6 @@
         public static class ShareLink
         {
             public const int Token = 128;
-        }
+        }        
     }
 }

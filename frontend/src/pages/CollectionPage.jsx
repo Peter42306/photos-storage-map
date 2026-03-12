@@ -1,5 +1,5 @@
 import TextareaAutosize from 'react-textarea-autosize';
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { completeUpload, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection, updatePhotoDescription } from "../api";
 
@@ -114,8 +114,36 @@ export default function CollectionPage() {
 
     async function onFilesSelected(e) {
         const UPLOAD_CONCURRENCY = 4;
+        const MAX_UPLOAD_BATCH = 500; // 500 
+        const MAX_COLLECTION_PHOTOS = 1500; // 1500
+
+        const currentTotalPhotosInCollection = collection.totalPhotos ?? 0;
+        const possibleToLoadToCollection = MAX_COLLECTION_PHOTOS - currentTotalPhotosInCollection;        
+
         const files = Array.from(e.target.files || []);
+
+
         if (files.length === 0) return;
+
+        if (possibleToLoadToCollection <= 0) {
+            setError(`Collection limit reached. Maximum allowed ${MAX_COLLECTION_PHOTOS} photos per collection.`)
+            e.target.value = "";
+            return;
+        }
+
+        if (files.length > MAX_UPLOAD_BATCH) {
+            setError(`You can upload up to ${MAX_UPLOAD_BATCH} photos at once.`)
+            e.target.value = "";
+            return;
+        }
+
+        if (files.length > possibleToLoadToCollection) {
+            setError(`You selected ${files.length} photos, but only ${possibleToLoadToCollection} photos more can be added to this collecftion.`)
+            e.target.value = "";
+            return;
+        }
+
+
 
         setError("");
         setUploading(true);        
@@ -410,7 +438,162 @@ export default function CollectionPage() {
 
 
 
-    function PhotoCard({ 
+    
+    
+    const photos = collection?.photos ?? collection?.Photos ?? [];
+
+    if (loading) {
+        return <div className='container py-4'>Loading...</div>
+    }
+
+    return(
+        <div className="container py-4">
+        {/* <div className="container py-4" style={{ maxWidth: 900 }}> */}
+            {/* <div className="card shadow-sm"> */}
+                {/* <div className="card-body"> */}
+                    <div className="d-flex align-items-center justify-content-between">
+                        <h2 className='mb-0'>{collection?.title || "-"}</h2>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => navigate("/collections")}
+                        >
+                            Back to My Collections
+                        </button>
+                    </div>
+                    
+                    <hr/>
+
+                     {error ? <div className="alert alert-danger">{error}</div> : null}
+                    {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
+
+                    {/* <h5>{collection?.title}</h5> */}
+                    <p>{collection?.description || "-"}</p>
+                    {/* <p>Collection Id: {collection?.id}</p> */}
+
+                    <div className='mb-2'>
+                        {!isEditing ? (
+                            <button
+                                className='btn btn-outline-secondary'
+                                onClick={() => setIsEditing(true)}
+                            >Edit Collection Title & Description</button>
+                        ) : (
+                            <>
+
+                            <div className='d-flex gap-2'>
+                                <button
+                                    className='btn btn-primary'
+                                    onClick={onSave}
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    className='btn btn-secondary'
+                                    onClick={onCancel}
+                                >
+                                    Cancel
+                                </button>                                
+                            </div>
+
+                            <form className='mt-3'>
+                                <div className="mb-3">
+                                    <label className="form-label">Collection Title</label>
+                                    <input
+                                        className="form-control"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Collection Description</label>
+                                    <TextareaAutosize
+                                        className="form-control"
+                                        minRows={2}
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        disabled={!isEditing}
+                                    />
+                                    
+                                </div>                        
+                            </form>
+
+                            
+
+                            </>
+                            
+                            
+                        )}
+                    </div>  
+
+                    <hr/>
+                    <div className='d-flex gap-2'>
+                        <button
+                            className='btn btn-primary'
+                            onClick={() => navigate(`/collections/${collection.id}/map`)}
+                        >
+                            Map view
+                        </button>
+                        <button className='btn btn-primary'>
+                            Download originals
+                        </button>
+                        <button
+                            className='btn btn-primary'
+                            onClick={downloadStandardZipHandler}
+                        >
+                            Download standard
+                        </button>
+                        <button className='btn btn-primary'>
+                            Share link
+                        </button>
+                        
+                    </div>
+                    <hr/>
+
+                    {/* <hr/>                             */}
+                            {uploadStatus ? <div className='alert alert-info py-2'>{uploadStatus}</div> : null}
+
+                            <label className='form-label'>Upload photos</label>
+                            <input
+                                type='file'
+                                className='form-control'
+                                accept='image/*'
+                                multiple
+                                disabled={uploading || isEditing}
+                                onChange={onFilesSelected}
+                            />
+                            <hr/>                  
+
+                    {uploading ? (
+                        <div className='alert alert-info'>Uploading/Processing... please wait</div>
+                    ) : photos.length === 0 ? (
+                        <div className='alert alert-info'>No photos uploaded yet</div>
+                    ) : (
+                        <div className='row'>
+                            {photos.map((p) => (
+                                <div key={p.id ?? p.Id} className='col-md-3 mb-3'>
+                                    <PhotoCard 
+                                        photo={p} 
+                                        onDeleted={deletePhotoHandler} 
+                                        onViewOriginal={viewOriginalHandler}
+                                        onDownloadOriginal={downloadOriginalHandler}
+                                        onLocation={showLocationHandler}
+                                        onSaveDescription={savePhotoDescriptionHandler}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    
+                    <hr/>
+                    
+                {/* </div>                 */}
+            {/* </div> */}
+        </div>        
+    );
+}
+
+const PhotoCard = React.memo(function PhotoCard({ 
         photo, 
         onDeleted, 
         onViewOriginal, 
@@ -423,6 +606,10 @@ export default function CollectionPage() {
         const [descriptionPhoto, setDescriptionPhoto] = useState(photo.description ?? photo.Description ?? "");
 
         const photoId = photo.id ?? photo.Id;
+        console.log("PhotoCard render:", photoId); 
+
+
+
         const status = photo.status ?? photo.Status;
         const originalFileName = photo.originalFileName ?? photo.OriginalFileName;
         const latitude = photo.latitude ?? photo.Latitude;
@@ -579,157 +766,4 @@ export default function CollectionPage() {
                 </div>
             </div>
         );
-    }
-    
-    const photos = collection?.photos ?? collection?.Photos ?? [];
-
-    if (loading) {
-        return <div className='container py-4'>Loading...</div>
-    }
-
-    return(
-        <div className="container py-4">
-        {/* <div className="container py-4" style={{ maxWidth: 900 }}> */}
-            {/* <div className="card shadow-sm"> */}
-                {/* <div className="card-body"> */}
-                    <div className="d-flex align-items-center justify-content-between">
-                        <h2 className='mb-0'>{collection?.title || "-"}</h2>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => navigate("/collections")}
-                        >
-                            Back to My Collections
-                        </button>
-                    </div>
-                    
-                    <hr/>
-
-                     {error ? <div className="alert alert-danger">{error}</div> : null}
-                    {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
-
-                    {/* <h5>{collection?.title}</h5> */}
-                    <p>{collection?.description || "-"}</p>
-                    {/* <p>Collection Id: {collection?.id}</p> */}
-
-                    <div className='mb-2'>
-                        {!isEditing ? (
-                            <button
-                                className='btn btn-outline-secondary'
-                                onClick={() => setIsEditing(true)}
-                            >Edit Collection Title & Description</button>
-                        ) : (
-                            <>
-
-                            <div className='d-flex gap-2'>
-                                <button
-                                    className='btn btn-primary'
-                                    onClick={onSave}
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    className='btn btn-secondary'
-                                    onClick={onCancel}
-                                >
-                                    Cancel
-                                </button>                                
-                            </div>
-
-                            <form className='mt-3'>
-                                <div className="mb-3">
-                                    <label className="form-label">Collection Title</label>
-                                    <input
-                                        className="form-control"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        disabled={!isEditing}
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Collection Description</label>
-                                    <TextareaAutosize
-                                        className="form-control"
-                                        minRows={2}
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        disabled={!isEditing}
-                                    />
-                                    
-                                </div>                        
-                            </form>
-
-                            
-
-                            </>
-                            
-                            
-                        )}
-                    </div>  
-
-                    <hr/>
-                    <div className='d-flex gap-2'>
-                        <button
-                            className='btn btn-primary'
-                            onClick={() => navigate(`/collections/${collection.id}/map`)}
-                        >
-                            Map view
-                        </button>
-                        <button className='btn btn-primary'>
-                            Download originals
-                        </button>
-                        <button
-                            className='btn btn-primary'
-                            onClick={downloadStandardZipHandler}
-                        >
-                            Download standard
-                        </button>
-                        <button className='btn btn-primary'>
-                            Share link
-                        </button>
-                        
-                    </div>
-                    <hr/>
-
-                    {/* <hr/>                             */}
-                            {uploadStatus ? <div className='alert alert-info py-2'>{uploadStatus}</div> : null}
-
-                            <label className='form-label'>Upload photos</label>
-                            <input
-                                type='file'
-                                className='form-control'
-                                accept='image/*'
-                                multiple
-                                disabled={uploading || isEditing}
-                                onChange={onFilesSelected}
-                            />
-                            <hr/>                  
-
-                    {uploading ? (
-                        <div className='alert alert-info'>Uploading/Processing... please wait</div>
-                    ) : photos.length === 0 ? (
-                        <div className='alert alert-info'>No photos uploaded yet</div>
-                    ) : (
-                        <div className='row'>
-                            {photos.map((p) => (
-                                <div key={p.id ?? p.Id} className='col-md-3 mb-3'>
-                                    <PhotoCard 
-                                        photo={p} 
-                                        onDeleted={deletePhotoHandler} 
-                                        onViewOriginal={viewOriginalHandler}
-                                        onDownloadOriginal={downloadOriginalHandler}
-                                        onLocation={showLocationHandler}
-                                        onSaveDescription={savePhotoDescriptionHandler}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    
-                    <hr/>
-                    
-                {/* </div>                 */}
-            {/* </div> */}
-        </div>        
-    );
-}
+    });

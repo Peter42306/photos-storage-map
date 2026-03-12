@@ -64,6 +64,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collection = await _db.UploadCollections
+                .AsNoTracking()
                 .Where(c => c.Id == id && c.OwnerUserId == userId)
                 .Select(c => new
                 {
@@ -74,7 +75,7 @@ namespace PhotosStorageMap.Api.Controllers
                     c.TotalPhotos,
                     c.TotalBytes,
                     Photos = c.Photos
-                        .OrderBy(p => p.CreatedAtUtc)
+                        .OrderBy(p => p.TakenAt ?? p.CreatedAtUtc)
                         .Select(p => new
                         {
                             p.Id,

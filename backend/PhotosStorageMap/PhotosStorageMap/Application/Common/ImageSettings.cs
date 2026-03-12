@@ -10,8 +10,8 @@
 
         public static class Quality
         {
-            public const int Standard = 85;
-            public const int Thumbnail = 75;
+            public const int Standard = 80;
+            public const int Thumbnail = 60;
         }        
     }
 }

@@ -5,6 +5,7 @@ using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Data;
 using System.IO.Compression;
 using PhotosStorageMap.Application.Common;
+using System.Diagnostics;
 
 namespace PhotosStorageMap.Infrastructure.Services
 {
@@ -41,6 +42,8 @@ namespace PhotosStorageMap.Infrastructure.Services
             ArchiveType type,
             CancellationToken ct)
         {
+            var sw = Stopwatch.StartNew();
+
             var collection = await _db.UploadCollections
                 .FirstOrDefaultAsync(c => c.Id == collectionId);
 
@@ -58,6 +61,11 @@ namespace PhotosStorageMap.Infrastructure.Services
             {
                 throw new InvalidOperationException("No photos found in collection.");
             }
+
+            _logger.LogInformation(
+                "ArchiveCollectionService: Archive build started. CollectionId={Collectionid}, ArchiveType={Type}",
+                collectionId,
+                type);
 
             var tempZipPath = Path.Combine(
                 Path.GetTempPath(),
@@ -104,9 +112,17 @@ namespace PhotosStorageMap.Infrastructure.Services
 
                         filesCount++;
 
-                        if (sourceStream.CanSeek)
+                        if (type == ArchiveType.Standard)
                         {
-                            totalBytes += sourceStream.Length;
+                            totalBytes += photo.StandardSizeBytes ?? 0;
+                        }
+                        else if (type == ArchiveType.Original)
+                        {
+                            totalBytes += photo.OriginalSizeBytes ?? 0;
+                        }
+                        else
+                        {
+                            _logger.LogWarning("ZIP ARCHIEVE: Size of PhotoId={PhotoId} was not caslculated", photo.Id);
                         }
                     }
                     catch (Exception ex)
@@ -121,6 +137,11 @@ namespace PhotosStorageMap.Infrastructure.Services
 
                         continue;
                     }
+
+                    //_logger.LogInformation("ArchiveCollectionService: archieved PhotoId={PhotoId}, TotalFiles={TotalFiles}, TotalBytes={TotalBytes}",
+                    //    photo.Id,
+                    //    filesCount,
+                    //    totalBytes);
                 }
             };
 
@@ -152,6 +173,15 @@ namespace PhotosStorageMap.Infrastructure.Services
 
             var suffix = type == ArchiveType.Standard ? ContentType.Standard : ContentType.Originals;
             var zipFileName = $"{safeCollectionTitle}_{suffix}.zip";
+
+            sw.Stop();
+            _logger.LogInformation(
+                "ArchiveCollectionService: Archive build completed. CollectionId={Collectionid}, ArchiveType={Type}, TotalFiles={TotalFiles}, TotalBytes={TotalBytes}, Duration={Duration}",
+                collectionId,
+                type,
+                filesCount,
+                totalBytes,
+                sw.ElapsedMilliseconds);
 
             return new ArchiveBuildResult(
                 resultStream,

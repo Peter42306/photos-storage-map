@@ -65,7 +65,18 @@ namespace PhotosStorageMap.Api.Controllers
             if (collection is null) return NotFound();
             if (collection.OwnerUserId != userId) return Forbid();
 
-            var safeName = string.IsNullOrWhiteSpace(fileName) ? $"photo_{DateTime.UtcNow:yyyyMMdd_HHmmss}.jpg" : fileName.Trim();
+            var currentPhotoCount = await _db.PhotoItems.CountAsync(p => p.UploadCollectionId == collectionId, ct);
+            if (currentPhotoCount >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
+            {
+                return BadRequest(new
+                {
+                    message = $"Collection limit reached. Maximum allowed {Limits.UploadCollection.MaxPhotosPerCollectionPro} photos per collection. From controller"
+                });
+            }
+            
+            var safeName = string.IsNullOrWhiteSpace(fileName) 
+                ? $"photo_{DateTime.UtcNow:yyyyMMdd_HHmmss}.jpg"
+                : fileName.Trim();
 
             var photoId = Guid.NewGuid();
             var storageKey = StorageKeys.Original(userId, collectionId, photoId);
@@ -78,7 +89,7 @@ namespace PhotosStorageMap.Api.Controllers
                 OriginalFileName = safeName,
                 OriginalKey = storageKey,
                 OriginalSizeBytes = (fileSize.HasValue && fileSize.Value > 0) ? fileSize.Value : null,
-                Status = PhotoStatus.Uploaded,
+                Status = PhotoStatus.Uploading,
                 CreatedAtUtc = DateTime.UtcNow,
             };
 
