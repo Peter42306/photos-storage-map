@@ -163,17 +163,18 @@ export default function CollectionPage() {
                 await putToPresignedUrl(uploadUrl, file);
 
                 done++;
-                setUploadStatus(`Uploading original: ${done}/${total1} (last: ${file.name}/${file.size} MB)`);
+                // setUploadStatus(`Uploading original: ${done}/${total1} (last: ${file.name}/${file.size} MB)`);
+                setUploadStatus(`Uploading originals: ${done} of ${total1} photos`);
 
                 return { photoId, fileName: file.name };
             });
 
             // 2) processing files one by one
-            setUploadStatus(`Starting processing: 0 / ${uploaded.length}`);
+            setUploadStatus(`Starting processing: 0 of ${uploaded.length} photos`);
 
             for (let i = 0; i < uploaded.length; i++) {
                 await completeUpload(uploaded[i].photoId);
-                setUploadStatus(`Starting processing: ${i + 1} / ${uploaded.length}`);                
+                setUploadStatus(`Starting processing: ${i + 1} / ${uploaded.length} photos`);                
             }
 
             // 3) Poll statuses until all done
@@ -198,7 +199,7 @@ export default function CollectionPage() {
                 const ready = statuses.filter((s) => (s?.status || "").toLowerCase() === "ready").length;
                 const failed = statuses.filter((s) => (s?.status || "").toLowerCase() === "failed").length;
 
-                setUploadStatus(`Processing photos: Ready ${ready}/${total2}, Failed ${failed}/${total2}`);
+                setUploadStatus(`Background processing: Ready ${ready} of ${total2} photos, Failed ${failed} photos`);
 
                 if (ready + failed >= total2) {
                     break;
@@ -550,7 +551,7 @@ export default function CollectionPage() {
                     <hr/>
 
                     {/* <hr/>                             */}
-                            {uploadStatus ? <div className='alert alert-info py-2'>{uploadStatus}</div> : null}
+                            {uploadStatus ? <div className='alert alert-info'>{uploadStatus}</div> : null}
 
                             <label className='form-label'>Upload photos</label>
                             <input
@@ -601,47 +602,47 @@ const PhotoCard = React.memo(function PhotoCard({
         onLocation, 
         onSaveDescription 
     }) {
-        const [thumbUrl, setThumbUrl] = useState("");
+        // const [thumbUrl, setThumbUrl] = useState("");
+        
+        const thumbUrl = photo.thumbUrl ?? photo.ThumbUrl;
         const [isEditingDescriptionPhoto, setIsEditingDescriptionPhoto] = useState(false);
         const [descriptionPhoto, setDescriptionPhoto] = useState(photo.description ?? photo.Description ?? "");
 
         const photoId = photo.id ?? photo.Id;
         console.log("PhotoCard render:", photoId); 
 
-
-
         const status = photo.status ?? photo.Status;
         const originalFileName = photo.originalFileName ?? photo.OriginalFileName;
         const latitude = photo.latitude ?? photo.Latitude;
         const longitude = photo.longitude ?? photo.Longitude;
 
-        useEffect(() => {
-            let cancelled = false;            
+        // useEffect(() => {
+        //     let cancelled = false;            
 
-            async function loadThumb() {
-                if (status !== "Ready") {
-                    setThumbUrl("");
-                    return;
-                }
+        //     async function loadThumb() {
+        //         if (status !== "Ready") {
+        //             setThumbUrl("");
+        //             return;
+        //         }
 
-                try {
-                    const res = await getThumbUrl(photoId);
-                    const url = typeof res === "string" ? res : res?.url ?? res?.thumbUrl;
+        //         try {
+        //             const res = await getThumbUrl(photoId);
+        //             const url = typeof res === "string" ? res : res?.url ?? res?.thumbUrl;
 
-                    if (!cancelled) {
-                        setThumbUrl(url || "");
-                    }
-                } catch (err) {
-                    console.error("thumb error", err);
-                }
-            }
+        //             if (!cancelled) {
+        //                 setThumbUrl(url || "");
+        //             }
+        //         } catch (err) {
+        //             console.error("thumb error", err);
+        //         }
+        //     }
 
-            loadThumb();
+        //     loadThumb();
 
-            return () => {
-                cancelled = true;
-            };
-        }, [photoId, status]);        
+        //     return () => {
+        //         cancelled = true;
+        //     };
+        // }, [photoId, status]);        
 
         async function handleSaveDescription() {
             await onSaveDescription?.(photoId, descriptionPhoto);

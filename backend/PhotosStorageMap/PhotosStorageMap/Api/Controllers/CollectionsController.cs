@@ -6,6 +6,7 @@ using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Domain.Entities;
 using PhotosStorageMap.Infrastructure.Data;
 using System.Security.Claims;
+using PhotosStorageMap.Domain.Enums;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -65,7 +66,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections
                 .AsNoTracking()
-                .Where(c => c.Id == id && c.OwnerUserId == userId)
+                .Where(c => c.Id == id && c.OwnerUserId == userId) // TODO add filter by status.ready
                 .Select(c => new
                 {
                     c.Id,
@@ -88,6 +89,7 @@ namespace PhotosStorageMap.Api.Controllers
                             p.TotalSizeBytes,
                             p.ThumbSizeBytes,
                             p.StandardSizeBytes,
+                            p.OriginalSizeBytes,
                             p.CreatedAtUtc,
                             p.TakenAt,
                             p.Latitude,
@@ -100,8 +102,48 @@ namespace PhotosStorageMap.Api.Controllers
                 .FirstOrDefaultAsync(ct);
 
             if (collection is null) return NotFound();
+
+            var photos = new List<object>();
+            foreach ( var p in collection.Photos)
+            {
+                string? thumbUrl = null;
+
+                if (!string.IsNullOrWhiteSpace(p.ThumbKey))
+                {
+                    thumbUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.ThumbKey, TimeSpan.FromHours(2));
+                }                
+
+                photos.Add(new
+                {
+                    p.Id,
+                    p.OriginalFileName,
+                    p.Description,                    
+                    p.Width,
+                    p.Height,
+                    p.TotalSizeBytes,
+                    p.ThumbSizeBytes,
+                    p.StandardSizeBytes,
+                    p.OriginalSizeBytes,
+                    p.CreatedAtUtc,
+                    p.TakenAt,
+                    p.Latitude,
+                    p.Longitude,
+                    p.Status,
+                    p.Error,
+                    ThumbUrl = thumbUrl
+                });
+            }
             
-            return Ok(collection);
+            return Ok(new
+            {
+                collection.Id,
+                collection.Title,
+                collection.Description,
+                collection.CreatedAtUtc,
+                collection.TotalPhotos,
+                collection.TotalBytes,
+                Photos = photos
+            });
         }
 
         [HttpPut("{id:guid}")]
