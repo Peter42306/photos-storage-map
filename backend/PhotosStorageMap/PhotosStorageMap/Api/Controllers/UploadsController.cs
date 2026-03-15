@@ -18,17 +18,20 @@ namespace PhotosStorageMap.Api.Controllers
     {
         private readonly IFileStorage _fileStorage;
         private readonly IPhotoProcessingQueue _queue;
+        private readonly ICollectionStatsService _statsService;
         private readonly ApplicationDbContext _db;
         private readonly ILogger<UploadsController> _logger;
 
         public UploadsController(
             IFileStorage fileStorage,
             IPhotoProcessingQueue queue,
+            ICollectionStatsService statsService,
             ApplicationDbContext db,
             ILogger<UploadsController> logger)
         {
             _fileStorage = fileStorage;
             _queue = queue;
+            _statsService = statsService;
             _db = db;
             _logger = logger;
         }
@@ -65,14 +68,23 @@ namespace PhotosStorageMap.Api.Controllers
             if (collection is null) return NotFound();
             if (collection.OwnerUserId != userId) return Forbid();
 
-            var currentPhotoCount = await _db.PhotoItems.CountAsync(p => p.UploadCollectionId == collectionId, ct);
-            if (currentPhotoCount >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
+            // 1) altual totals from DB
+            var actualStats = await _statsService.SyncStoredStatsAsync(collectionId, ct);
+
+            // 2) validate limits
+            if (actualStats.TotalPhotos >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
             {
-                return BadRequest(new
-                {
-                    message = $"Collection limit reached. Maximum allowed {Limits.UploadCollection.MaxPhotosPerCollectionPro} photos per collection. From controller"
-                });
+                return BadRequest($"Collection limit reached. Maximum collection photos: {Limits.UploadCollection.MaxPhotosPerCollectionPro}.");
             }
+
+            //var currentPhotoCount = await _db.PhotoItems.CountAsync(p => p.UploadCollectionId == collectionId, ct);
+            //if (currentPhotoCount >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
+            //{
+            //    return BadRequest(new
+            //    {
+            //        message = $"Collection limit reached. Maximum allowed {Limits.UploadCollection.MaxPhotosPerCollectionPro} photos per collection. From controller"
+            //    });
+            //}
             
             var safeName = string.IsNullOrWhiteSpace(fileName) 
                 ? $"photo_{DateTime.UtcNow:yyyyMMdd_HHmmss}.jpg"

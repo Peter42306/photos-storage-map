@@ -59,6 +59,7 @@ builder.Services.AddSingleton<IPhotoProcessingQueue, InMemoryPhotoProcessingQueu
 builder.Services.AddScoped<IImageProcessor, ImageSharpImageProcessor>();
 builder.Services.AddHostedService<PhotoProcessingWorker>();
 builder.Services.AddScoped<IArchiveCollectionService, ArchiveCollectionService>();
+builder.Services.AddScoped<ICollectionStatsService, CollectionStatsService>();
 
 var app = builder.Build();
 

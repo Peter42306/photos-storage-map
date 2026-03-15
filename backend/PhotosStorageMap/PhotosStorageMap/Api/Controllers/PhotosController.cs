@@ -88,48 +88,77 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId, ct);
+                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
 
             if (photo is null) return NotFound();
 
             if(photo.UploadCollection?.OwnerUserId != userId) return NotFound();
 
-            try
+            var keysToDelete = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
             {
-                if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
-                {
-                    await _storage.DeleteAsync(photo.OriginalKey, ct);
-                }
-
-                if (!string.IsNullOrWhiteSpace(photo.StandardKey))
-                {
-                    await _storage.DeleteAsync(photo.StandardKey, ct);
-                }
-
-                if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
-                {
-                    await _storage.DeleteAsync(photo.ThumbKey, ct);
-                }
+                keysToDelete.Add(photo.OriginalKey);
             }
-            catch (Exception ex)
+            if (!string.IsNullOrWhiteSpace(photo.StandardKey))
             {
-                _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete storage objects for photoId={PhotoId}", photoId);
+                keysToDelete.Add(photo.StandardKey);
+            }
+            if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
+            {
+                keysToDelete.Add(photo.ThumbKey);
             }
 
-            if (photo.UploadCollection is not null)
+            foreach (var key in keysToDelete)
             {
-                if (photo.TotalSizeBytes.HasValue)
+                try
                 {
-                    photo.UploadCollection.TotalBytes = Math.Max(0, photo.UploadCollection.TotalBytes - photo.TotalSizeBytes.Value);
+                    await _storage.DeleteAsync(key, ct);
+                    _logger.LogInformation("DELETE PHOTO: Delete from S3 PhotoId={PhotoId}, StorageKey={StorageKey}", photoId, key);
                 }
-
-                photo.UploadCollection.TotalPhotos = Math.Max(0, photo.UploadCollection.TotalPhotos - 1);
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete from S3 PhotoId={PhotoId}, Key={StorageKey}", photoId, key);                    
+                }
             }
+
+
+            //try
+            //{
+            //    if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
+            //    {
+            //        await _storage.DeleteAsync(photo.OriginalKey, ct);
+            //    }
+
+            //    if (!string.IsNullOrWhiteSpace(photo.StandardKey))
+            //    {
+            //        await _storage.DeleteAsync(photo.StandardKey, ct);
+            //    }
+
+            //    if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
+            //    {
+            //        await _storage.DeleteAsync(photo.ThumbKey, ct);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete storage objects for photoId={PhotoId}", photoId);
+            //}
+
+
+
+            if (photo.TotalSizeBytes.HasValue)
+            {
+                photo.UploadCollection.TotalBytes = Math.Max(0, photo.UploadCollection.TotalBytes - photo.TotalSizeBytes.Value);
+            }
+            photo.UploadCollection.TotalPhotos = Math.Max(0, photo.UploadCollection.TotalPhotos - 1);            
+
+
 
             _db.PhotoItems.Remove(photo);
             await _db.SaveChangesAsync(ct);
 
-            _logger.LogInformation("DELETE PHOTO: Successfully deleted photo, photoId={PhotoId}", photoId);
+            _logger.LogInformation("DELETE PHOTO: Successfully from S3 deleted photo, photoId={PhotoId}", photoId);
 
             return NoContent();
         }

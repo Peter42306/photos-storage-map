@@ -27,7 +27,7 @@ namespace PhotosStorageMap.Api.Services
 
 
             var expiresMinutesRaw = jwt["ExpiresMinutes"];
-            var expiresMinutes = 240;
+            var expiresMinutes = 720; // TODO: check
             
             if (!string.IsNullOrWhiteSpace(expiresMinutesRaw) && int.TryParse(expiresMinutesRaw, out var parsed))
             {

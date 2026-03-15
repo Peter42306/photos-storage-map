@@ -119,18 +119,9 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     result.ThumbJpeg.Position = 0;
                     thumbnailBytes = result.ThumbJpeg.Length;
                 }                
+
                 var wasCounted = photo.TotalSizeBytes is not null;
-                var totalBytes = originalBytes + standardBytes + thumbnailBytes;
-
-                if (!wasCounted)
-                {
-                    photo.UploadCollection.TotalPhotos += 1;
-                    photo.UploadCollection.TotalBytes += totalBytes;
-                }
-
-                photo.TotalSizeBytes = totalBytes;
-                photo.StandardSizeBytes = standardBytes;
-                photo.ThumbSizeBytes = thumbnailBytes;
+                var totalBytes = originalBytes + standardBytes + thumbnailBytes;                
 
                 var userId = photo.UploadCollection.OwnerUserId;
                 var collectionId = photo.UploadCollectionId;
@@ -153,14 +144,23 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     Content: result.ThumbJpeg,
                     ContentType: ContentType.ImageJpeg,
                     ContentLength: thumbnailBytes
-                ), ct);
+                ), ct);                
 
                 photo.StandardKey = standardKey;
                 photo.ThumbKey = thumbKey;
                 photo.Width = result.Width;
-                photo.Height = result.Height;                
+                photo.Height = result.Height;
 
-                
+                if (!wasCounted)
+                {
+                    photo.UploadCollection.TotalPhotos += 1;
+                    photo.UploadCollection.TotalBytes += totalBytes;
+                }
+                photo.TotalSizeBytes = totalBytes;
+                photo.StandardSizeBytes = standardBytes;
+                photo.ThumbSizeBytes = thumbnailBytes;
+
+
 
                 var takenAt = result.Exif.TakenAt;
                 if (takenAt.HasValue)

@@ -6,8 +6,10 @@
         {
             public const int Title = 200;
             public const int Description = 4000;
-            public const int MaxPhotosPerCollectionPro = 1500; // 1500
-            public const int MaxPhotosPerCollectionFree = 500; // 500
+            public const int MaxPhotosPerCollectionPro = 1500; // 2000 TODO:
+            public const int MaxPhotosPerCollectionFree = 500; // 1000
+            public const long MaxBytesPerCollectionPro = 10L * 1024 * 1024 * 1024; // 10 GB
+            public const long MaxBytesPerCollectionFree = 5L * 1024 * 1024 * 1024; // 5 GB
         }
 
         public static class PhotoItem
