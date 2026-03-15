@@ -570,7 +570,7 @@ export default function CollectionPage() {
                     ) : (
                         <div className='row'>
                             {photos.map((p) => (
-                                <div key={p.id ?? p.Id} className='col-md-3 mb-3'>
+                                <div key={p.id ?? p.Id} className='col-6 col-md-4 col-lg-3 mb-3'>
                                     <PhotoCard 
                                         photo={p} 
                                         onDeleted={deletePhotoHandler} 
