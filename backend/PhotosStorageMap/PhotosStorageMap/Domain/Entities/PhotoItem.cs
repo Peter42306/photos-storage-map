@@ -37,10 +37,7 @@ namespace PhotosStorageMap.Domain.Entities
         // processing lifecycle
         public PhotoStatus Status { get; set; } = PhotoStatus.Uploading;
         public string? Error { get; set; }
-
-        // 
-        public bool IsDeleted { get; set; }
-
+        
         public DateTime? StandardDeletedAtUtc { get; set; }
     }
 }

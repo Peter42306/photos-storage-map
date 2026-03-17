@@ -45,7 +45,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (photo is null) return NotFound();
 
-            if (photo.Status != Domain.Enums.PhotoStatus.Ready || string.IsNullOrWhiteSpace(photo.ThumbKey))
+            if (photo.Status != PhotoStatus.Ready || string.IsNullOrWhiteSpace(photo.ThumbKey))
             {
                 return Ok(new 
                 {
@@ -89,7 +89,11 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
+                .FirstOrDefaultAsync(p => 
+                    p.Id == photoId &&
+                    p.UploadCollection.OwnerUserId == userId &&
+                    !p.UploadCollection.IsDeleted,
+                    ct);
 
             if (photo is null) return NotFound();
 
@@ -152,7 +156,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .Where(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId)
+                .Where(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId && !p.UploadCollection.IsDeleted)
                 .Select(p => new
                 {
                     status = p.Status.ToString(),
@@ -175,7 +179,11 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId);
+                .FirstOrDefaultAsync(p =>
+                    p.Id == photoId &&
+                    p.UploadCollection.OwnerUserId == userId &&
+                    !p.UploadCollection.IsDeleted,
+                    ct);
 
             if (photo is null) return NotFound();
             if (string.IsNullOrWhiteSpace(photo.OriginalKey)) return NotFound();
@@ -196,7 +204,11 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
+                .FirstOrDefaultAsync(p => 
+                    p.Id == photoId && 
+                    p.UploadCollection.OwnerUserId == userId &&     
+                    !p.UploadCollection.IsDeleted,
+                    ct);
 
             if (photo is null) return NotFound();
             if (string.IsNullOrWhiteSpace(photo.OriginalKey)) return NotFound();
@@ -226,7 +238,11 @@ namespace PhotosStorageMap.Api.Controllers
 
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
+                .FirstOrDefaultAsync(p => 
+                    p.Id == photoId && 
+                    p.UploadCollection.OwnerUserId == userId &&
+                    !p.UploadCollection.IsDeleted,
+                    ct);
 
             if (photo is null) return NotFound();
 
@@ -259,10 +275,11 @@ namespace PhotosStorageMap.Api.Controllers
         {
             var photo = await _db.PhotoItems
                 .Include(p => p.UploadCollection)
-                .FirstOrDefaultAsync(p => p.Id == photoId, ct);
-
-            if (photo is null) return null;
-            if (photo.UploadCollection.OwnerUserId != userId) return null;
+                .FirstOrDefaultAsync(p =>
+                    p.Id == photoId &&
+                    p.UploadCollection.OwnerUserId == userId &&
+                    !p.UploadCollection.IsDeleted,
+                    ct);
 
             return photo;
         }

@@ -40,7 +40,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collections = await _db.UploadCollections
-                .Where(x => x.OwnerUserId == userId)
+                .Where(x => x.OwnerUserId == userId && !x.IsDeleted)
                 .OrderByDescending(x => x.CreatedAtUtc)
                 .Select(x => new
                 {
@@ -66,7 +66,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections
                 .AsNoTracking()
-                .Where(c => c.Id == id && c.OwnerUserId == userId) 
+                .Where(c => c.Id == id && c.OwnerUserId == userId && !c.IsDeleted) 
                 .Select(c => new
                 {
                     c.Id,
@@ -155,7 +155,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collection = await _db.UploadCollections
-                .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId);
+                .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId && !x.IsDeleted);
 
             if (collection is null) return NotFound();
 
@@ -204,46 +204,50 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections
                 .Include(c => c.Photos)
-                .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId, ct);
+                .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId && !x.IsDeleted, ct);
 
             if (collection is null) return NotFound();
 
             // 1) S3 cleanup
-            foreach (var photo in collection.Photos)
-            {
-                try
-                {
-                    if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
-                    {
-                        await _storage.DeleteAsync(photo.OriginalKey, ct);
-                        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.OriginalKey);
-                    }
+            //foreach (var photo in collection.Photos)
+            //{
+            //    try
+            //    {
+            //        if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
+            //        {
+            //            await _storage.DeleteAsync(photo.OriginalKey, ct);
+            //            _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.OriginalKey);
+            //        }
 
-                    if (!string.IsNullOrWhiteSpace(photo.StandardKey))
-                    {
-                        await _storage.DeleteAsync(photo.StandardKey, ct);
-                        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.StandardKey);
-                    }
+            //        if (!string.IsNullOrWhiteSpace(photo.StandardKey))
+            //        {
+            //            await _storage.DeleteAsync(photo.StandardKey, ct);
+            //            _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.StandardKey);
+            //        }
 
-                    if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
-                    {
-                        await _storage.DeleteAsync(photo.ThumbKey, ct);
-                        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.ThumbKey);
-                    }
+            //        if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
+            //        {
+            //            await _storage.DeleteAsync(photo.ThumbKey, ct);
+            //            _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.ThumbKey);
+            //        }
 
-                    _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}", photo.Id);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "DELETE COLLECTION: failed to delete S3 object for photoId={PhotoId}", photo.Id);
-                }
-            }
+            //        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}", photo.Id);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        _logger.LogWarning(ex, "DELETE COLLECTION: failed to delete S3 object for photoId={PhotoId}", photo.Id);
+            //    }
+            //}
 
             // 2) DB delete
-            _db.UploadCollections.Remove(collection);
+            //_db.UploadCollections.Remove(collection);
+
+            collection.IsDeleted = true;            
             await _db.SaveChangesAsync(ct);
 
-            _logger.LogInformation("DELETE COLLECTION: deleted collectionId={CollectionId}", id);
+            //_logger.LogInformation("DELETE COLLECTION: deleted collectionId={CollectionId}", id);
+            _logger.LogInformation("DELETE COLLECTION: masked as deleted collectionId={CollectionId}", id);
+
             return NoContent();
         }
 
@@ -254,7 +258,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collectionExists = await _db.UploadCollections
-                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId, ct);
+                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId && !c.IsDeleted, ct);
 
             if (!collectionExists) return NotFound();
             
@@ -309,7 +313,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collectionExists = await _db.UploadCollections
-                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId, ct);
+                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId && !c.IsDeleted, ct);
 
             if (!collectionExists) return NotFound();
 

@@ -17,6 +17,8 @@
         public int MapPreviewCount { get; set; }
         public int TotalPhotos { get; set; }
         public long TotalBytes { get; set; }
+                
+        public bool IsDeleted { get; set; }
 
         public ICollection<PhotoItem> Photos { get; set; } = new List<PhotoItem>();
         public ShareLink? ShareLink { get; set; }

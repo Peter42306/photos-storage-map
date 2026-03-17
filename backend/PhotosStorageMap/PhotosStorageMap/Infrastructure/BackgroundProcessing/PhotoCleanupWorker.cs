@@ -95,7 +95,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 
             if (batchSize == 0)
             {
-                _logger.LogInformation("PHOTO CLEANUP WORKER: no candidates found");
+                _logger.LogInformation("PHOTO CLEANUP WORKER: no candidates to delete found");
                 return;
             }            
 
