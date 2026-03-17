@@ -26,7 +26,8 @@ namespace PhotosStorageMap.Infrastructure.Services
                 .Where(p => p.UploadCollectionId == collectionid && p.Status == PhotoStatus.Ready)
                 .GroupBy(_ => 1)
                 .Select(g => new CollectionActualStats(g.Count(), g.Sum(x => x.TotalSizeBytes ?? 0)))
-                .FirstOrDefaultAsync(ct);
+                .SingleOrDefaultAsync(ct);
+                //.FirstOrDefaultAsync(ct);
 
             return stats ?? new CollectionActualStats(0, 0);
         }
