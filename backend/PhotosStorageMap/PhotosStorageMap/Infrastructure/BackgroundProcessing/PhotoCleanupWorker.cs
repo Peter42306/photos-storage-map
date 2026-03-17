@@ -71,10 +71,12 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 
             var statusUploadingThreshold = now - StatusUploadingOlderThan;
             var statusFailedThreshold = now - StatusFailedOlderThan;
+            var statusProcessingThreshold = now - StatusProcessingOlderThan;
 
             var query = db.PhotoItems
                 .Where(p =>
                     (p.Status == PhotoStatus.Uploading && p.CreatedAtUtc < statusUploadingThreshold) ||
+                    (p.Status == PhotoStatus.Processing && p.CreatedAtUtc < statusProcessingThreshold) ||
                     (p.Status == PhotoStatus.Failed && p.CreatedAtUtc < statusFailedThreshold) ||
                     (p.Status == PhotoStatus.PendingDelete));
                         
@@ -89,9 +91,9 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     .Take(Limits.PhotoCleanupWorker.BatchSize)
                     .ToListAsync(ct);
 
-            var candidatesNumber = candidates.Count;
+            var batchSize = candidates.Count;
 
-            if (candidatesNumber == 0)
+            if (batchSize == 0)
             {
                 _logger.LogDebug("PHOTO CLEANUP WORKER: no candidates found");
                 return;
@@ -103,7 +105,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 processingCandidates,
                 pendingDeleteCandidates,
                 failedCandidates,
-                candidatesNumber);
+                batchSize);
 
             var deletedCount = 0;
             var failedCount = 0;
@@ -131,10 +133,10 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 
             await db.SaveChangesAsync(ct);
 
-            var remainedCandidates = Math.Max(totalCandidates - candidatesNumber, 0);
+            var remainedCandidates = Math.Max(totalCandidates - batchSize, 0);
 
             _logger.LogInformation("PHOTO CLEANUP WORKER: processed: {Processed}, deleted: {Count}, failed: {Failed}, remained to delete {remained} items.", 
-                candidatesNumber,
+                batchSize,
                 deletedCount,
                 failedCount,
                 remainedCandidates);
