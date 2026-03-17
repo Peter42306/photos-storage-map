@@ -14,6 +14,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 
         private static readonly TimeSpan LoopDelay = TimeSpan.FromMinutes(Limits.PhotoCleanupWorker.LoopDelay);
         private static readonly TimeSpan StatusUploadingOlderThan = TimeSpan.FromHours(Limits.PhotoCleanupWorker.StatusUploadingOlderThan);
+        private static readonly TimeSpan StatusProcessingOlderThan = TimeSpan.FromHours(Limits.PhotoCleanupWorker.StatusProcessingOlderThan);
         private static readonly TimeSpan StatusFailedOlderThan = TimeSpan.FromHours(Limits.PhotoCleanupWorker.StatusFailedOlderThan);
         
 
@@ -78,9 +79,10 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     (p.Status == PhotoStatus.PendingDelete));
                         
             var uploadingCandidates = await query.Where(p => p.Status == PhotoStatus.Uploading).CountAsync(ct);
-            var failedCandidates = await query.Where(p => p.Status == PhotoStatus.Failed).CountAsync(ct);
+            var processingCandidates = await query.Where(p => p.Status == PhotoStatus.Processing).CountAsync(ct);
+            var failedCandidates = await query.Where(p => p.Status == PhotoStatus.Failed).CountAsync(ct);            
             var pendingDeleteCandidates = await query.Where(p => p.Status == PhotoStatus.PendingDelete).CountAsync(ct);
-            var totalCandidates = uploadingCandidates + failedCandidates + pendingDeleteCandidates;
+            var totalCandidates = uploadingCandidates + processingCandidates + failedCandidates + pendingDeleteCandidates;
 
             var candidates = await query
                     .OrderBy(p => p.CreatedAtUtc)
@@ -95,9 +97,10 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 return;
             }            
 
-            _logger.LogInformation("PHOTO CLEANUP WORKER: found TotalCandidates={TotalCandidates}, Uploading={Uploading}, PendingDelete={PendingDelete}, Failed={Failed}, BatchSize {BatchSize} candidates for cleanup.",
+            _logger.LogInformation("PHOTO CLEANUP WORKER: found TotalCandidates={TotalCandidates}, Uploading={Uploading}, Processing={Processing} PendingDelete={PendingDelete}, Failed={Failed}, BatchSize {BatchSize} candidates for cleanup.",
                 totalCandidates,
                 uploadingCandidates,
+                processingCandidates,
                 pendingDeleteCandidates,
                 failedCandidates,
                 candidatesNumber);
