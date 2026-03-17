@@ -117,6 +117,7 @@ namespace PhotosStorageMap.Api.Controllers
             });
         }
 
+        // uploading to S3 confirmation
         [HttpPost("{photoId:guid}/complete")]
         public async Task<IActionResult> CompleteUpload(Guid photoId, CancellationToken ct)
         {
@@ -127,11 +128,23 @@ namespace PhotosStorageMap.Api.Controllers
                 .Include(p => p.UploadCollection)
                 .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
 
-            if (photo == null) return NotFound($"Photo {photoId} not found");
+            if (photo is null) return NotFound($"Photo {photoId} not found");
+
+            if (string.IsNullOrWhiteSpace(photo.OriginalKey)) return BadRequest("OriginalKey in missing");
+
+            try
+            {
+                await using var stream = await _fileStorage.OpenReadAsync(photo.OriginalKey, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "UPLOADS : COMPLETE UPLOAD - original file in not available in storage.");
+                return BadRequest("Original file in not available in storage.");
+            }
 
             photo.Status = PhotoStatus.Processing;
-
             await _db.SaveChangesAsync(ct);
+
             await _queue.EnqueueAsync(photoId, ct);
 
             _logger.LogInformation("UPLOAD: CompleteUpload photoId={PhotoId}", photoId);

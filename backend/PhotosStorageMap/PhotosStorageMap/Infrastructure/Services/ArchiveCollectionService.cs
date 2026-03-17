@@ -171,7 +171,7 @@ namespace PhotosStorageMap.Infrastructure.Services
                 ? "collection"
                 : MakeSafeFileName(collection.Title);
 
-            var suffix = type == ArchiveType.Standard ? ContentType.Standard : ContentType.Originals;
+            var suffix = type == ArchiveType.Standard ? ContentType.Standard : ContentType.Original;
             var zipFileName = $"{safeCollectionTitle}_{suffix}.zip";
 
             sw.Stop();

@@ -24,5 +24,13 @@
         {
             public const int Token = 128;
         }        
+
+        public static class PhotoCleanupWorker
+        {
+            public const int BatchSize = 20;
+            public const int LoopDelay = 10; // minutes
+            public const int StatusUploadingOlderThan = 1; // hours
+            public const int StatusFailedOlderThan = 6; // hours
+        }
     }
 }

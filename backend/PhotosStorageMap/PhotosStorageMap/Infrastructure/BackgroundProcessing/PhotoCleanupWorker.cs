@@ -1,0 +1,169 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PhotosStorageMap.Application.Common;
+using PhotosStorageMap.Application.Interfaces;
+using PhotosStorageMap.Infrastructure.Data;
+using PhotosStorageMap.Domain.Enums;
+using PhotosStorageMap.Domain.Entities;
+
+namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
+{
+    public class PhotoCleanupWorker : BackgroundService
+    {
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<PhotoCleanupWorker> _logger;
+
+        private static readonly TimeSpan LoopDelay = TimeSpan.FromMinutes(Limits.PhotoCleanupWorker.LoopDelay);
+        private static readonly TimeSpan StatusUploadingOlderThan = TimeSpan.FromHours(Limits.PhotoCleanupWorker.StatusUploadingOlderThan);
+        private static readonly TimeSpan StatusFailedOlderThan = TimeSpan.FromHours(Limits.PhotoCleanupWorker.StatusFailedOlderThan);
+        
+
+        public PhotoCleanupWorker(
+            IServiceScopeFactory scopeFactory,
+            ILogger<PhotoCleanupWorker> logger)
+        {
+            _scopeFactory = scopeFactory;
+            _logger = logger;
+        }
+
+        
+        
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("PHOTO CLEANUP WORKER: PhotoCleanupWorker started.");
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await CleanupAsync(stoppingToken);
+                }
+                catch(OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "PHOTO CLEANUP WORKER: loop failed.");
+                }
+
+                try
+                {
+                    await Task.Delay(LoopDelay, stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+            _logger.LogInformation("PHOTO CLEANUP WORKER: PhotoCleanupWorker stopped.");
+        }
+
+        private async Task CleanupAsync(CancellationToken ct)
+        {
+            using var scope = _scopeFactory.CreateScope();
+
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+
+            var now = DateTime.UtcNow;
+
+            var statusUploadingThreshold = now - StatusUploadingOlderThan;
+            var statusFailedThreshold = now - StatusFailedOlderThan;
+
+            var query = db.PhotoItems
+                .Where(p =>
+                    (p.Status == PhotoStatus.Uploading && p.CreatedAtUtc < statusUploadingThreshold) ||
+                    (p.Status == PhotoStatus.Failed && p.CreatedAtUtc < statusFailedThreshold));
+                        
+            var uploadingCandidates = await query.Where(p => p.Status == PhotoStatus.Uploading).CountAsync(ct);
+            var failedCandidates = await query.Where(p => p.Status == PhotoStatus.Failed).CountAsync(ct);
+            var totalCandidates = uploadingCandidates + failedCandidates;
+
+            var candidates = await query
+                    .OrderBy(p => p.CreatedAtUtc)
+                    .Take(Limits.PhotoCleanupWorker.BatchSize)
+                    .ToListAsync(ct);
+
+            var candidatesNumber = candidates.Count;
+
+            if (candidatesNumber == 0)
+            {
+                _logger.LogDebug("PHOTO CLEANUP WORKER: no candidates found");
+                return;
+            }            
+
+            _logger.LogInformation("PHOTO CLEANUP WORKER: found TotalCandidates={TotalCandidates}, Uploading={Uploading}, Failed={Failed}, BatchSize {BatchSize} candidates for cleanup.",
+                totalCandidates,
+                uploadingCandidates,
+                failedCandidates,
+                candidatesNumber);
+
+            foreach (var photo in candidates)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                await CleanupPhotoAsync(db, storage, photo, ct);
+                _logger.LogInformation("PHOTO CLEANUP WORKER: deleted Photo={PhotoName} PhotoId={PhotoId}",
+                    photo.OriginalFileName,
+                    photo.Id);
+            }
+            
+            var remainedCandidates = Math.Max(totalCandidates - candidatesNumber, 0);
+            _logger.LogInformation("PHOTO CLEANUP WORKER: deleted {Count} items, remained to delete {remained} items.", 
+                candidatesNumber,
+                remainedCandidates);
+
+            await db.SaveChangesAsync(ct);
+        }
+
+        private async Task CleanupPhotoAsync(
+            ApplicationDbContext db,
+            IFileStorage storage,
+            PhotoItem photo,
+            CancellationToken ct)
+        {
+            var photoId = photo.Id;
+
+            var keys = new[]
+            {
+                (Key: photo.OriginalKey, Type: ContentType.Original),
+                (Key: photo.StandardKey, Type: ContentType.Standard),
+                (Key: photo.ThumbKey, Type: ContentType.Thumbnail),
+            };
+
+            foreach ( var item in keys )
+            {
+                if (string.IsNullOrWhiteSpace(item.Key))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    await storage.DeleteAsync(item.Key, ct);
+
+                    _logger.LogInformation("PHOTO CLEANUP WORKER: deleted from S3 {FileType} file for PhotoId={PhotoId}, Key={StorageKey}",
+                        item.Type,
+                        photoId,
+                        item.Key);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "PHOTO CLEANUP WORKER: failed deleting from S3 {FileType} file for PhotoId={PhotoId}, Key={StorageKey}",
+                        item.Type,
+                        photoId,
+                        item.Key);
+                }
+            }
+
+            db.PhotoItems.Remove(photo);
+            _logger.LogInformation(
+                "PHOTO CLEANUP WORKER: removed from DB photoId={photoId}, status={Status}",
+                photoId,
+                photo.Status);
+        }
+    }
+}

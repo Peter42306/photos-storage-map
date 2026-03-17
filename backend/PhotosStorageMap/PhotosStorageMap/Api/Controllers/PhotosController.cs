@@ -123,29 +123,6 @@ namespace PhotosStorageMap.Api.Controllers
             }
 
 
-            //try
-            //{
-            //    if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
-            //    {
-            //        await _storage.DeleteAsync(photo.OriginalKey, ct);
-            //    }
-
-            //    if (!string.IsNullOrWhiteSpace(photo.StandardKey))
-            //    {
-            //        await _storage.DeleteAsync(photo.StandardKey, ct);
-            //    }
-
-            //    if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
-            //    {
-            //        await _storage.DeleteAsync(photo.ThumbKey, ct);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete storage objects for photoId={PhotoId}", photoId);
-            //}
-
-
 
             if (photo.TotalSizeBytes.HasValue)
             {

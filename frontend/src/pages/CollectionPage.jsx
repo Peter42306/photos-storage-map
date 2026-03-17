@@ -443,8 +443,14 @@ export default function CollectionPage() {
     
     const photos = collection?.photos ?? collection?.Photos ?? [];
 
-    if (loading) {
-        return <div className='container py-4'>Loading...</div>
+    if (loading) {        
+        return(
+            <div className='container py-4'>
+                <div className='alert alert-info'>Loading...</div>
+            </div>
+        );
+        
+                 
     }
 
     return(

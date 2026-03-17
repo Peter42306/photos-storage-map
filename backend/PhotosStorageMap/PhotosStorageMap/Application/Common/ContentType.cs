@@ -4,7 +4,10 @@
     {
         public const string ImageJpeg = "image/jpeg";
         public const string ApplicationZip = "application/zip";
+        
+        // types of photos
+        public const string Original = "originals";
         public const string Standard = "standard";
-        public const string Originals = "originals";
+        public const string Thumbnail = "thumbnail";
     }
 }

@@ -60,6 +60,7 @@ builder.Services.AddScoped<IImageProcessor, ImageSharpImageProcessor>();
 builder.Services.AddHostedService<PhotoProcessingWorker>();
 builder.Services.AddScoped<IArchiveCollectionService, ArchiveCollectionService>();
 builder.Services.AddScoped<ICollectionStatsService, CollectionStatsService>();
+builder.Services.AddHostedService<PhotoCleanupWorker>();
 
 var app = builder.Build();
 

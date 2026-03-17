@@ -66,7 +66,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections
                 .AsNoTracking()
-                .Where(c => c.Id == id && c.OwnerUserId == userId) // TODO add filter by status.ready
+                .Where(c => c.Id == id && c.OwnerUserId == userId) 
                 .Select(c => new
                 {
                     c.Id,
@@ -76,7 +76,8 @@ namespace PhotosStorageMap.Api.Controllers
                     c.TotalPhotos,
                     c.TotalBytes,
                     Photos = c.Photos
-                        .OrderBy(p => p.TakenAt ?? p.CreatedAtUtc)
+                        .Where(p => p.Status == PhotoStatus.Ready)
+                        .OrderBy(p => p.TakenAt ?? p.CreatedAtUtc) // TODO add filter by status.ready
                         .Select(p => new
                         {
                             p.Id,
@@ -95,7 +96,7 @@ namespace PhotosStorageMap.Api.Controllers
                             p.Latitude,
                             p.Longitude,
                             Status = p.Status.ToString(),
-                            p.Error                            
+                            p.Error
                         })
                         .ToList()
                 })
@@ -146,6 +147,7 @@ namespace PhotosStorageMap.Api.Controllers
             });
         }
 
+        // update collection title & description
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> UpdateCollection(Guid id, [FromBody] UpdateCollectionRequest request, CancellationToken ct)
         {
@@ -171,7 +173,7 @@ namespace PhotosStorageMap.Api.Controllers
             return NoContent();
         }
 
-
+        // create empty collection
         [HttpPost]
         public async Task<ActionResult<Guid>> CreateCollection(CancellationToken ct)
         {
@@ -214,16 +216,19 @@ namespace PhotosStorageMap.Api.Controllers
                     if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
                     {
                         await _storage.DeleteAsync(photo.OriginalKey, ct);
+                        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.OriginalKey);
                     }
 
                     if (!string.IsNullOrWhiteSpace(photo.StandardKey))
                     {
                         await _storage.DeleteAsync(photo.StandardKey, ct);
+                        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.StandardKey);
                     }
 
                     if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
                     {
                         await _storage.DeleteAsync(photo.ThumbKey, ct);
+                        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.ThumbKey);
                     }
 
                     _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}", photo.Id);
