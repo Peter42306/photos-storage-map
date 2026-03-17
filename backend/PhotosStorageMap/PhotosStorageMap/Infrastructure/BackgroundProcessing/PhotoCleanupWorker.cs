@@ -102,31 +102,51 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 failedCandidates,
                 candidatesNumber);
 
+            var deletedCount = 0;
+            var failedCount = 0;
+
             foreach (var photo in candidates)
             {
                 ct.ThrowIfCancellationRequested();
 
-                await CleanupPhotoAsync(db, storage, photo, ct);
-                _logger.LogInformation("PHOTO CLEANUP WORKER: deleted Photo={PhotoName} PhotoId={PhotoId}",
+                var deleted = await CleanupPhotoAsync(db, storage, photo, ct);
+
+                if (deleted)
+                {
+                    deletedCount++;
+
+                    _logger.LogInformation("PHOTO CLEANUP WORKER: deleted Photo={PhotoName} PhotoId={PhotoId}",
                     photo.OriginalFileName,
                     photo.Id);
+                }
+                else
+                {
+                    failedCount++;
+                }                
+                
             }
-            
-            var remainedCandidates = Math.Max(totalCandidates - candidatesNumber, 0);
-            _logger.LogInformation("PHOTO CLEANUP WORKER: deleted {Count} items, remained to delete {remained} items.", 
-                candidatesNumber,
-                remainedCandidates);
 
             await db.SaveChangesAsync(ct);
+
+            var remainedCandidates = Math.Max(totalCandidates - candidatesNumber, 0);
+
+            _logger.LogInformation("PHOTO CLEANUP WORKER: processed: {Processed}, deleted: {Count}, failed: {Failed}, remained to delete {remained} items.", 
+                candidatesNumber,
+                deletedCount,
+                failedCount,
+                remainedCandidates);
+
+            
         }
 
-        private async Task CleanupPhotoAsync(
+        private async Task<bool> CleanupPhotoAsync(
             ApplicationDbContext db,
             IFileStorage storage,
             PhotoItem photo,
             CancellationToken ct)
         {
             var photoId = photo.Id;
+            var allDeleted = true;
 
             var keys = new[]
             {
@@ -153,6 +173,8 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 }
                 catch (Exception ex)
                 {
+                    allDeleted = false;
+
                     _logger.LogWarning(
                         ex,
                         "PHOTO CLEANUP WORKER: failed deleting from S3 {FileType} file for PhotoId={PhotoId}, Key={StorageKey}",
@@ -162,11 +184,20 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 }
             }
 
+            if (!allDeleted)
+            {
+                _logger.LogWarning("PHOTO CLEANUP WORKER: photoId={PhotoId} was not removed from DB because some storage files failed to delete.", photoId);
+                return false;
+            }
+
             db.PhotoItems.Remove(photo);
+
             _logger.LogInformation(
                 "PHOTO CLEANUP WORKER: removed from DB photoId={photoId}, status={Status}",
                 photoId,
                 photo.Status);
+
+            return true;
         }
     }
 }
