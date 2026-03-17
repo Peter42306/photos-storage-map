@@ -7,6 +7,7 @@ using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Domain.Entities;
 using PhotosStorageMap.Infrastructure.Data;
 using System.Security.Claims;
+using PhotosStorageMap.Domain.Enums;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -94,35 +95,40 @@ namespace PhotosStorageMap.Api.Controllers
 
             if(photo.UploadCollection?.OwnerUserId != userId) return NotFound();
 
-            var keysToDelete = new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
+            if (photo.Status != PhotoStatus.Ready)
             {
-                keysToDelete.Add(photo.OriginalKey);
-            }
-            if (!string.IsNullOrWhiteSpace(photo.StandardKey))
-            {
-                keysToDelete.Add(photo.StandardKey);
-            }
-            if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
-            {
-                keysToDelete.Add(photo.ThumbKey);
+                return BadRequest("Photo cannot be deleted");
             }
 
-            foreach (var key in keysToDelete)
-            {
-                try
-                {
-                    await _storage.DeleteAsync(key, ct);
-                    _logger.LogInformation("DELETE PHOTO: Delete from S3 PhotoId={PhotoId}, StorageKey={StorageKey}", photoId, key);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete from S3 PhotoId={PhotoId}, Key={StorageKey}", photoId, key);                    
-                }
-            }
+            photo.Status = PhotoStatus.PendingDelete;
 
+            //var keysToDelete = new List<string>();
 
+            //if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
+            //{
+            //    keysToDelete.Add(photo.OriginalKey);
+            //}
+            //if (!string.IsNullOrWhiteSpace(photo.StandardKey))
+            //{
+            //    keysToDelete.Add(photo.StandardKey);
+            //}
+            //if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
+            //{
+            //    keysToDelete.Add(photo.ThumbKey);
+            //}
+
+            //foreach (var key in keysToDelete)
+            //{
+            //    try
+            //    {
+            //        await _storage.DeleteAsync(key, ct);
+            //        _logger.LogInformation("DELETE PHOTO: Delete from S3 PhotoId={PhotoId}, StorageKey={StorageKey}", photoId, key);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete from S3 PhotoId={PhotoId}, Key={StorageKey}", photoId, key);                    
+            //    }
+            //}
 
             if (photo.TotalSizeBytes.HasValue)
             {
@@ -130,12 +136,10 @@ namespace PhotosStorageMap.Api.Controllers
             }
             photo.UploadCollection.TotalPhotos = Math.Max(0, photo.UploadCollection.TotalPhotos - 1);            
 
-
-
-            _db.PhotoItems.Remove(photo);
+            //_db.PhotoItems.Remove(photo);
             await _db.SaveChangesAsync(ct);
 
-            _logger.LogInformation("DELETE PHOTO: Successfully from S3 deleted photo, photoId={PhotoId}", photoId);
+            _logger.LogInformation("DELETE PHOTO: marked to delele, photoId={PhotoId}", photoId);
 
             return NoContent();
         }

@@ -74,11 +74,13 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
             var query = db.PhotoItems
                 .Where(p =>
                     (p.Status == PhotoStatus.Uploading && p.CreatedAtUtc < statusUploadingThreshold) ||
-                    (p.Status == PhotoStatus.Failed && p.CreatedAtUtc < statusFailedThreshold));
+                    (p.Status == PhotoStatus.Failed && p.CreatedAtUtc < statusFailedThreshold) ||
+                    (p.Status == PhotoStatus.PendingDelete));
                         
             var uploadingCandidates = await query.Where(p => p.Status == PhotoStatus.Uploading).CountAsync(ct);
             var failedCandidates = await query.Where(p => p.Status == PhotoStatus.Failed).CountAsync(ct);
-            var totalCandidates = uploadingCandidates + failedCandidates;
+            var pendingDeleteCandidates = await query.Where(p => p.Status == PhotoStatus.PendingDelete).CountAsync(ct);
+            var totalCandidates = uploadingCandidates + failedCandidates + pendingDeleteCandidates;
 
             var candidates = await query
                     .OrderBy(p => p.CreatedAtUtc)
@@ -93,9 +95,10 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 return;
             }            
 
-            _logger.LogInformation("PHOTO CLEANUP WORKER: found TotalCandidates={TotalCandidates}, Uploading={Uploading}, Failed={Failed}, BatchSize {BatchSize} candidates for cleanup.",
+            _logger.LogInformation("PHOTO CLEANUP WORKER: found TotalCandidates={TotalCandidates}, Uploading={Uploading}, PendingDelete={PendingDelete}, Failed={Failed}, BatchSize {BatchSize} candidates for cleanup.",
                 totalCandidates,
                 uploadingCandidates,
+                pendingDeleteCandidates,
                 failedCandidates,
                 candidatesNumber);
 
