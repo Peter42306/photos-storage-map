@@ -246,7 +246,7 @@ namespace PhotosStorageMap.Api.Controllers
             await _db.SaveChangesAsync(ct);
 
             //_logger.LogInformation("DELETE COLLECTION: deleted collectionId={CollectionId}", id);
-            _logger.LogInformation("DELETE COLLECTION: masked as deleted collectionId={CollectionId}", id);
+            _logger.LogInformation("DELETE COLLECTION: marked as deleted collectionId={CollectionId}", id);
 
             return NoContent();
         }

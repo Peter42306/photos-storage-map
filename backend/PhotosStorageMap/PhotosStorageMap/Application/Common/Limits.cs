@@ -27,11 +27,17 @@
 
         public static class PhotoCleanupWorker
         {
-            public const int BatchSize = 20;
-            public const int LoopDelay = 10; // minutes
-            public const int StatusUploadingOlderThan = 1; // hours
-            public const int StatusProcessingOlderThan = 5; // hours
-            public const int StatusFailedOlderThan = 6; // hours
+            public const int BatchSize = 20; // 20 photos
+            public const int LoopDelay = 5; // 5 minutes
+            public const int StatusUploadingOlderThan = 1; // 3 hours
+            public const int StatusProcessingOlderThan = 1; // 1 hours
+            public const int StatusFailedOlderThan = 1; // 24 hours
+        }
+
+        public static class CollectionCleanupWorker
+        {
+            public const int BatchSize = 20; // 20 photos
+            public const int LoopDelay = 7; // 5 minutes
         }
     }
 }

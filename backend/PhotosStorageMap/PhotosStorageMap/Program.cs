@@ -61,6 +61,7 @@ builder.Services.AddHostedService<PhotoProcessingWorker>();
 builder.Services.AddScoped<IArchiveCollectionService, ArchiveCollectionService>();
 builder.Services.AddScoped<ICollectionStatsService, CollectionStatsService>();
 builder.Services.AddHostedService<PhotoCleanupWorker>();
+builder.Services.AddHostedService<CollectionCleanupWorker>();
 
 var app = builder.Build();
 

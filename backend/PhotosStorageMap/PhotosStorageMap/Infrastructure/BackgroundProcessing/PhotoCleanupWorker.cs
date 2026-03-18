@@ -4,12 +4,13 @@ using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.Data;
 using PhotosStorageMap.Domain.Enums;
 using PhotosStorageMap.Domain.Entities;
+using System.Diagnostics;
 
 namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 {
     public class PhotoCleanupWorker : BackgroundService
     {
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<PhotoCleanupWorker> _logger;
 
         private static readonly TimeSpan LoopDelay = TimeSpan.FromMinutes(Limits.PhotoCleanupWorker.LoopDelay);
@@ -22,14 +23,14 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
             IServiceScopeFactory scopeFactory,
             ILogger<PhotoCleanupWorker> logger)
         {
-            _scopeFactory = scopeFactory;
+            _serviceScopeFactory = scopeFactory;
             _logger = logger;
         }
 
         
         
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
+        {            
             _logger.LogInformation("PHOTO CLEANUP WORKER: PhotoCleanupWorker started.");
 
             while (!stoppingToken.IsCancellationRequested)
@@ -56,13 +57,15 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     break;
                 }
             }
-
+         
             _logger.LogInformation("PHOTO CLEANUP WORKER: PhotoCleanupWorker stopped.");
         }
 
         private async Task CleanupAsync(CancellationToken ct)
         {
-            using var scope = _scopeFactory.CreateScope();
+            var stopwatch = Stopwatch.StartNew();
+
+            using var scope = _serviceScopeFactory.CreateScope();
 
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
@@ -135,11 +138,14 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 
             var remainedCandidates = Math.Max(totalCandidates - batchSize, 0);
 
-            _logger.LogInformation("PHOTO CLEANUP WORKER: processed: {Processed}, deleted: {Count}, failed: {Failed}, remained to delete {remained} items.", 
+            stopwatch.Stop();
+
+            _logger.LogInformation("PHOTO CLEANUP WORKER: processed: {Processed}, deleted: {Count}, failed: {Failed}, remained to delete: {remained}, duration: {Duration:F2} seconds.", 
                 batchSize,
                 deletedCount,
                 failedCount,
-                remainedCandidates);
+                remainedCandidates,
+                stopwatch.Elapsed.TotalSeconds);
 
             
         }
