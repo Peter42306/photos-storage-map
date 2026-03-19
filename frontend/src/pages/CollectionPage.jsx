@@ -20,7 +20,7 @@ export default function CollectionPage() {
     const [description, setDescription] = useState("");
 
     const [uploading, setUploading] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState("");
+    const [uploadStatus, setUploadStatus] = useState("");    
 
     
 
@@ -331,11 +331,30 @@ export default function CollectionPage() {
         }
     }    
 
-    async function viewOriginalHandler(photoId, fileName) {
-        const confirmed = confirm(`View original in browser?\n${fileName ?? "photo"}`);
-        if (!confirmed) {
-            return;
-        }
+    // async function viewOriginalHandler(photoId, fileName) {
+    //     const confirmed = confirm(`View original in browser?\n${fileName ?? "photo"}`);
+    //     if (!confirmed) {
+    //         return;
+    //     }
+
+    //     try {
+    //         const res = await getOriginalUrl(photoId);
+    //         const url = typeof res === "string" ? res : res?.url;
+
+    //         if (url) {
+    //             window.open(url, "_blank");
+    //         }
+
+    //     } catch (err) {
+    //         alert(err.message);
+    //     }
+    // }
+
+    async function viewOriginalHandler(photoId) {
+        // const confirmed = confirm(`View original in browser?\n${fileName ?? "photo"}`);
+        // if (!confirmed) {
+        //     return;
+        // }
 
         try {
             const res = await getOriginalUrl(photoId);
@@ -350,11 +369,29 @@ export default function CollectionPage() {
         }
     }
 
-    async function downloadOriginalHandler(photoId, fileName) {
-        const confirmed = confirm(`Download original file?\n${fileName ?? "photo"}`);
-        if (!confirmed) {
-            return;
-        }
+    // async function downloadOriginalHandler(photoId, fileName) {
+    //     const confirmed = confirm(`Download original file?\n${fileName ?? "photo"}`);
+    //     if (!confirmed) {
+    //         return;
+    //     }
+
+    //     try {
+    //         const res = await getOriginalDownloadUrl(photoId);
+    //         const url = typeof res === "string" ? res : res?.url;
+
+    //         if (url) {
+    //             window.location.href = url;
+    //         }
+    //     } catch (err) {
+    //         alert(err.message);
+    //     }
+    // }
+
+    async function downloadOriginalHandler(photoId) {
+        // const confirmed = confirm(`Download original file?\n${fileName ?? "photo"}`);
+        // if (!confirmed) {
+        //     return;
+        // }
 
         try {
             const res = await getOriginalDownloadUrl(photoId);
