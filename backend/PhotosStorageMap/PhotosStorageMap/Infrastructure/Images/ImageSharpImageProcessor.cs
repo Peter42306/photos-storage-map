@@ -42,6 +42,10 @@ namespace PhotosStorageMap.Infrastructure.Images
             using var image = await Image.LoadAsync(buffered, ct);
             image.Mutate(x => x.AutoOrient());
 
+            // remove EXIF from standard & thumbnails
+            image.Metadata.ExifProfile = null;
+            image.Metadata.XmpProfile = null;
+
             var width = image.Width;
             var height = image.Height;
 

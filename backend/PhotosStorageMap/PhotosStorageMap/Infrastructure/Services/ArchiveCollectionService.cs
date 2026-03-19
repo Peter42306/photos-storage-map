@@ -6,6 +6,7 @@ using PhotosStorageMap.Infrastructure.Data;
 using System.IO.Compression;
 using PhotosStorageMap.Application.Common;
 using System.Diagnostics;
+using PhotosStorageMap.Domain.Enums;
 
 namespace PhotosStorageMap.Infrastructure.Services
 {
@@ -53,7 +54,7 @@ namespace PhotosStorageMap.Infrastructure.Services
             }
 
             var photos = await _db.PhotoItems
-                .Where(p => p.UploadCollectionId == collectionId)
+                .Where(p => p.UploadCollectionId == collectionId && p.Status == PhotoStatus.Ready)
                 .OrderBy(p => p.CreatedAtUtc)
                 .ToListAsync(ct);
 
@@ -108,9 +109,17 @@ namespace PhotosStorageMap.Infrastructure.Services
                         var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
 
                         await using var entryStream = entry.Open();
-                        await sourceStream.CopyToAsync(entryStream, ct);
+                        await sourceStream.CopyToAsync(entryStream, ct);                        
 
                         filesCount++;
+
+                        _logger.LogInformation(
+                            "Archieved photo to zip. FileNo={FileCount}, CollectionId={CollectionId}, PhotoId={PhotoId}, Type={Type}, Key={StorageKey}",
+                            filesCount,
+                            collectionId,
+                            photo.Id,
+                            type,
+                            storageKey);
 
                         if (type == ArchiveType.Standard)
                         {
@@ -175,13 +184,15 @@ namespace PhotosStorageMap.Infrastructure.Services
             var zipFileName = $"{safeCollectionTitle}_{suffix}.zip";
 
             sw.Stop();
+
             _logger.LogInformation(
-                "ArchiveCollectionService: Archive build completed. CollectionId={Collectionid}, ArchiveType={Type}, TotalFiles={TotalFiles}, TotalBytes={TotalBytes}, Duration={Duration}",
+                "ArchiveCollectionService: Archive build completed. CollectionId={Collectionid}, ArchiveType={Type}, TotalFiles={TotalFiles}, TotalBytes={TotalBytes}, Duration={Minutes} m {Seconds} s",
                 collectionId,
                 type,
                 filesCount,
                 totalBytes,
-                sw.ElapsedMilliseconds);
+                sw.Elapsed.Minutes,
+                sw.Elapsed.Seconds);
 
             return new ArchiveBuildResult(
                 resultStream,
