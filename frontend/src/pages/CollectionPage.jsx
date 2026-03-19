@@ -654,6 +654,21 @@ const PhotoCard = React.memo(function PhotoCard({
             await onSaveDescription?.(photoId, descriptionPhoto);
             setIsEditingDescriptionPhoto(false);
         }
+
+        async function handleCopyCoordinates() {
+            if (latitude == null || longitude == null) {
+                return;
+            }
+
+            const text = `${latitude}, ${longitude}`;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                console.log("Copied coordinates:", text);
+            } catch (err) {
+                console.log("Copy coordinates failed", err);
+            }
+        }
         
 
         
@@ -751,13 +766,22 @@ const PhotoCard = React.memo(function PhotoCard({
                         </button>
 
                         {latitude != null && longitude != null && (
-                            <button
-                                className='btn btn-outline-secondary btn-sm'
-                                onClick={() => onLocation?.(photo)}
-                                title='Show location'
-                            >
-                                <i className='bi bi-geo-alt'></i>
-                            </button>
+                            <>
+                                <button
+                                    className='btn btn-outline-secondary btn-sm'
+                                    onClick={() => onLocation?.(photo)}
+                                    title='Show location'
+                                >
+                                    <i className='bi bi-geo-alt'></i>
+                                </button>
+                                <button
+                                    className='btn btn-outline-secondary btn-sm'
+                                    onClick={handleCopyCoordinates}
+                                    title='Copy coordinates'
+                                >
+                                    <i className='bi bi-copy'></i>
+                                </button>
+                            </>                            
                         )}                        
 
                         <button
