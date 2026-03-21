@@ -19,6 +19,24 @@ function formatDistance(meters){
         return `${(meters / 1000).toFixed(2)} km`;
     }
 
+function formatTakenAt(dateString) {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    if (isNaN(date)) return "";
+
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    }).format(date)
+    .replace(",", " at");
+}
+
 export default function CollectionPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -678,6 +696,7 @@ const PhotoCard = React.memo(function PhotoCard({
         const latitude = photo.latitude ?? photo.Latitude;
         const longitude = photo.longitude ?? photo.Longitude;
         const distanceFromPrevious = photo.distanceFromPrevious ?? photo.DistanceFromPrevious;
+        const takenAt = photo.takenAt ?? photo.TakenAt;
 
         // useEffect(() => {
         //     let cancelled = false;            
@@ -755,13 +774,19 @@ const PhotoCard = React.memo(function PhotoCard({
                     <div className="small text-truncate">
                         {originalFileName || "(no name)"}                        
                     </div>                
-                    <div className="small text-truncate">
-                        Distance from previous: {formatDistance(distanceFromPrevious)}
-                    </div>                
 
-                    <div>
-                        
-                    </div>
+                    {takenAt && (
+                        <div className="small text-truncate">
+                            {formatTakenAt(takenAt)}
+                        </div>
+                    )}
+
+                    {distanceFromPrevious && (
+                        <div className="small text-truncate">
+                            + {formatDistance(distanceFromPrevious)}    
+                        </div>                        
+                    )}
+                    
 
                     {/* Photo description */}
                     {!isEditingDescriptionPhoto 
