@@ -111,6 +111,11 @@ namespace PhotosStorageMap.Api.Controllers
             double? prevLng = null;
             double totalDistance = 0;
 
+            int totalPhotos = collection.Photos.Count;
+            long totalOriginalSizeBytes = 0;
+            long totalStandardSizeBytes = 0;
+            long totalThumbSizeBytes = 0;
+
             foreach ( var p in collection.Photos)
             {
                 string? thumbUrl = null;
@@ -133,6 +138,10 @@ namespace PhotosStorageMap.Api.Controllers
 
                     totalDistance += distanceFromPrevious.Value;
                 }
+
+                totalOriginalSizeBytes += p.OriginalSizeBytes ?? 0;
+                totalStandardSizeBytes += p.StandardSizeBytes ?? 0;
+                totalThumbSizeBytes += p.ThumbSizeBytes ?? 0;
 
                 photos.Add(new
                 {
@@ -169,9 +178,16 @@ namespace PhotosStorageMap.Api.Controllers
                 collection.Title,
                 collection.Description,
                 collection.CreatedAtUtc,
+                
                 collection.TotalPhotos,
-                collection.TotalBytes,
+                collection.TotalBytes,                
+
                 TotalDistance = totalDistance,
+                TotalReadyPhotos = collection.TotalPhotos,
+                TotalOriginalSizeBytes = totalOriginalSizeBytes,
+                TotalStandardSizeBytes = totalStandardSizeBytes,
+                TotalThumbSizeBytes = totalThumbSizeBytes,
+
                 Photos = photos
             });
         }
@@ -311,6 +327,10 @@ namespace PhotosStorageMap.Api.Controllers
 
             var result = new List<object>();
 
+            double? prevLat = null;
+            double? prevLng = null;
+            double totalDistance = 0;
+
             foreach (var photo in photos)
             {
                 string? thumbUrl = null;
@@ -318,6 +338,13 @@ namespace PhotosStorageMap.Api.Controllers
                 if (!string.IsNullOrWhiteSpace(photo.thumbKey))
                 {
                     thumbUrl = await _storage.GeneratePresignedDownloadUrlAsync(photo.thumbKey, TimeSpan.FromMinutes(30));
+                }
+
+                if (prevLat.HasValue && prevLng.HasValue)
+                {
+                    totalDistance += Calculator.DistanceBetweenLocations(
+                        prevLat.Value, prevLng.Value,
+                        photo.latitude!.Value, photo.longitude!.Value);
                 }
 
                 result.Add(new
@@ -329,9 +356,16 @@ namespace PhotosStorageMap.Api.Controllers
                     photo.takenAt,
                     thumbUrl
                 });
+
+                prevLat = photo.latitude;
+                prevLng = photo.longitude;
             }
 
-            return Ok(result);
+            return Ok(new
+            {
+                totalDistance,
+                result
+            });
         }
 
         // download standard side photos to zip

@@ -7,6 +7,15 @@ import { completeUpload, deleteCollection, deletePhoto, downloadCollectionStanda
 
 //const S3_BASE = "https://hel1.your-objectstorage.com/photos-storage-map";
 
+function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+}
+
 function formatDistance(meters){
         if (meters == null) {
             return "";
@@ -509,7 +518,11 @@ export default function CollectionPage() {
     
     const photos = collection?.photos ?? collection?.Photos ?? [];
 
+    const totalPhotos = collection?.totalPhotos ?? collection?.TotalPhotos ?? 0;
     const totalDistance = collection?.totalDistance ?? collection?.TotalDistance ?? 0;
+    const totalOriginal = collection?.totalOriginalSizeBytes ?? collection?.TotalOriginalSizeBytes ?? 0;
+    const totalStandard = collection?.totalStandardSizeBytes ?? collection?.TotalStandardSizeBytes ?? 0;
+    const totalThumb = collection?.totalThumbSizeBytes ?? collection?.TotalThumbSizeBytes ?? 0;
 
 
 
@@ -639,9 +652,20 @@ export default function CollectionPage() {
                             onChange={onFilesSelected}
                         />
                     <hr/>                  
-                    <p>
-                        Total distance: {formatDistance(totalDistance)}
-                    </p>
+                    
+                    <div className="d-flex align-items-start justify-content-between small">
+                        <p>
+                            Total distance: {formatDistance(totalDistance)}<br/>
+                            Total photos: {totalPhotos}
+                        </p>
+                        <p>                        
+                            Originals: {formatBytes(totalOriginal)}<br/>
+                            Standards: {formatBytes(totalStandard)}<br/>
+                            Thumbnails: {formatBytes(totalThumb)}<br/>
+                        </p>
+                    </div>
+                    
+                    
 
 
                     {uploading ? (
@@ -781,7 +805,7 @@ const PhotoCard = React.memo(function PhotoCard({
                         </div>
                     )}
 
-                    {distanceFromPrevious && (
+                    {(distanceFromPrevious !== null && distanceFromPrevious > 0) && (
                         <div className="small text-truncate">
                             + {formatDistance(distanceFromPrevious)}    
                         </div>                        

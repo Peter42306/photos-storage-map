@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCollection, deleteCollection, getCollection, getCollections, getThumbUrl, getToken, me } from "../api";
 
+function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+}
+
 export default function CollectionsPage() {
     const navigate = useNavigate();
     
@@ -137,14 +146,15 @@ export default function CollectionsPage() {
                                     <div className="text-muted small">
                                         {new Date(c.createdAtUtc).toLocaleString()}
                                     </div>
-                                    <div className="text-muted small">
+                                    {/* <div className="text-muted small">
                                         Id: {c.id}
-                                    </div>
+                                    </div> */}
                                     <div className="text-muted small">
                                         Photos: {c.totalPhotos}
                                     </div>
                                     <div className="text-muted small mb-2">
-                                        Size: {(c.totalBytes / (1024 * 1024)).toFixed(2)} MB
+                                        {/* Size: {(c.totalBytes / (1024 * 1024)).toFixed(2)} MB */}
+                                        Size: {formatBytes(c.totalBytes)}
                                     </div>
                                     <div className="mt-auto d-flex gap-2">
                                         <button

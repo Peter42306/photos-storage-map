@@ -4,6 +4,18 @@ import * as maptilersdk from "@maptiler/sdk";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import { getCollectionMap } from "../api";
 
+function formatDistance(meters) {
+    if (meters == null) {
+        return "";
+    }
+
+    if (meters < 1000) {
+        return `${Math.round(meters)} m`;
+    }
+
+    return `${(meters / 1000).toFixed(2)} km`;
+}
+
 
 export default function MapPage() {
     const mapContainer = useRef(null);
@@ -14,6 +26,7 @@ export default function MapPage() {
     const navigate = useNavigate();
 
     const [photos, setPhotos] = useState([]);
+    const [totalDistance, setTotalDistance] = useState(0);    
     const [error, setError] = useState("");
 
     maptilersdk.config.apiKey = import.meta.env.VITE_MAPTILER_KEY;
@@ -24,7 +37,8 @@ export default function MapPage() {
                 setError("");
                 const data = await getCollectionMap(id);
                 console.log("photos for map", data);
-                setPhotos(data ?? []);                
+                setPhotos(data.result ?? []);                
+                setTotalDistance(data?.totalDistance ?? 0);
 
             } catch (err) {
                 setError(err.message);
@@ -141,7 +155,14 @@ export default function MapPage() {
 
 
 
-            <p>Photos: {photos.length}</p>
+            <div className="d-flex align-items-center justify-content-between small">
+                <p>Photos: {photos.length}</p>
+                <p>Distance: {formatDistance(totalDistance)}</p>
+            </div>
+            
+            
+
+
             {error ? <div className="alert alert-danger">{error}</div> : null}
             
             <div 
