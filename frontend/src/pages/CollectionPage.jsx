@@ -7,6 +7,18 @@ import { completeUpload, deleteCollection, deletePhoto, downloadCollectionStanda
 
 //const S3_BASE = "https://hel1.your-objectstorage.com/photos-storage-map";
 
+function formatDistance(meters){
+        if (meters == null) {
+            return "";
+        }
+
+        if (meters < 1000) {
+            return `${Math.round(meters)} m`;
+        }
+
+        return `${(meters / 1000).toFixed(2)} km`;
+    }
+
 export default function CollectionPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -21,7 +33,6 @@ export default function CollectionPage() {
 
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState("");    
-
     
 
     async function load() {
@@ -321,7 +332,7 @@ export default function CollectionPage() {
                 }
 
                 const photos = prev.photos ?? prev.Photos ?? [];
-                const newPhotos = photos.filter(p => (p.id ?? p.Id) !== photoId);
+                const newPhotos = photos.filter(p => (p.id ?? p.Id) !== photoId);                
 
                 return prev.photos ? { ...prev, photos: newPhotos } : { ...prev, Photos: newPhotos }
                 
@@ -480,6 +491,10 @@ export default function CollectionPage() {
     
     const photos = collection?.photos ?? collection?.Photos ?? [];
 
+    const totalDistance = collection?.totalDistance ?? collection?.TotalDistance ?? 0;
+
+
+
     if (loading) {        
         return(
             <div className='container py-4'>
@@ -594,18 +609,22 @@ export default function CollectionPage() {
                     <hr/>
 
                     {/* <hr/>                             */}
-                            {uploadStatus ? <div className='alert alert-info'>{uploadStatus}</div> : null}
+                    {uploadStatus ? <div className='alert alert-info'>{uploadStatus}</div> : null}
 
-                            <label className='form-label'>Upload photos</label>
-                            <input
-                                type='file'
-                                className='form-control'
-                                accept='image/*'
-                                multiple
-                                disabled={uploading || isEditing}
-                                onChange={onFilesSelected}
-                            />
-                            <hr/>                  
+                    <label className='form-label'>Upload photos</label>
+                        <input
+                            type='file'
+                            className='form-control'
+                            accept='image/*'
+                            multiple
+                            disabled={uploading || isEditing}
+                            onChange={onFilesSelected}
+                        />
+                    <hr/>                  
+                    <p>
+                        Total distance: {formatDistance(totalDistance)}
+                    </p>
+
 
                     {uploading ? (
                         <div className='alert alert-info'>Uploading/Processing... please wait</div>
@@ -658,6 +677,7 @@ const PhotoCard = React.memo(function PhotoCard({
         const originalFileName = photo.originalFileName ?? photo.OriginalFileName;
         const latitude = photo.latitude ?? photo.Latitude;
         const longitude = photo.longitude ?? photo.Longitude;
+        const distanceFromPrevious = photo.distanceFromPrevious ?? photo.DistanceFromPrevious;
 
         // useEffect(() => {
         //     let cancelled = false;            
@@ -733,8 +753,15 @@ const PhotoCard = React.memo(function PhotoCard({
                 {/* Photo original name */}
                 <div className="card-body p-2">
                     <div className="small text-truncate">
-                        {originalFileName || "(no name)"}
+                        {originalFileName || "(no name)"}                        
                     </div>                
+                    <div className="small text-truncate">
+                        Distance from previous: {formatDistance(distanceFromPrevious)}
+                    </div>                
+
+                    <div>
+                        
+                    </div>
 
                     {/* Photo description */}
                     {!isEditingDescriptionPhoto 

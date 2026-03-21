@@ -7,6 +7,7 @@ using PhotosStorageMap.Domain.Entities;
 using PhotosStorageMap.Infrastructure.Data;
 using System.Security.Claims;
 using PhotosStorageMap.Domain.Enums;
+using PhotosStorageMap.Application.Common;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -105,6 +106,11 @@ namespace PhotosStorageMap.Api.Controllers
             if (collection is null) return NotFound();
 
             var photos = new List<object>();
+            
+            double? prevLat = null;
+            double? prevLng = null;
+            double totalDistance = 0;
+
             foreach ( var p in collection.Photos)
             {
                 string? thumbUrl = null;
@@ -112,7 +118,21 @@ namespace PhotosStorageMap.Api.Controllers
                 if (!string.IsNullOrWhiteSpace(p.ThumbKey))
                 {
                     thumbUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.ThumbKey, TimeSpan.FromHours(2));
-                }                
+                }
+                
+                double? distanceFromPrevious = null;
+
+                if (
+                    prevLat.HasValue && prevLng.HasValue &&
+                    p.Latitude.HasValue && p.Longitude.HasValue
+                    )
+                {
+                    distanceFromPrevious = Calculator.DistanceBetweenLocations(
+                        prevLat.Value, prevLng.Value,
+                        p.Latitude.Value, p.Longitude.Value);
+
+                    totalDistance += distanceFromPrevious.Value;
+                }
 
                 photos.Add(new
                 {
@@ -131,8 +151,16 @@ namespace PhotosStorageMap.Api.Controllers
                     p.Longitude,
                     p.Status,
                     p.Error,
-                    ThumbUrl = thumbUrl
+                    ThumbUrl = thumbUrl,
+                    DistanceFromPrevious = distanceFromPrevious
                 });
+
+                // update previous
+                if (p.Latitude.HasValue && p.Longitude.HasValue)
+                {
+                    prevLat = p.Latitude.Value;
+                    prevLng = p.Longitude.Value;
+                }
             }
             
             return Ok(new
@@ -143,6 +171,7 @@ namespace PhotosStorageMap.Api.Controllers
                 collection.CreatedAtUtc,
                 collection.TotalPhotos,
                 collection.TotalBytes,
+                TotalDistance = totalDistance,
                 Photos = photos
             });
         }
@@ -371,6 +400,6 @@ namespace PhotosStorageMap.Api.Controllers
             return User.FindFirstValue("sub")
                 ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? User.Identity?.Name;
-        }
+        }        
     }
 }
