@@ -136,7 +136,15 @@ namespace PhotosStorageMap.Api.Controllers
                         prevLat.Value, prevLng.Value,
                         p.Latitude.Value, p.Longitude.Value);
 
-                    totalDistance += distanceFromPrevious.Value;
+                    if ( distanceFromPrevious >= Limits.MinDistanceMeters)
+                    {
+                        totalDistance += distanceFromPrevious.Value;                        
+                    }
+                    else
+                    {
+                        distanceFromPrevious = 0;
+                    }
+                        
                 }
 
                 totalOriginalSizeBytes += p.OriginalSizeBytes ?? 0;
@@ -144,7 +152,7 @@ namespace PhotosStorageMap.Api.Controllers
                 totalThumbSizeBytes += p.ThumbSizeBytes ?? 0;
 
                 photos.Add(new
-                {
+                { 
                     p.Id,
                     p.OriginalFileName,
                     p.Description,                    

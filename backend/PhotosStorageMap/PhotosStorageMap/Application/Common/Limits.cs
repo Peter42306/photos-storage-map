@@ -2,6 +2,8 @@
 {
     public static class Limits
     {
+        public const int MinDistanceMeters = 5;
+
         public static class UploadCollection
         {
             public const int Title = 200;
@@ -38,6 +40,6 @@
         {
             public const int BatchSize = 20; // 20 photos
             public const int LoopDelay = 7; // 5 minutes
-        }
+        }        
     }
 }
