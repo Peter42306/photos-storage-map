@@ -774,7 +774,7 @@ const PhotoCard = React.memo(function PhotoCard({
         
 
         return(
-            <div className="card shadow-sm h-100 position-relative">
+            <div className="card shadow-sm h-100 position-relative d-flex flex-column">
 
                 {/* Photo */}
                 {thumbUrl ? (
@@ -794,7 +794,7 @@ const PhotoCard = React.memo(function PhotoCard({
                 )}
 
                 {/* Photo original name */}
-                <div className="card-body p-2">
+                <div className="card-body d-flex flex-column p-2">
                     <div className="small text-truncate">
                         {originalFileName || "(no name)"}                        
                     </div>                
@@ -853,7 +853,7 @@ const PhotoCard = React.memo(function PhotoCard({
                     }
 
                     <hr/>
-                    <div className="d-flex flex-wrap gap-1 mt-2">
+                    <div className="d-flex flex-wrap gap-1 mt-auto mt-2">
                         <button
                             // className='btn btn-outline-danger btn-sm'
                             className='btn-close position-absolute top-0 end-0 m-2'

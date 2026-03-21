@@ -248,12 +248,6 @@ namespace PhotosStorageMap.Infrastructure.Services
             }
 
             return value.Trim();
-        }
-
-        private enum ArchiveType
-        {
-            Standard = 1,
-            Original = 2
-        }
+        }       
     }
 }
