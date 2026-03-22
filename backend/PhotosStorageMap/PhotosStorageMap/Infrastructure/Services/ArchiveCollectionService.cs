@@ -26,19 +26,19 @@ namespace PhotosStorageMap.Infrastructure.Services
             _logger = logger;
         }
 
-        public Task<ArchiveBuildResult> BuildOriginalZipAsync(Guid collectionId, CancellationToken ct = default)
+        public Task<ArchiveBuildTempResult> BuildOriginalZipAsync(Guid collectionId, CancellationToken ct = default)
         {
             return BuildZipAsync(collectionId, ArchiveType.Original, ct);
         }
 
-        public Task<ArchiveBuildResult> BuildStandardZipAsync(Guid collectionId, CancellationToken ct = default)
+        public Task<ArchiveBuildTempResult> BuildStandardZipAsync(Guid collectionId, CancellationToken ct = default)
         {
             return BuildZipAsync(collectionId, ArchiveType.Standard, ct);
         }
 
 
 
-        private async Task<ArchiveBuildResult> BuildZipAsync(
+        private async Task<ArchiveBuildTempResult> BuildZipAsync(
             Guid collectionId,
             ArchiveType type,
             CancellationToken ct)
@@ -46,7 +46,7 @@ namespace PhotosStorageMap.Infrastructure.Services
             var sw = Stopwatch.StartNew();
 
             var collection = await _db.UploadCollections
-                .FirstOrDefaultAsync(c => c.Id == collectionId);
+                .FirstOrDefaultAsync(c => c.Id == collectionId && !c.IsDeleted, ct);
 
             if (collection is null)
             {
@@ -170,11 +170,11 @@ namespace PhotosStorageMap.Infrastructure.Services
                 throw new InvalidOperationException("No files available for archive.");
             }
 
-            var resultStream = new FileStream(
-                tempZipPath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read);
+            //var resultStream = new FileStream(
+            //    tempZipPath,
+            //    FileMode.Open,
+            //    FileAccess.Read,
+            //    FileShare.Read);
 
             var safeCollectionTitle = string.IsNullOrWhiteSpace(collection.Title)
                 ? "collection"
@@ -194,10 +194,16 @@ namespace PhotosStorageMap.Infrastructure.Services
                 sw.Elapsed.Minutes,
                 sw.Elapsed.Seconds);
 
-            return new ArchiveBuildResult(
-                resultStream,
+            //return new ArchiveBuildResult(
+            //    resultStream,
+            //    zipFileName,
+            //    ContentType.ApplicationZip,
+            //    filesCount,
+            //    totalBytes);
+
+            return new ArchiveBuildTempResult(
+                tempZipPath,
                 zipFileName,
-                ContentType.ApplicationZip,
                 filesCount,
                 totalBytes);
         }
