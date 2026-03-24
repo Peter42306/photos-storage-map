@@ -623,9 +623,9 @@ export default function CollectionPage() {
                         >
                             Map view
                         </button>
-                        <button className='btn btn-primary'>
+                        {/* <button className='btn btn-primary'>
                             Download originals
-                        </button>
+                        </button> */}
                         <button
                             className='btn btn-primary'
                             onClick={downloadStandardZipHandler}
