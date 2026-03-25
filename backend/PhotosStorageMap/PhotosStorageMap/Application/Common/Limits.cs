@@ -39,5 +39,15 @@
             public const int BatchSize = 20; // 20 photos
             public const int LoopDelay = 7; // 5 minutes
         }
+
+        public static class ArchiveItem
+        {
+            public const int OriginalFileName = 255;
+            public const int StorageKey = 1024;
+            public const int Description = 1000;
+            public const int ContentType = 100;            
+            public const long MaxSizeBytes = 20L * 1024 * 1024 * 1024; // 20 GB
+            public const int Error = 2000;
+        }
     }
 }

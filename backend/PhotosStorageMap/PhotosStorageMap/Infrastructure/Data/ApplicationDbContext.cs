@@ -16,10 +16,28 @@ namespace PhotosStorageMap.Infrastructure.Data
         public DbSet<UploadCollection> UploadCollections => Set<UploadCollection>();
         public DbSet<PhotoItem> PhotoItems => Set<PhotoItem>();
         public DbSet<ShareLink> ShareLinks => Set<ShareLink>();
+        public DbSet<ArchiveItem> ArchiveItems => Set<ArchiveItem>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<ArchiveItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.OriginalFileName).IsRequired().HasMaxLength(Limits.ArchiveItem.OriginalFileName);
+                entity.Property(e => e.StorageKey).IsRequired().HasMaxLength(Limits.ArchiveItem.StorageKey);
+                entity.Property(e => e.ContentType).IsRequired().HasMaxLength(Limits.ArchiveItem.ContentType);
+                entity.Property(e => e.Description).HasMaxLength(Limits.ArchiveItem.Description);
+                entity.Property(e => e.SizeBytes).IsRequired();
+                entity.Property(e => e.CreatedAtUtc).IsRequired();
+                
+                entity.HasOne(e => e.UploadCollection).WithMany(c => c.Archives).HasForeignKey(e => e.UploadCollectionId).OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.UploadCollectionId);
+                entity.HasIndex(e => e.StorageKey);
+                entity.HasIndex(e => new { e.UploadCollectionId, e.CreatedAtUtc });                
+            });
 
             builder.Entity<UploadCollection>(entity =>
             {
