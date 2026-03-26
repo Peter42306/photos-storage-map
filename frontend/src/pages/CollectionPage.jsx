@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeUpload, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initUpload, putToPresignedUrl, updateCollection, updatePhotoDescription } from "../api";
+import { completeArchiveUpload, completeUpload, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
 
 
 
@@ -60,6 +60,11 @@ export default function CollectionPage() {
 
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState("");    
+
+    const [archives, setArchives] = useState([]);
+    const [archiveUploading, setArchiveUploading] = useState(false);
+    const [archiveUploadProgress, setArchiveUploadProgress] = useState(0);
+    const [archiveUploadStatus, setArchiveUploadStatus] = useState("");
     
 
     async function load() {
@@ -71,11 +76,13 @@ export default function CollectionPage() {
 
             console.log("load() called, before getCollection")
             const data = await getCollection(id);
+            const archivesData = await getCollectionArchives(id);
 
             console.log("load() called, after getCollection, response data: ", data);
             setCollection(data);
             setTitle(data?.title ?? "");
             setDescription(data?.description ?? "");
+            setArchives(archivesData ?? []);
         } catch (err) {
 
             
@@ -512,6 +519,49 @@ export default function CollectionPage() {
         }
     }
 
+    async function onArchiveSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith(".zip")) {
+        setError("Only .zip archives are allowed.");
+        e.target.value = "";
+        return;
+    }
+
+    try {
+        setError("");
+        setArchiveUploading(true);
+        setArchiveUploadProgress(0);
+        setArchiveUploadStatus("Initializing archive upload...");
+        
+        const { archiveId, uploadUrl } = await initArchiveUploads(id, file.name, file.size);
+
+        setArchiveUploadStatus("Uploading archive...");
+
+        await putToPresignedUrlWithProgress(uploadUrl, file, (loaded, total) => {
+            const percent = Math.round((loaded / total) * 100);
+            setArchiveUploadProgress(percent);
+            setArchiveUploadStatus(`Uploading archive: ${percent}%`);
+        });
+
+        setArchiveUploadStatus("Saving archive metadata...");
+
+        await completeArchiveUpload(archiveId, id, file.name, file.size);
+
+        setArchiveUploadStatus("Archive uploaded successfully.");
+        const archivesData = await getCollectionArchives(id);
+        setArchives(archivesData ?? []);
+    } catch (err) {
+        setError(err.message);
+        setArchiveUploadStatus("");
+    } finally {
+        setArchiveUploading(false);
+        setArchiveUploadProgress(0);
+        e.target.value = "";
+    }
+}
+
 
 
     
@@ -642,20 +692,22 @@ export default function CollectionPage() {
                     {/* <hr/>                             */}
                     {uploadStatus ? <div className='alert alert-info'>{uploadStatus}</div> : null}
 
-                    <label className='form-label'>Upload photos</label>
+                    <h5>Photos</h5>
+
+                    <label className='form-label'>Upload photos (.jpg, .jpeg)</label>
                         <input
                             type='file'
-                            className='form-control'
+                            className='form-control mb-3'
                             accept='image/*'
                             multiple
                             disabled={uploading || isEditing}
                             onChange={onFilesSelected}
                         />
-                    <hr/>                  
+                    {/* <hr/>                   */}
                     
                     <div className="d-flex align-items-start justify-content-between small">
                         <p>
-                            Total distance: {formatDistance(totalDistance)}<br/>
+                            Total distance by geo tags: {formatDistance(totalDistance)}<br/>
                             Total photos: {totalPhotos}
                         </p>
                         <p>                        
@@ -664,9 +716,6 @@ export default function CollectionPage() {
                             Thumbnails: {formatBytes(totalThumb)}<br/>
                         </p>
                     </div>
-                    
-                    
-
 
                     {uploading ? (
                         <div className='alert alert-info'>Uploading/Processing... please wait</div>
@@ -691,6 +740,85 @@ export default function CollectionPage() {
 
                     
                     <hr/>
+                    <h5>Archives</h5>
+                    
+                    {/* Archives */}
+                    <label className='form-label'>Upload archive (.zip)</label>
+                    <input
+                        type='file'
+                        className='form-control mb-3'                        
+                        accept='.zip,application/zip,application/x-zip-compressed'
+                        disabled={archiveUploadStatus || isEditing}
+                        onChange={onArchiveSelected}
+                    />
+
+                    {archiveUploadStatus ? (
+                        <div className='alert alert-info mt-2'>
+                            {archiveUploadStatus}
+                            {archiveUploading &&(
+                                <div className='progress mt-2'>
+                                    <div
+                                        className='progress-bar'
+                                        role='progressbar'
+                                        style={{width: `${archiveUploadProgress}%`}}
+                                    >
+                                        {archiveUploadProgress}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+
+                    {/* <hr/> */}
+
+                    {archives.length === 0 ? (
+                        <div className='alert alert-info'>No archives uploaded yet</div>
+                    ) : (
+                        <div className='row'>
+                            {archives.map((a) => (
+                                <div key={a.id ?? a.Id} className='col-6 col-md-4 col-lg-3 mb-3'>
+                                    <div className='card shadow-sm h-100'>
+                                        <div className='card-body p-2'>
+
+                                            <div className='small text-truncate'>
+                                                {a.originalFileName ?? a.OriginalFileName}
+                                            </div>
+                                            <div className='small text-truncate'>
+                                                {formatBytes(a.sizeBytes ?? a.SizeBytes)}
+                                            </div>
+                                            <div className='small text-truncate'>
+                                                {formatTakenAt(a.createdAtUtc ?? a.CreatedAtUtc)}
+                                            </div>
+                                            
+                                            <hr/>
+                                            <div className='d-flex flex-wrap gap-1 mt-2'>
+                                                <button
+                                                    className='btn btn-outline-secondary btn-sm'
+                                                    title='View original'
+                                                >
+                                                    <i className='bi bi-download'></i>
+                                                </button>
+                                                <button
+                                                    className='btn btn-outline-secondary btn-sm'
+                                                    title='Delete archive'
+                                                >
+                                                    <i className='bi bi-trash'></i>
+                                                </button>
+                                                <button
+                                                    className='btn btn-outline-secondary btn-sm'
+                                                    title='Edit description'
+                                                >
+                                                    <i className='bi bi-pencil'></i>
+                                                </button>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}                            
+                        </div>
+                    )}
                     
                 {/* </div>                 */}
             {/* </div> */}
@@ -809,16 +937,23 @@ const PhotoCard = React.memo(function PhotoCard({
                         <div className="small text-truncate">
                             + {formatDistance(distanceFromPrevious)}    
                         </div>                        
-                    )}
+                    )}                   
                     
 
                     {/* Photo description */}
                     {!isEditingDescriptionPhoto 
                         ? (descriptionPhoto) 
-                            ? (<div className='small text-muted text-truncate'>{descriptionPhoto}</div>) 
+                            ? (
+                                <div>
+                                    <hr/>
+                                    <div className='small text-muted text-truncate'>{descriptionPhoto}</div>
+                                </div>
+                            ) 
                             : null
                         : (
                             <div className='mt-2'>
+                                
+                                <hr/>
                                 <TextareaAutosize
                                     className='form-control form-control-sm'                                    
                                     minRows={2}

@@ -425,7 +425,7 @@ namespace PhotosStorageMap.Api.Controllers
             }
         }
 
-        [HttpGet("{id:guid}archives")]
+        [HttpGet("{id:guid}/archives")]
         public async Task<IActionResult> GetCollectionArchives(Guid id, CancellationToken ct)
         {
             var userId = GetUserId();

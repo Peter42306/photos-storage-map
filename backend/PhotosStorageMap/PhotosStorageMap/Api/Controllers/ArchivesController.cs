@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PhotosStorageMap.Application.Common;
 using PhotosStorageMap.Application.DTOs;
 using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Domain.Entities;
 using PhotosStorageMap.Infrastructure.Data;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace PhotosStorageMap.Api.Controllers
@@ -14,16 +16,16 @@ namespace PhotosStorageMap.Api.Controllers
     [Route("api/archives")]
     [ApiController]
     [Authorize]
-    public class ArchiveController : ControllerBase
+    public class ArchivesController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
         private readonly IFileStorage _storage;
-        private readonly ILogger<ArchiveController> _logger;
+        private readonly ILogger<ArchivesController> _logger;
 
-        public ArchiveController(
+        public ArchivesController(
             ApplicationDbContext db,
             IFileStorage storage,
-            ILogger<ArchiveController> logger)
+            ILogger<ArchivesController> logger)
         {
             _db = db;
             _storage = storage;
@@ -34,9 +36,12 @@ namespace PhotosStorageMap.Api.Controllers
 
         [HttpPost("init")]
         public async Task<IActionResult> InitUpload(
-            [FromQuery] InitArchiveUploadRequest request, 
+            [FromBody] InitArchiveUploadRequest request, 
             CancellationToken ct) 
         {
+            var sw = Stopwatch.StartNew();
+            _logger.LogInformation("ARCHIVES CONTROLLER: InitUpload started, ArchiveName: {ArchiveName}.",request.FileName);
+
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
@@ -46,7 +51,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (request.FileSize > Limits.ArchiveItem.MaxSizeBytes) return BadRequest($"Archive size exceeds limit of {Limits.ArchiveItem.MaxSizeBytes} bytes.");
             
             var extension = Path.GetExtension(request.FileName)?.ToLowerInvariant();
-            if (extension != ContentType.Zip) return BadRequest("Only .zip zrchive are allowed.");
+            if (extension != ContentType.Zip) return BadRequest("Only .zip archive are allowed.");
 
             var collection = await _db.UploadCollections
                 .FirstOrDefaultAsync(
@@ -63,6 +68,10 @@ namespace PhotosStorageMap.Api.Controllers
             var uploadUrl = await _storage.GeneratePresignedUploadUrlAsync(
                 storageKey,TimeSpan.FromHours(Limits.ArchiveItem.InitUpload.UrlExpiresIn));
 
+            sw.Stop();
+            _logger.LogInformation("ARCHIVES CONTROLLER: InitUpload completed, Duration: {Seconds} ms",
+                sw.Elapsed.TotalSeconds);
+
             return Ok(new
             {
                 archiveId,
@@ -78,6 +87,9 @@ namespace PhotosStorageMap.Api.Controllers
             [FromBody] InitArchiveUploadRequest request,
             CancellationToken ct)
         {
+            var sw = Stopwatch.StartNew();
+            _logger.LogInformation("ARCHIVES CONTROLLER: CompleteUpload started, ArchiveName: {ArchiveName}.", request.FileName);
+
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
@@ -93,14 +105,14 @@ namespace PhotosStorageMap.Api.Controllers
             var extension = Path.GetExtension(request.FileName)?.ToLowerInvariant();
             if (extension != ContentType.Zip) return BadRequest("Only .zip archives are allowed.");
 
-            var storagekey = StorageKeys.Archive(userId, request.CollectionId, id, extension);
+            var storageKey = StorageKeys.Archive(userId, request.CollectionId, id, extension);
 
             var archive = new ArchiveItem
             {
                 Id = id,
                 UploadCollectionId = request.CollectionId,
                 OriginalFileName = request.FileName,
-                StorageKey = storagekey,
+                StorageKey = storageKey,
                 ContentType = ContentType.ApplicationZip,
                 SizeBytes = request.FileSize,
                 CreatedAtUtc = DateTime.UtcNow
@@ -108,6 +120,11 @@ namespace PhotosStorageMap.Api.Controllers
 
             _db.ArchiveItems.Add(archive);
             await _db.SaveChangesAsync(ct);
+
+            sw.Stop();
+            _logger.LogInformation("ARCHIVES CONTROLLER: CompleteUpload completed, ArchiveSize: {TotalBytes}, Duration: {Seconds} s",
+                request.FileSize,                
+                sw.Elapsed.TotalSeconds);
 
             return Ok(new
             {
@@ -152,7 +169,7 @@ namespace PhotosStorageMap.Api.Controllers
             }
 
             _db.ArchiveItems.Remove(archive);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
 
             return NoContent();
         }

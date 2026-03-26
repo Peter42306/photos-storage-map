@@ -319,3 +319,99 @@ function getFileNameFromContentDisposition(contentDisposition) {
 
     return null;
 }
+
+export function prepareStandardZip(collectionId) {
+    return request(`/api/collections/${collectionId}/prepare-standard-zip`, {
+        method: "POST",
+        auth: true
+    });
+}
+
+export function getArchiveJob(jobId) {
+    return request(`/api/archive-jobs/${jobId}`, {
+        method: "GET",
+        auth: true
+    });
+}
+
+// export function getArchiveDownloadUrl(jobId) {
+//     return request(`/api/archive-jobs/${jobId}/download`, {
+//         method: "GET",
+//         auth: true
+//     });
+// }
+
+// archives
+
+export function initArchiveUploads(collectionId, fileName, fileSize) {
+    return request("/api/archives/init",{
+        method: "POST",
+        auth: true,
+        body:{
+            collectionId,
+            fileName,
+            fileSize
+        }
+    });
+}
+
+export function completeArchiveUpload(archiveId, collectionId, fileName, fileSize) {
+    return request(`/api/archives/${archiveId}/complete`, {
+        method: "POST",
+        auth: true,
+        body: {
+            collectionId,
+            fileName,
+            fileSize
+        }
+    });
+}
+
+export function getCollectionArchives(collectionId) {
+    return request(`/api/collections/${collectionId}/archives`, {
+        method: "GET",
+        auth: true
+    });
+}
+
+export function deleteArchive(archiveId) {
+    return request(`/api/archives/${archiveId}`, {
+        method: "DELETE",
+        auth: true
+    });
+}
+
+export function getArchiveDownloadUrl(archiveId) {
+    return request(`/api/archives/${archiveId}/download-url`, {
+        method: "GET",
+        auth: true
+    });
+}
+
+export function putToPresignedUrlWithProgress(uploadUrl, file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                onProgress?.(event.loaded, event.total);
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve();
+            } else {
+                reject(new Error(`Upload failed: ${xhr.status}`));
+            }
+        };
+
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.onabort = () => reject(new Error("Upload aborted"));
+
+        xhr.send(file);
+    });
+}
