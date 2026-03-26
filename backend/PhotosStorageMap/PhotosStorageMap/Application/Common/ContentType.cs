@@ -4,7 +4,8 @@
     {
         public const string ImageJpeg = "image/jpeg";
         public const string ApplicationZip = "application/zip";
-        
+        public const string Zip = ".zip";
+
         // types of photos
         public const string Original = "originals";
         public const string Standard = "standard";

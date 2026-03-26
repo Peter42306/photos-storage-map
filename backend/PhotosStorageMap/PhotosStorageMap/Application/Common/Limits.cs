@@ -47,7 +47,17 @@
             public const int Description = 1000;
             public const int ContentType = 100;            
             public const long MaxSizeBytes = 20L * 1024 * 1024 * 1024; // 20 GB
-            public const int Error = 2000;
+            public const int Error = 2000;            
+
+            public static class InitUpload
+            {
+                public const int UrlExpiresIn = 1; // 1 hour
+            }
+
+            public static class GetDownloadUrl
+            {
+                public const int UrlExpiresIn = 30; // 30 minutes
+            }
         }
     }
 }

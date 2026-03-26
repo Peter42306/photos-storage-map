@@ -86,6 +86,7 @@ namespace PhotosStorageMap.Infrastructure.Storage
             var url = _s3.GetPreSignedURL(req);
             return Task.FromResult(url);
         }
+        
 
         public Task<string> GeneratePresignedDownloadUrlAsync(
             string storageKey, 
