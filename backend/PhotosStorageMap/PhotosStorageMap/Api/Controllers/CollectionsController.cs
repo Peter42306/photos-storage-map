@@ -425,6 +425,37 @@ namespace PhotosStorageMap.Api.Controllers
             }
         }
 
+        [HttpGet("{id:guid}archives")]
+        public async Task<IActionResult> GetCollectionArchives(Guid id, CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var collectionExists = await _db.UploadCollections
+                .AnyAsync(c =>
+                    c.Id == id &&
+                    c.OwnerUserId == userId &&
+                    !c.IsDeleted,
+                    ct);
+
+            if (!collectionExists) return NotFound();
+
+            var archives = await _db.ArchiveItems
+                .Where(a => a.UploadCollectionId == id)
+                .OrderByDescending(a => a.CreatedAtUtc)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.OriginalFileName,
+                    a.SizeBytes,
+                    a.CreatedAtUtc,
+                    a.Description
+                })
+                .ToListAsync(ct);
+
+            return Ok(archives);
+        }
+
 
         //-------------------------------------------------------
         // Helper
