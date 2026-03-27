@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeArchiveUpload, completeUpload, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
+import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
 
 
 
@@ -552,15 +552,33 @@ export default function CollectionPage() {
         setArchiveUploadStatus("Archive uploaded successfully.");
         const archivesData = await getCollectionArchives(id);
         setArchives(archivesData ?? []);
-    } catch (err) {
-        setError(err.message);
-        setArchiveUploadStatus("");
-    } finally {
-        setArchiveUploading(false);
-        setArchiveUploadProgress(0);
-        e.target.value = "";
+        } catch (err) {
+            setError(err.message);
+            setArchiveUploadStatus("");
+        } finally {
+            setArchiveUploading(false);
+            setArchiveUploadProgress(0);
+            e.target.value = "";
+        }
     }
-}
+
+    async function deleteArchiveHandler(archiveId, fileName) {
+        const confirmed = confirm(`Delete this archive?\n${fileName ?? "archive"}`);
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setError("");
+            await deleteArchive(archiveId);
+
+            setArchives(prev => 
+                prev.filter(a => (a.id ?? a.Id) !== archiveId)
+            );
+        } catch (err) {
+            setError(err.message);
+        }
+    }
 
 
 
@@ -770,7 +788,7 @@ export default function CollectionPage() {
                     ) : null}
 
                     {/* <hr/> */}
-
+                    {/* Archive Cards */}
                     {archives.length === 0 ? (
                         <div className='alert alert-info'>No archives uploaded yet</div>
                     ) : (
@@ -800,6 +818,7 @@ export default function CollectionPage() {
                                                 </button>
                                                 <button
                                                     className='btn btn-outline-secondary btn-sm'
+                                                    onClick={() => deleteArchiveHandler(a.id ?? a.Id, a.originalFileName ?? a.OriginalFileName)}
                                                     title='Delete archive'
                                                 >
                                                     <i className='bi bi-trash'></i>

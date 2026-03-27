@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Amazon.Runtime.Internal;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -157,6 +158,8 @@ namespace PhotosStorageMap.Api.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteArchive(Guid id, CancellationToken ct)
         {
+            var sw = Stopwatch.StartNew();
+
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
@@ -170,6 +173,12 @@ namespace PhotosStorageMap.Api.Controllers
 
             _db.ArchiveItems.Remove(archive);
             await _db.SaveChangesAsync(ct);
+
+            sw.Stop();
+            _logger.LogInformation("ARCHIVES CONTROLLER: DeleteArchive completed, ArchiveName: {ArchiveName} ArchiveSize: {TotalBytes}, Duration: {Seconds} s",
+                archive.OriginalFileName,
+                archive.SizeBytes,
+                sw.Elapsed.TotalSeconds);
 
             return NoContent();
         }
