@@ -601,6 +601,11 @@ export default function CollectionPage() {
     
     
     const photos = collection?.photos ?? collection?.Photos ?? [];
+    const totalArchives = archives.length;
+    const totalArchivesSize = archives.reduce(
+        (sum, archive) => sum + (archive.sizeBytes ?? archive.SizeBytes ?? 0),
+        0
+    );
 
     const totalPhotos = collection?.totalPhotos ?? collection?.TotalPhotos ?? 0;
     const totalDistance = collection?.totalDistance ?? collection?.TotalDistance ?? 0;
@@ -744,10 +749,10 @@ export default function CollectionPage() {
                             Total distance by geo tags: {formatDistance(totalDistance)}<br/>
                             Total photos: {totalPhotos}
                         </p>
-                        <p>                        
-                            Originals: {formatBytes(totalOriginal)}<br/>
-                            Standards: {formatBytes(totalStandard)}<br/>
-                            Thumbnails: {formatBytes(totalThumb)}<br/>
+                        <p className='text-end'>                        
+                            Originals size: {formatBytes(totalOriginal)}<br/>
+                            Resized standards size: {formatBytes(totalStandard)}<br/>
+                            Resized thumbnails size: {formatBytes(totalThumb)}<br/>
                         </p>
                     </div>
 
@@ -785,6 +790,15 @@ export default function CollectionPage() {
                         disabled={archiveUploadStatus || isEditing}
                         onChange={onArchiveSelected}
                     />
+
+                    <div className="d-flex align-items-start justify-content-between small">
+                        <p>
+                            Total archives: {totalArchives}<br/>                            
+                        </p>
+                        <p className='text-end'>                        
+                            Total archives size: {formatBytes(totalArchivesSize)}<br/>                            
+                        </p>
+                    </div>
 
                     {archiveUploadStatus ? (
                         <div className='alert alert-info mt-2'>
