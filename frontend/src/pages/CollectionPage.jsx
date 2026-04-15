@@ -967,22 +967,26 @@ const PhotoCard = React.memo(function PhotoCard({
                 )}
 
                 {/* Photo original name */}
-                <div className="card-body p-2">
-                    <div className="small text-truncate">
-                        {originalFileName || "(no name)"}                        
-                    </div>                
+                <div className="card-body p-2 d-flex flex-column">
+                    <div className='d-flex align-items-start justify-content-between'>
+                        <div className="small text-truncate">
+                            {originalFileName || "(no name)"}                        
+                        </div>                
+                        {(distanceFromPrevious !== null && distanceFromPrevious > 0) && (
+                        <div className="small text-truncate">
+                            + {formatDistance(distanceFromPrevious)}    
+                        </div>                        
+                    )}                   
+                    </div>
+                    
 
+                    {/* Photo taken */}
                     {takenAt && (
                         <div className="small text-truncate">
                             {formatTakenAt(takenAt)}
                         </div>
                     )}
-
-                    {(distanceFromPrevious !== null && distanceFromPrevious > 0) && (
-                        <div className="small text-truncate">
-                            + {formatDistance(distanceFromPrevious)}    
-                        </div>                        
-                    )}                   
+                    
                     
 
                     {/* Photo description */}
@@ -1033,7 +1037,8 @@ const PhotoCard = React.memo(function PhotoCard({
                     }
 
                     <hr/>
-                    <div className="d-flex flex-wrap gap-1 mt-2">
+                    {/* Card buttons block */}
+                    <div className="d-flex flex-wrap gap-1 mt-auto">
                         <button
                             // className='btn btn-outline-danger btn-sm'
                             className='btn-close position-absolute top-0 end-0 m-2'
