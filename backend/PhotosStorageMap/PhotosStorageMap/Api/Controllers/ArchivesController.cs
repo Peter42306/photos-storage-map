@@ -152,7 +152,7 @@ namespace PhotosStorageMap.Api.Controllers
                 archive.OriginalFileName,
                 true);
 
-            return Ok(new { url });
+            return Ok(url);
         }
 
         [HttpDelete("{id:guid}")]

@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
+import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
 
 
 
@@ -39,11 +39,12 @@ function formatTakenAt(dateString) {
         day: "2-digit",
         month: "long",
         year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-    }).format(date)
-    .replace(",", " at");
+        // hour: "2-digit",
+        // minute: "2-digit",
+        // hour12: false
+    }).format(date);
+    // .replace(",", " at");
+    
 }
 
 export default function CollectionPage() {
@@ -580,6 +581,21 @@ export default function CollectionPage() {
         }
     }
 
+    async function downloadArchiveHandler(archiveId) {
+        try {
+            setError("");
+
+            const res = await getArchiveDownloadUrl(archiveId);
+            const url = typeof res === "string" ? res : res?.url;
+
+            if (url) {
+                window.location.href = url;
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
 
 
     
@@ -795,9 +811,18 @@ export default function CollectionPage() {
                         <div className='row'>
                             {archives.map((a) => (
                                 <div key={a.id ?? a.Id} className='col-6 col-md-4 col-lg-3 mb-3'>
-                                    <div className='card shadow-sm h-100'>
+                                    <div className='card shadow-sm h-100 position-relative'>
+                                        <div
+                                            className="d-flex flex-column align-items-center justify-content-center bg-light"
+                                            style={{ width: "100%", height: 80 }}
+                                        >
+                                            <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>
+                                            {/* <div className='small text-muted mt-2'>ZIP archive</div> */}
+                                        </div>                                            
+
                                         <div className='card-body p-2'>
 
+                                            
                                             <div className='small text-truncate'>
                                                 {a.originalFileName ?? a.OriginalFileName}
                                             </div>
@@ -812,6 +837,7 @@ export default function CollectionPage() {
                                             <div className='d-flex flex-wrap gap-1 mt-2'>
                                                 <button
                                                     className='btn btn-outline-secondary btn-sm'
+                                                    onClick={() => downloadArchiveHandler(a.id ?? a.Id)}
                                                     title='View original'
                                                 >
                                                     <i className='bi bi-download'></i>
