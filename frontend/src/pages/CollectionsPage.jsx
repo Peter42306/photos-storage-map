@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createCollection, deleteCollection, getCollection, getCollections, getThumbUrl, getToken, me } from "../api";
+import { createCollection, deleteCollection, getCollection, getCollections, getStorageSummary, getThumbUrl, getToken, me } from "../api";
 
 function formatBytes(bytes) {
     if (!bytes) return "0 B";
@@ -43,6 +43,8 @@ export default function CollectionsPage() {
 
     const [deletingId, setDeletingId] = useState(null);
 
+    const [summary, setSummary] = useState(null);
+
     async function loadMe() {
             setError("");
             setStatus("Loading /api/me...");
@@ -62,8 +64,15 @@ export default function CollectionsPage() {
             try {
                 setLoading(true);
                 setError("");
-                const data = await getCollections();
-                setCollections(data);
+
+                const [collectionsData, summaryData] = await Promise.all([
+                    getCollections(),
+                    getStorageSummary()
+                ]);
+
+                // const data = await getCollections();
+                setCollections(collectionsData ?? []);
+                setSummary(summaryData);
             } catch (err) {
                 setError(err.message);            
             } finally {
@@ -147,6 +156,18 @@ export default function CollectionsPage() {
 
             {error ? <div className="alert alert-danger">{error}</div> : null}
             {status ? <div className="alert alert-info">{status}</div> : null}
+
+            {summary && (
+                <div className="d-flex align-items-start justify-content-between small mb-3">
+                    <div>                        
+                        Photos: {summary.totalPhotos ?? summary.TotalPhotos ?? 0} / {formatBytes(summary.totalPhotosBytes ?? summary.TotalPhotosBytes ?? 0)}<br/>
+                        Archives: {summary.totalArchives ?? summary.TotalArchives ?? 0} / {formatBytes(summary.totalArchivesBytes ?? summary.TotalArchivesBytes ?? 0)}<br/>
+                    </div>
+                    <div className="text-end">                        
+                        Collections: {summary.totalCollections ?? summary.TotalCollections ?? 0} / {formatBytes(summary.totalStorageBytes ?? summary.totalStorageBytes ?? 0)}<br/>
+                    </div>
+                </div>
+            )}            
 
             {loading ? (
                 <div>Loading...</div>

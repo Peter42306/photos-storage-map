@@ -415,3 +415,10 @@ export function putToPresignedUrlWithProgress(uploadUrl, file, onProgress) {
         xhr.send(file);
     });
 }
+
+export function getStorageSummary() {
+    return request("/api/me/storage-summary",{
+        method: "GET",
+        auth: true
+    })
+}

@@ -772,18 +772,18 @@ export default function CollectionPage() {
                         />
                     {/* <hr/>                   */}
                     
-                    <div className="d-flex align-items-start justify-content-between small">
-                        <p>
+                    <div className="d-flex align-items-start justify-content-between small mb-3">
+                        <div>
                             Total distance by geo tags: {formatDistance(totalDistance)}<br/>
                             Photos: {totalPhotos}<br/>
                             Size: {formatBytes(totalPhotosSize)}
-                        </p>
-                        <p className='text-end'>                        
+                        </div>
+                        <div className='text-end'>                        
                             Originals size: {formatBytes(totalOriginal)}<br/>
                             Resized standards size: {formatBytes(totalStandard)}<br/>
                             Resized thumbnails size: {formatBytes(totalThumb)}<br/>
-                        </p>
-                    </div>
+                        </div>
+                    </div>                    
 
                     {uploading ? (
                         <div className='alert alert-info'>Uploading/Processing... please wait</div>
@@ -821,14 +821,15 @@ export default function CollectionPage() {
                         onChange={onArchiveSelected}
                     />
 
-                    <div className="d-flex align-items-start justify-content-between small">
-                        <p>
+                    <div className="d-flex align-items-start justify-content-between small mb-3">
+                        <div>
                             Total archives: {totalArchives}<br/>                            
-                        </p>
-                        <p className='text-end'>                        
+                        </div>
+                        <div className='text-end'>                        
                             Total archives size: {formatBytes(totalArchivesSize)}<br/>                            
-                        </p>
+                        </div>
                     </div>
+                    
 
                     {archiveUploadStatus ? (
                         <div className='alert alert-info mt-2'>
