@@ -11,6 +11,25 @@ function formatBytes(bytes) {
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
 
+function formatTakenAt(dateString) {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    if (isNaN(date)) return "";
+
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        // hour: "2-digit",
+        // minute: "2-digit",
+        // hour12: false
+    }).format(date);
+    // .replace(",", " at");
+    
+}
+
 export default function CollectionsPage() {
     const navigate = useNavigate();
     
@@ -143,19 +162,34 @@ export default function CollectionsPage() {
                                     >
                                         {c.title || "Untitled"}
                                     </h5>
+                                    <hr/>
                                     <div className="text-muted small">
-                                        {new Date(c.createdAtUtc).toLocaleString()}
+                                        Created: {formatTakenAt (new Date(c.createdAtUtc).toLocaleString())}
                                     </div>
                                     {/* <div className="text-muted small">
                                         Id: {c.id}
                                     </div> */}
+                                    {/* {c.totalPhotos > 0 && (
+                                        <div className="text-muted small">
+                                            Photos: {c.totalPhotos} / {formatBytes(c.totalBytes)}
+                                        </div>
+                                    )} */}
+                                    
                                     <div className="text-muted small">
-                                        Photos: {c.totalPhotos}
+                                        {c.totalPhotos > 0 ? (
+                                            <>Photos: {c.totalPhotos} / {formatBytes(c.totalBytes)}</>
+                                        ) : (
+                                            <>Photos: 0</>
+                                        )}                                        
+                                    </div>                                    
+                                    <div className="text-muted small mb-2">                                        
+                                        {c.totalArchives> 0 ? (
+                                            <>Archives: {c.totalArchives} / {formatBytes(c.totalArchivesBytes)}</>
+                                        ) : (
+                                            <>Archives: 0</>
+                                        )}                                                                                
                                     </div>
-                                    <div className="text-muted small mb-2">
-                                        {/* Size: {(c.totalBytes / (1024 * 1024)).toFixed(2)} MB */}
-                                        Size: {formatBytes(c.totalBytes)}
-                                    </div>
+                                    <hr/>
                                     <div className="mt-auto d-flex gap-2">
                                         <button
                                             className="btn btn-primary"

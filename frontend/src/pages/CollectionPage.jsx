@@ -75,18 +75,16 @@ export default function CollectionPage() {
             setError("");
             setLoading(true);
 
-            console.log("load() called, before getCollection")
+            // console.log("load() called, before getCollection")
             const data = await getCollection(id);
-            const archivesData = await getCollectionArchives(id);
+            //const archivesData = await getCollectionArchives(id);            
 
-            console.log("load() called, after getCollection, response data: ", data);
+            // console.log("load() called, after getCollection, response data: ", data);
             setCollection(data);
             setTitle(data?.title ?? "");
             setDescription(data?.description ?? "");
-            setArchives(archivesData ?? []);
+            setArchives(data?.archives ?? data?.Archives ?? []);
         } catch (err) {
-
-            
             setError(err.message);
             setCollection(null);
         } finally {
@@ -360,18 +358,19 @@ export default function CollectionPage() {
         try {
             setError("");
             await deletePhoto(photoId);
+            await refreshCollectionData();
 
-            setCollection(prev => {
-                if (!prev) {
-                    return prev;
-                }
+            // setCollection(prev => {
+            //     if (!prev) {
+            //         return prev;
+            //     }
 
-                const photos = prev.photos ?? prev.Photos ?? [];
-                const newPhotos = photos.filter(p => (p.id ?? p.Id) !== photoId);                
+            //     const photos = prev.photos ?? prev.Photos ?? [];
+            //     const newPhotos = photos.filter(p => (p.id ?? p.Id) !== photoId);                
 
-                return prev.photos ? { ...prev, photos: newPhotos } : { ...prev, Photos: newPhotos }
+            //     return prev.photos ? { ...prev, photos: newPhotos } : { ...prev, Photos: newPhotos }
                 
-            })
+            // })
         } catch (err) {
             setError(err.message)
         }
@@ -550,15 +549,20 @@ export default function CollectionPage() {
 
         await completeArchiveUpload(archiveId, id, file.name, file.size);
 
+        await refreshCollectionData();
+
         setArchiveUploadStatus("Archive uploaded successfully.");
-        const archivesData = await getCollectionArchives(id);
-        setArchives(archivesData ?? []);
+        setArchiveUploadProgress(100);
+        // const archivesData = await getCollectionArchives(id);        
+        // 
+        
         } catch (err) {
             setError(err.message);
             setArchiveUploadStatus("");
+            setArchiveUploadProgress(0);
         } finally {
             setArchiveUploading(false);
-            setArchiveUploadProgress(0);
+            // setArchiveUploadProgress(0);
             e.target.value = "";
         }
     }
@@ -572,10 +576,11 @@ export default function CollectionPage() {
         try {
             setError("");
             await deleteArchive(archiveId);
+            await refreshCollectionData();
 
-            setArchives(prev => 
-                prev.filter(a => (a.id ?? a.Id) !== archiveId)
-            );
+            // setArchives(prev => 
+            //     prev.filter(a => (a.id ?? a.Id) !== archiveId)
+            // );
         } catch (err) {
             setError(err.message);
         }
@@ -596,23 +601,46 @@ export default function CollectionPage() {
         }
     }
 
+    async function refreshCollectionData() {
+    try {
+        setError("");
+
+        const data = await getCollection(id);
+        // const archivesData = await getCollectionArchives(id);
+
+        setCollection(data);
+        setTitle(data?.title ?? "");
+        setDescription(data?.description ?? "");
+
+        const archivesData = data?.archives ?? data?.Archives ?? [];
+        setArchives(archivesData ?? []);
+    } catch (err) {
+        setError(err.message);
+    }
+}
+
 
 
     
     
     const photos = collection?.photos ?? collection?.Photos ?? [];
-    const totalArchives = archives.length;
-    const totalArchivesSize = archives.reduce(
-        (sum, archive) => sum + (archive.sizeBytes ?? archive.SizeBytes ?? 0),
-        0
-    );
+
+    // const totalArchives = archives.length;
+    // const totalArchivesSize = archives.reduce(
+    //     (sum, archive) => sum + (archive.sizeBytes ?? archive.SizeBytes ?? 0),
+    //     0
+    // );    
 
     const totalPhotos = collection?.totalPhotos ?? collection?.TotalPhotos ?? 0;
+    const totalPhotosSize = collection?.totalBytes ?? collection?.TotalBytes ?? 0;
     const totalDistance = collection?.totalDistance ?? collection?.TotalDistance ?? 0;
     const totalOriginal = collection?.totalOriginalSizeBytes ?? collection?.TotalOriginalSizeBytes ?? 0;
     const totalStandard = collection?.totalStandardSizeBytes ?? collection?.TotalStandardSizeBytes ?? 0;
     const totalThumb = collection?.totalThumbSizeBytes ?? collection?.TotalThumbSizeBytes ?? 0;
 
+    const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
+    const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;    
+    
 
 
     if (loading) {        
@@ -747,7 +775,8 @@ export default function CollectionPage() {
                     <div className="d-flex align-items-start justify-content-between small">
                         <p>
                             Total distance by geo tags: {formatDistance(totalDistance)}<br/>
-                            Total photos: {totalPhotos}
+                            Photos: {totalPhotos}<br/>
+                            Size: {formatBytes(totalPhotosSize)}
                         </p>
                         <p className='text-end'>                        
                             Originals size: {formatBytes(totalOriginal)}<br/>
@@ -787,7 +816,8 @@ export default function CollectionPage() {
                         type='file'
                         className='form-control mb-3'                        
                         accept='.zip,application/zip,application/x-zip-compressed'
-                        disabled={archiveUploadStatus || isEditing}
+                        // disabled={archiveUploadStatus || isEditing}
+                        disabled={archiveUploading || isEditing}
                         onChange={onArchiveSelected}
                     />
 

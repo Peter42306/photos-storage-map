@@ -52,7 +52,7 @@ namespace PhotosStorageMap.Api.Controllers
             if (request.FileSize > Limits.ArchiveItem.MaxSizeBytes) return BadRequest($"Archive size exceeds limit of {Limits.ArchiveItem.MaxSizeBytes} bytes.");
             
             var extension = Path.GetExtension(request.FileName)?.ToLowerInvariant();
-            if (extension != ContentType.Zip) return BadRequest("Only .zip archive are allowed.");
+            if (extension != ContentType.Zip) return BadRequest("Only .zip archives are allowed.");
 
             var collection = await _db.UploadCollections
                 .FirstOrDefaultAsync(
@@ -70,7 +70,7 @@ namespace PhotosStorageMap.Api.Controllers
                 storageKey,TimeSpan.FromHours(Limits.ArchiveItem.InitUpload.UrlExpiresIn));
 
             sw.Stop();
-            _logger.LogInformation("ARCHIVES CONTROLLER: InitUpload completed, Duration: {Seconds} ms",
+            _logger.LogInformation("ARCHIVES CONTROLLER: InitUpload completed, Duration: {Seconds} s",
                 sw.Elapsed.TotalSeconds);
 
             return Ok(new
@@ -101,7 +101,7 @@ namespace PhotosStorageMap.Api.Controllers
                     !c.IsDeleted,
                     ct);
 
-            if (collection is null) return NotFound($"Collection {id} not found");
+            if (collection is null) return NotFound($"Collection {request.CollectionId} not found");
 
             var extension = Path.GetExtension(request.FileName)?.ToLowerInvariant();
             if (extension != ContentType.Zip) return BadRequest("Only .zip archives are allowed.");
@@ -120,7 +120,11 @@ namespace PhotosStorageMap.Api.Controllers
             };
 
             _db.ArchiveItems.Add(archive);
+            collection.TotalArchives += 1;
+            collection.TotalArchivesBytes += request.FileSize;
+
             await _db.SaveChangesAsync(ct);
+                        
 
             sw.Stop();
             _logger.LogInformation("ARCHIVES CONTROLLER: CompleteUpload completed, ArchiveSize: {TotalBytes}, Duration: {Seconds} s",
@@ -152,7 +156,7 @@ namespace PhotosStorageMap.Api.Controllers
                 archive.OriginalFileName,
                 true);
 
-            return Ok(url);
+            return Ok(new { url });
         }
 
         [HttpDelete("{id:guid}")]
@@ -172,6 +176,9 @@ namespace PhotosStorageMap.Api.Controllers
             }
 
             _db.ArchiveItems.Remove(archive);
+            archive.UploadCollection.TotalArchives = Math.Max(0, archive.UploadCollection.TotalArchives - 1);
+            archive.UploadCollection.TotalArchivesBytes = Math.Max(0, archive.UploadCollection.TotalArchivesBytes - archive.SizeBytes);
+
             await _db.SaveChangesAsync(ct);
 
             sw.Stop();
@@ -200,6 +207,7 @@ namespace PhotosStorageMap.Api.Controllers
         private async Task<ArchiveItem?> LoadOwnedArchive(string userId, Guid archiveId, CancellationToken ct)
         {
             var archive = await _db.ArchiveItems
+                .Include(a => a.UploadCollection)
                 .FirstOrDefaultAsync(a =>
                     a.Id == archiveId &&
                     a.UploadCollection.OwnerUserId == userId &&

@@ -51,8 +51,11 @@ namespace PhotosStorageMap.Api.Controllers
                     x.CreatedAtUtc,
                     //x.ExpiresAtUtc,
                     x.TotalPhotos,
-                    x.TotalBytes
-
+                    x.TotalBytes,
+                    x.TotalArchives,
+                    x.TotalArchivesBytes,
+                    //x.TotalStorageBytes
+                    TotalStorageBytes = x.TotalBytes + x.TotalArchivesBytes
                 })
                 .ToListAsync(ct);
 
@@ -67,6 +70,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Where(c => c.Id == id && c.OwnerUserId == userId && !c.IsDeleted) 
                 .Select(c => new
                 {
@@ -76,6 +80,10 @@ namespace PhotosStorageMap.Api.Controllers
                     c.CreatedAtUtc,
                     c.TotalPhotos,
                     c.TotalBytes,
+                    c.TotalArchives, 
+                    c.TotalArchivesBytes,                    
+                    TotalStorageBytes = c.TotalBytes + c.TotalArchivesBytes,
+                    
                     Photos = c.Photos
                         .Where(p => p.Status == PhotoStatus.Ready)
                         .OrderBy(p => p.TakenAt ?? p.CreatedAtUtc) // TODO add filter by status.ready
@@ -96,8 +104,21 @@ namespace PhotosStorageMap.Api.Controllers
                             p.TakenAt,
                             p.Latitude,
                             p.Longitude,
-                            Status = p.Status.ToString(),
+                            //Status = p.Status.ToString(),
+                            p.Status,
                             p.Error
+                        })
+                        .ToList(),
+
+                    Archives = c.Archives
+                        .OrderByDescending(a => a.CreatedAtUtc)
+                        .Select(a => new
+                        {
+                            a.Id,
+                            a.OriginalFileName,
+                            a.Description,
+                            a.SizeBytes,
+                            a.CreatedAtUtc
                         })
                         .ToList()
                 })
@@ -111,10 +132,13 @@ namespace PhotosStorageMap.Api.Controllers
             double? prevLng = null;
             double totalDistance = 0;
 
-            int totalPhotos = collection.Photos.Count;
+            int totalReadyPhotos = collection.Photos.Count;
             long totalOriginalSizeBytes = 0;
             long totalStandardSizeBytes = 0;
             long totalThumbSizeBytes = 0;
+
+            //int totalArchives = collection.TotalArchives;
+            //long totalArchivesSizeBytes = collection.TotalArchivesBytes;
 
             foreach ( var p in collection.Photos)
             {
@@ -158,7 +182,7 @@ namespace PhotosStorageMap.Api.Controllers
                     p.TakenAt,
                     p.Latitude,
                     p.Longitude,
-                    p.Status,
+                    Status = p.Status.ToString(),
                     p.Error,
                     ThumbUrl = thumbUrl,
                     DistanceFromPrevious = distanceFromPrevious
@@ -181,14 +205,18 @@ namespace PhotosStorageMap.Api.Controllers
                 
                 collection.TotalPhotos,
                 collection.TotalBytes,                
+                collection.TotalArchives,
+                collection.TotalArchivesBytes,
+                collection.TotalStorageBytes,
 
                 TotalDistance = totalDistance,
-                TotalReadyPhotos = collection.TotalPhotos,
+                TotalReadyPhotos = totalReadyPhotos,
                 TotalOriginalSizeBytes = totalOriginalSizeBytes,
                 TotalStandardSizeBytes = totalStandardSizeBytes,
                 TotalThumbSizeBytes = totalThumbSizeBytes,
 
-                Photos = photos
+                Photos = photos,
+                Archives = collection.Archives
             });
         }
 
