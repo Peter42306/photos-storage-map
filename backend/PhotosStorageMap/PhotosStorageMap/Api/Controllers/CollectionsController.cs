@@ -276,47 +276,15 @@ namespace PhotosStorageMap.Api.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collection = await _db.UploadCollections
-                .Include(c => c.Photos)
+                //.Include(c => c.Photos)
                 .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId && !x.IsDeleted, ct);
 
-            if (collection is null) return NotFound();
-
-            // 1) S3 cleanup
-            //foreach (var photo in collection.Photos)
-            //{
-            //    try
-            //    {
-            //        if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
-            //        {
-            //            await _storage.DeleteAsync(photo.OriginalKey, ct);
-            //            _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.OriginalKey);
-            //        }
-
-            //        if (!string.IsNullOrWhiteSpace(photo.StandardKey))
-            //        {
-            //            await _storage.DeleteAsync(photo.StandardKey, ct);
-            //            _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.StandardKey);
-            //        }
-
-            //        if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
-            //        {
-            //            await _storage.DeleteAsync(photo.ThumbKey, ct);
-            //            _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}, StorageKey={StorageKey}", photo.Id, photo.ThumbKey);
-            //        }
-
-            //        _logger.LogInformation("DELETE COLLECTION: DELETE PHOTO from S3 for photoId={PhotoId}", photo.Id);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        _logger.LogWarning(ex, "DELETE COLLECTION: failed to delete S3 object for photoId={PhotoId}", photo.Id);
-            //    }
-            //}
-
-            // 2) DB delete
-            //_db.UploadCollections.Remove(collection);
+            if (collection is null) return NotFound();            
 
             collection.IsDeleted = true;            
             await _db.SaveChangesAsync(ct);
+
+            // Archives should be deleted in CollectionCleanupWorker in CleanupAsync
 
             //_logger.LogInformation("DELETE COLLECTION: deleted collectionId={CollectionId}", id);
             _logger.LogInformation("DELETE COLLECTION: marked as deleted collectionId={CollectionId}", id);

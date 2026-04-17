@@ -98,7 +98,7 @@ export default function CollectionsPage() {
     // }
 
     async function onDeleteCollection(id) {
-        if (!confirm("Delete collection with all photos?")) {
+        if (!confirm("Delete collection with all photos & archives?")) {
             return;
         }
 

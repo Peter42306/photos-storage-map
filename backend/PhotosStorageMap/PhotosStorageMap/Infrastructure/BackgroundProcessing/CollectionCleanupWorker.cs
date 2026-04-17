@@ -4,6 +4,7 @@ using PhotosStorageMap.Application.Common;
 using PhotosStorageMap.Infrastructure.Data;
 using PhotosStorageMap.Domain.Enums;
 using System.Diagnostics;
+using PhotosStorageMap.Application.Interfaces;
 
 namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 {
@@ -63,13 +64,13 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
             using var scope = _serviceScopeFactory.CreateScope();
 
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
 
             var candidates = await db.UploadCollections
-                .Include(c => c.Photos)
                 .Where(c => c.IsDeleted)
                 .OrderBy(c => c.CreatedAtUtc)
                 .Take(Limits.CollectionCleanupWorker.BatchSize)
-                .ToListAsync(ct);
+                .ToListAsync(ct);            
 
             if (candidates.Count == 0)
             {
@@ -78,13 +79,20 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
             }
 
             var markedPhotosCount = 0;
+            var deletedArchivesCount = 0;
+            var failedToDeleteArchivesCount = 0;
             var deletedCollectionsCount = 0;
 
             foreach (var collection in candidates)
             {
                 ct.ThrowIfCancellationRequested();
 
-                foreach (var photo in collection.Photos)
+                // Mark photos for background deletion
+                var photos = await db.PhotoItems
+                    .Where(p => p.UploadCollectionId == collection.Id)
+                    .ToListAsync(ct);
+
+                foreach (var photo in photos)
                 {
                     if (photo.Status == PhotoStatus.Ready)
                     {
@@ -93,28 +101,75 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     }
                 }
 
-                //var hasAnyPhotosLeft = collection.Photos.Any();
-                var hasAnyPhotosLeft = await db.PhotoItems.AnyAsync(p => p.UploadCollectionId == collection.Id, ct);
+                // Delete archives from S3 and DB
+                var archives = await db.ArchiveItems
+                    .Where(a => a.UploadCollectionId == collection.Id)
+                    .ToListAsync(ct);
 
-                if (!hasAnyPhotosLeft)
+                foreach (var archive in archives)
+                {
+                    ct.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        if (!string.IsNullOrWhiteSpace(archive.StorageKey))
+                        {
+                            await storage.DeleteAsync(archive.StorageKey, ct);
+
+                            _logger.LogInformation(
+                                "COLLECTION CLEANUP WORKER: deleted archive from storage archiveId={ArchiveId}, collectionId={CollectionId}, storageKey={StorageKey}",
+                                archive.Id,
+                                collection.Id,
+                                archive.StorageKey);
+                        }
+
+                        db.ArchiveItems.Remove(archive);
+                        deletedArchivesCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        failedToDeleteArchivesCount++;
+
+                        _logger.LogWarning(
+                            ex,
+                            "COLLECTION CLEANUP WORKER: failed to delete archive from storage archiveId={ArchiveId}, collectionId={CollectionId}",
+                            archive.Id,
+                            collection.Id);
+                    }
+                }
+
+                await db.SaveChangesAsync(ct);
+
+                
+                // Remove collection only if no photos and no archives 
+
+                var hasAnyPhotos = await db.PhotoItems.AnyAsync(p => p.UploadCollectionId == collection.Id, ct);
+                var hasAnyArchives = await db.ArchiveItems.AnyAsync(a => a.UploadCollectionId == collection.Id, ct);
+
+                if (!hasAnyPhotos && !hasAnyArchives)
                 {
                     db.UploadCollections.Remove(collection);
                     deletedCollectionsCount++;
 
-                    _logger.LogInformation("COLLECTION CLEANUP WORKER: removed collectionId={CollectionId} from DB.",
+                    _logger.LogInformation(
+                        "COLLECTION CLEANUP WORKER: removed collectionId={CollectionId} from DB.",
                         collection.Id);
+
+                    await db.SaveChangesAsync(ct);
                 }
-            }
 
-            await db.SaveChangesAsync();
+            }            
 
-            stopwatch.Stop();
+            stopwatch.Stop();            
 
             _logger.LogInformation(
-                "COLLECTION CLEANUP WORKER: candidates to delete {Processed}, marked photos as PendingDelete {MarkedPhotos}, deleted collections {DeletedCollections}, duration: {Duration:F2} seconds.",
+                "COLLECTION CLEANUP WORKER: candidates={Candidates}, markedPhotos={MarkedPhotos}, deletedArchives={DeletedArchives}, failedArchives={FailedArchives}, deletedCollections={DeletedCollections}, notDeletedCollections={NotDeleted}, duration={Duration:F2}s",
                 candidates.Count,
                 markedPhotosCount,
-                deletedCollectionsCount, 
+                deletedArchivesCount,
+                failedToDeleteArchivesCount,
+                deletedCollectionsCount,
+                candidates.Count - deletedCollectionsCount,
                 stopwatch.Elapsed.TotalSeconds);
         }
     }
