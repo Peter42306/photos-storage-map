@@ -4,7 +4,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
 import "yet-another-react-lightbox/styles.css";
-
+// import { Slideshow } from 'yet-another-react-lightbox/plugins';
+import { Slideshow, Counter, Fullscreen, Zoom } from 'yet-another-react-lightbox/plugins';
+import "yet-another-react-lightbox/plugins/counter.css";
 
 
 //const S3_BASE = "https://hel1.your-objectstorage.com/photos-storage-map";
@@ -71,6 +73,7 @@ export default function CollectionPage() {
 
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
+    const [viewerMode, setViewerMode] = useState("standard");
     
 
     async function load() {
@@ -646,12 +649,28 @@ export default function CollectionPage() {
     const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
     const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;    
 
-    const slides = photos
+    // const slides = photos
+    //     .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
+    //     .map(p => ({
+    //         src: p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl,
+    //         alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
+    //     }));
+
+    const standardSlides = photos
         .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
         .map(p => ({
             src: p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl,
             alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
         }));
+
+    const originalSlides = photos
+        .filter(p => (p.originalUrl ?? p.OriginalUrl ))
+        .map(p => ({
+            src: p.originalUrl ?? p.OriginalUrl,
+            alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
+        }));
+
+    const slides = viewerMode === "original" ? originalSlides : standardSlides;
 
 
     
@@ -754,6 +773,37 @@ export default function CollectionPage() {
                         >
                             Map view
                         </button>
+                        <button
+                            className='btn btn-primary'
+                            onClick={() => {
+                                if(standardSlides.length === 0){
+                                    setError("No resized photos available for slideshow.");
+                                    return;
+                                }
+
+                                setError("");
+                                setViewerMode("standard");
+                                setLightboxIndex(0);
+                                setLightboxOpen(true);
+                            }}
+                        >
+                            Slideshow Resized
+                        </button>
+                        <button
+                            className='btn btn-primary'
+                            onClick={() => {
+                                if(originalSlides.length === 0){
+                                    setError("No original photos available for slideshow.");
+                                    return;
+                                }
+
+                                setError("");
+                                setViewerMode("original");
+                                setLightboxIndex(0);
+                                setLightboxOpen(true);
+                            }}>
+                            Slideshow Originals
+                        </button>
                         {/* <button className='btn btn-primary'>
                             Download originals
                         </button> */}
@@ -761,7 +811,7 @@ export default function CollectionPage() {
                             className='btn btn-primary'
                             onClick={downloadStandardZipHandler}
                         >
-                            Download standard
+                            Download Resized ZIP
                         </button>
                         <button className='btn btn-primary'>
                             Share link
@@ -815,6 +865,7 @@ export default function CollectionPage() {
                                         onLocation={showLocationHandler}
                                         onSaveDescription={savePhotoDescriptionHandler}
                                         onOpenLightBox={() => {
+                                            setViewerMode("standard");
                                             setLightboxIndex(index);
                                             setLightboxOpen(true);
                                         }}
@@ -955,6 +1006,8 @@ export default function CollectionPage() {
                         close={() => setLightboxOpen(false)}
                         index={lightboxIndex}
                         slides={slides}
+                        plugins={[Slideshow, Counter, Fullscreen, Zoom]}
+                        slideshow={{delay: 3000, autoplay:true}}
                     />
 
                     
