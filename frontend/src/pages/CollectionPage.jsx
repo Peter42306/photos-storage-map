@@ -2,6 +2,8 @@ import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
+import Lightbox from 'yet-another-react-lightbox';
+import "yet-another-react-lightbox/styles.css";
 
 
 
@@ -66,6 +68,9 @@ export default function CollectionPage() {
     const [archiveUploading, setArchiveUploading] = useState(false);
     const [archiveUploadProgress, setArchiveUploadProgress] = useState(0);
     const [archiveUploadStatus, setArchiveUploadStatus] = useState("");
+
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
     
 
     async function load() {
@@ -602,22 +607,22 @@ export default function CollectionPage() {
     }
 
     async function refreshCollectionData() {
-    try {
-        setError("");
+        try {
+            setError("");
 
-        const data = await getCollection(id);
-        // const archivesData = await getCollectionArchives(id);
+            const data = await getCollection(id);
+            // const archivesData = await getCollectionArchives(id);
 
-        setCollection(data);
-        setTitle(data?.title ?? "");
-        setDescription(data?.description ?? "");
+            setCollection(data);
+            setTitle(data?.title ?? "");
+            setDescription(data?.description ?? "");
 
-        const archivesData = data?.archives ?? data?.Archives ?? [];
-        setArchives(archivesData ?? []);
-    } catch (err) {
-        setError(err.message);
+            const archivesData = data?.archives ?? data?.Archives ?? [];
+            setArchives(archivesData ?? []);
+        } catch (err) {
+            setError(err.message);
+        }
     }
-}
 
 
 
@@ -640,6 +645,15 @@ export default function CollectionPage() {
 
     const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
     const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;    
+
+    const slides = photos
+        .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
+        .map(p => ({
+            src: p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl,
+            alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
+        }));
+
+
     
 
 
@@ -791,7 +805,7 @@ export default function CollectionPage() {
                         <div className='alert alert-info'>No photos uploaded yet</div>
                     ) : (
                         <div className='row'>
-                            {photos.map((p) => (
+                            {photos.map((p, index) => (
                                 <div key={p.id ?? p.Id} className='col-6 col-md-4 col-lg-3 mb-3'>
                                     <PhotoCard 
                                         photo={p} 
@@ -800,6 +814,10 @@ export default function CollectionPage() {
                                         onDownloadOriginal={downloadOriginalHandler}
                                         onLocation={showLocationHandler}
                                         onSaveDescription={savePhotoDescriptionHandler}
+                                        onOpenLightBox={() => {
+                                            setLightboxIndex(index);
+                                            setLightboxOpen(true);
+                                        }}
                                     />
                                 </div>
                             ))}
@@ -909,6 +927,36 @@ export default function CollectionPage() {
                             ))}                            
                         </div>
                     )}
+
+                    {/* Lightbox gallery */}
+                    {/* <div className='row'>
+                        {photos.map((p, index) =>{
+                            const thumbUrl = p.thumbUrl ?? p.ThumbUrl;
+
+                            return(
+                                <div className='col-md-3 mb-3' key={p.id}>
+                                    <img
+                                        src={thumbUrl}
+                                        alt={p.originalFileName ?? p.OriginalFileName ?? "photo"}
+                                        style={{width:"100%", height: 160, objectFit:"cover", cursor:"pointer"}}
+                                        onClick={() => {
+                                            setLightboxIndex(index);
+                                            setLightboxOpen(true);
+                                        }}
+                                    />
+                                </div>
+                            );
+                        })}                        
+                    </div> */}
+
+                    {/* Lightbox */}
+                    <Lightbox
+                        open={lightboxOpen}
+                        close={() => setLightboxOpen(false)}
+                        index={lightboxIndex}
+                        slides={slides}
+                    />
+
                     
                 {/* </div>                 */}
             {/* </div> */}
@@ -922,7 +970,8 @@ const PhotoCard = React.memo(function PhotoCard({
         onViewOriginal, 
         onDownloadOriginal, 
         onLocation, 
-        onSaveDescription 
+        onSaveDescription,
+        onOpenLightBox
     }) {
         // const [thumbUrl, setThumbUrl] = useState("");
         
@@ -996,12 +1045,18 @@ const PhotoCard = React.memo(function PhotoCard({
 
                 {/* Photo */}
                 {thumbUrl ? (
-                    <img
-                        src={thumbUrl}
-                        alt={originalFileName || "photo"}
-                        loading='lazy'
-                        style={{ width: "100%", height: 160, objectFit: "cover" }}
-                    />
+                    <div
+                        onClick={onOpenLightBox}
+                        style={{cursor:"pointer"}}
+                    >
+                        <img
+                            src={thumbUrl}
+                            alt={originalFileName || "photo"}
+                            loading='lazy'
+                            style={{ width: "100%", height: 160, objectFit: "cover" }}
+                        />
+                    </div>
+                    
                 ) : (
                     <div 
                         className="d-flex align-items-center justify-content-center" 

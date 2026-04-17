@@ -143,12 +143,17 @@ namespace PhotosStorageMap.Api.Controllers
             foreach ( var p in collection.Photos)
             {
                 string? thumbUrl = null;
+                string? standardUrl = null;
 
                 if (!string.IsNullOrWhiteSpace(p.ThumbKey))
                 {
                     thumbUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.ThumbKey, TimeSpan.FromHours(2));
                 }
-                
+                if (!string.IsNullOrWhiteSpace(p.StandardKey))
+                {
+                    standardUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.StandardKey, TimeSpan.FromHours(2));
+                }
+
                 double? distanceFromPrevious = null;
 
                 if (
@@ -185,6 +190,7 @@ namespace PhotosStorageMap.Api.Controllers
                     Status = p.Status.ToString(),
                     p.Error,
                     ThumbUrl = thumbUrl,
+                    standardUrl = standardUrl,
                     DistanceFromPrevious = distanceFromPrevious
                 });
 
