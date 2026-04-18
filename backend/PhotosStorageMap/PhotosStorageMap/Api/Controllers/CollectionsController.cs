@@ -229,7 +229,7 @@ namespace PhotosStorageMap.Api.Controllers
                 TotalThumbSizeBytes = totalThumbSizeBytes,
 
                 Photos = photos,
-                Archives = collection.Archives
+                collection.Archives
             });
         }
 

@@ -136,7 +136,8 @@ namespace PhotosStorageMap.Api.Controllers
                 archive.Id,
                 archive.OriginalFileName,
                 archive.SizeBytes,
-                archive.CreatedAtUtc
+                archive.CreatedAtUtc,
+                archive.Description
             });
         }
 
@@ -188,6 +189,32 @@ namespace PhotosStorageMap.Api.Controllers
                 sw.Elapsed.TotalSeconds);
 
             return NoContent();
+        }
+
+        [HttpPut("{id:guid}/description")]
+        public async Task<IActionResult> UpdateDescription(
+            Guid id,
+            [FromBody] UpdateArchiveDescriptionRequest request,
+            CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var archive = await LoadOwnedArchive(userId, id, ct);
+            if (archive is null) return NotFound();
+
+            var trimmed = request.Description?.Trim();
+            archive.Description = string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+
+            await _db.SaveChangesAsync(ct);
+
+            _logger.LogInformation("ARCHIVES CONTROLLER: UpdateDescription, updated");
+
+            return Ok(new
+            {
+                archive.Id,
+                archive.Description
+            });
         }
 
 

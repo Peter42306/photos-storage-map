@@ -422,3 +422,11 @@ export function getStorageSummary() {
         auth: true
     })
 }
+
+export function updateArchiveDescription(archiveId, description) {
+    return request(`/api/archives/${archiveId}/description`,{
+        method: "PUT",
+        auth:true,
+        body: { description }
+    })
+}

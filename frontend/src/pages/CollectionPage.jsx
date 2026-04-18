@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateCollection, updatePhotoDescription } from "../api";
+import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
 import "yet-another-react-lightbox/styles.css";
 // import { Slideshow } from 'yet-another-react-lightbox/plugins';
@@ -74,6 +74,9 @@ export default function CollectionPage() {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [viewerMode, setViewerMode] = useState("standard");
+
+    
+    
     
 
     async function load() {
@@ -627,6 +630,61 @@ export default function CollectionPage() {
         }
     }
 
+    async function saveArchiveDescriptionHandler(archiveId, descriptionValue) {
+        try {
+            setError("");
+            const trimmed = descriptionValue?.trim() ?? "";
+
+            const res = await updateArchiveDescription(
+                archiveId,
+                trimmed === "" ? null : trimmed
+            );
+
+            const newDescription = res?.description ?? (trimmed === "" ? null : trimmed);
+
+            setCollection(prev => {
+                if (!prev) {
+                    return prev;
+                }
+
+                const archives = prev.archives ?? prev.Archives ?? [];
+
+                const updatedArchives = archives.map(a => {
+                    const currentId = a.id ?? a.Id;
+                    if (currentId !== archiveId) {
+                        return a;
+                    }
+
+                    if (prev.archives) {
+                        return { ...a, description: newDescription };
+                    }
+
+                    return { ...a, Description: newDescription };
+                });
+
+                return prev.archives 
+                    ? { ...prev, archives: updatedArchives }
+                    : { ...prev, Archives: updatedArchives }
+            });
+
+            setArchives(prev => 
+                prev.map(a => {
+                    const currentId = a.id ?? a.Id;
+                    if (currentId !== archiveId) {
+                        return a;
+                    }
+
+                    return a.description !== undefined
+                        ? { ...a, description: newDescription }
+                        : { ...a, Description: newDescription }
+                })
+            );
+
+        } catch (err) {
+            setError(err.message)
+        }
+    }
+
 
 
     
@@ -664,9 +722,9 @@ export default function CollectionPage() {
         }));
 
     const originalSlides = photos
-        .filter(p => (p.originalUrl ?? p.OriginalUrl ))
+        .filter(p => (p.originalUrl ?? p.OriginalUrl ?? p.standardUrl ?? p.StandardUrl))
         .map(p => ({
-            src: p.originalUrl ?? p.OriginalUrl,
+            src: p.originalUrl ?? p.OriginalUrl ??p.standardUrl ?? p.StandardUrl,
             alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
         }));
 
@@ -838,7 +896,7 @@ export default function CollectionPage() {
                     
                     <div className="d-flex align-items-start justify-content-between small mb-3">
                         <div>
-                            Total distance by geo tags: {formatDistance(totalDistance)}<br/>
+                            Distance by geo tags: {formatDistance(totalDistance)}<br/>
                             Photos: {totalPhotos}<br/>
                             Size: {formatBytes(totalPhotosSize)}
                         </div>
@@ -925,13 +983,20 @@ export default function CollectionPage() {
                         <div className='row'>
                             {archives.map((a) => (
                                 <div key={a.id ?? a.Id} className='col-6 col-md-4 col-lg-3 mb-3'>
-                                    <div className='card shadow-sm h-100 position-relative'>
+                                    <ArchiveCard
+                                        archive={a}
+                                        onDownload={downloadArchiveHandler}
+                                        onDelete={deleteArchiveHandler}
+                                        onSaveDescription={saveArchiveDescriptionHandler}
+                                    />
+
+
+                                    {/* <div className='card shadow-sm h-100 position-relative'>
                                         <div
                                             className="d-flex flex-column align-items-center justify-content-center bg-light"
                                             style={{ width: "100%", height: 80 }}
                                         >
-                                            <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>
-                                            {/* <div className='small text-muted mt-2'>ZIP archive</div> */}
+                                            <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>                                            
                                         </div>                                            
 
                                         <div className='card-body p-2'>
@@ -952,7 +1017,7 @@ export default function CollectionPage() {
                                                 <button
                                                     className='btn btn-outline-secondary btn-sm'
                                                     onClick={() => downloadArchiveHandler(a.id ?? a.Id)}
-                                                    title='View original'
+                                                    title='Download archive'
                                                 >
                                                     <i className='bi bi-download'></i>
                                                 </button>
@@ -973,7 +1038,7 @@ export default function CollectionPage() {
 
 
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             ))}                            
                         </div>
@@ -1007,7 +1072,10 @@ export default function CollectionPage() {
                         index={lightboxIndex}
                         slides={slides}
                         plugins={[Slideshow, Counter, Fullscreen, Zoom]}
-                        slideshow={{delay: 3000, autoplay:true}}
+                        slideshow={{
+                            delay: viewerMode === "standard" ? 2000 : 5000, 
+                            autoplay: true
+                        }}                        
                     />
 
                     
@@ -1195,14 +1263,14 @@ const PhotoCard = React.memo(function PhotoCard({
                         <button
                             // className='btn btn-outline-danger btn-sm'
                             className='btn-close position-absolute top-0 end-0 m-2'
-                            onClick={() => onDeleted?.(photoId, photo.originalFileName)}
+                            onClick={() => onDeleted?.(photoId, originalFileName)}
                             title='Delete photo'
                         >                            
                         </button>
 
                         <button
                             className='btn btn-outline-secondary btn-sm'
-                            onClick={() => onViewOriginal?.(photoId, photo.originalFileName)}
+                            onClick={() => onViewOriginal?.(photoId, originalFileName)}
                             title='View original'
                         >
                             <i className='bi bi-eye'></i>
@@ -1210,7 +1278,7 @@ const PhotoCard = React.memo(function PhotoCard({
 
                         <button
                             className='btn btn-outline-secondary btn-sm'
-                            onClick={() => onDownloadOriginal?.(photoId, photo.originalFileName)}
+                            onClick={() => onDownloadOriginal?.(photoId, originalFileName)}
                             title='Download original'
                         >
                             <i className='bi bi-download'></i>
@@ -1249,3 +1317,120 @@ const PhotoCard = React.memo(function PhotoCard({
             </div>
         );
     });
+
+
+// ArchiveCard Component
+const ArchiveCard = React.memo(function ArchiveCard({
+    archive,
+    onDownload,
+    onDelete,
+    onSaveDescription
+}) {
+    const archiveId = archive.id ?? archive.Id;
+    const originalFileName = archive.originalFileName ?? archive.OriginalFileName;
+    const sizeBytes = archive.sizeBytes ?? archive.SizeBytes;
+    const createdAt = archive.createdAtUtc ?? archive.CreatedAtUtc;
+    const initialDescription = archive.description ?? archive.Description ?? "";
+
+    const [isEditingDescriptionArchive, setIsEditingDescriptionArchive] = useState(false);
+    const [descriptionArchive, setDescriptionArchive] = useState(initialDescription);
+
+    async function handleSaveDescriptionArchive() {
+        await onSaveDescription?.(archiveId, descriptionArchive);
+        setIsEditingDescriptionArchive(false);
+    }
+
+    return(
+        <div className='card shadow-sm h-100 position-relative'>
+            <div
+                className="d-flex flex-column align-items-center justify-content-center bg-light"
+                style={{ width: "100%", height: 80 }}
+            >
+                <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>                                            
+            </div>
+            <div className='card-body p-2 d-flex flex-column'>
+                <div className='small text-truncate'>
+                    {originalFileName || "(no name)"}
+                </div>
+                <div className='small text-truncate'>
+                    {formatBytes(sizeBytes)}
+                </div>
+                <div className='small text-truncate'>
+                    {formatTakenAt(createdAt)}
+                </div>
+
+                {!isEditingDescriptionArchive 
+                    ? descriptionArchive 
+                        ? (
+                            <div>
+                                <hr/>
+                                <div className='small text-truncate'>
+                                    {descriptionArchive}
+                                </div>
+                            </div>
+                        ) 
+                        : null 
+                    : (
+                        <div className='mt-2'>
+                            <hr/>
+                            <TextareaAutosize
+                                className='form-control form-control-sm'
+                                minRows={2}
+                                value={descriptionArchive}
+                                style={{overflow: "hidden"}}
+                                onChange={(e) => setDescriptionArchive(e.target.value)}
+                                placeholder='Add archive description'
+                            />
+                            <div className='d-flex gap-2 mt-2'>
+                                <button
+                                    className='btn btn-outline-secondary btn-sm'
+                                    onClick={handleSaveDescriptionArchive}
+                                    title='Save description'
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    className='btn btn-outline-secondary btn-sm'
+                                    onClick={() =>{
+                                        setDescriptionArchive(initialDescription);
+                                        setIsEditingDescriptionArchive(false);
+                                    }}
+                                    title='Cancel description'
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                )}
+
+                {/* Archive card small buttons block */}
+                <hr/>
+                <div className='d-flex flex-wrap gap-1 mt-auto'>
+                    <button
+                        className='btn btn-outline-secondary btn-sm'
+                        onClick={() => onDownload?.(archiveId)}
+                        title='Download archive'
+                    >
+                        <i className='bi bi-download'></i>
+                    </button>
+
+                    <button
+                        className='btn btn-outline-secondary btn-sm'
+                        onClick={() => onDelete?.(archiveId, originalFileName)}
+                        title='Delete archive'
+                    >
+                        <i className='bi bi-trash'></i>
+                    </button>
+
+                    <button
+                        className='btn btn-outline-secondary btn-sm'
+                        onClick={() => setIsEditingDescriptionArchive((v) => !v)}
+                        title='Edit description'
+                    >
+                        <i className='bi bi-pencil'></i>
+                    </button>                    
+                </div>
+            </div>
+        </div>
+    );
+});
