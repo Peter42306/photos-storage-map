@@ -12,7 +12,12 @@
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? ExpiresAtUtc { get; set; }
 
-        public bool IsRevoked { get; set; } = false;
-        public bool AllowDownload { get; set; } = true;
+        public bool IsRevoked { get; set; } = false;        
+        //public bool AllowDownload { get; set; } = true;
+
+        //new properties
+        public bool AllowSlideshowOriginals { get; set; } = false;
+        public bool AllowDownloadResizedZip { get; set; } = false;
+        public bool AllowDownloadOriginalFromCard { get; set; } = false;
     }
 }

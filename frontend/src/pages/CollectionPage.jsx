@@ -765,17 +765,67 @@ export default function CollectionPage() {
                     {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
                     {/* <h5>{collection?.title}</h5> */}
-                    <p>{collection?.description || "-"}</p>
+                    <p>{collection?.description || "No description of collection yet."}</p>
                     {/* <p>Collection Id: {collection?.id}</p> */}
 
                     <div className='mb-2'>
                         {!isEditing ? (
+                            <>
+
                             <button
                                 className='btn btn-outline-secondary'
-                                onClick={() => setIsEditing(true)}
+                                type='button'
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapseEditCollectionDetails" 
+                                aria-expanded="false" 
+                                aria-controls="collapseEditCollectionDetails"
+                                // onClick={() => setIsEditing(true)}
                             >Edit Collection Title & Description</button>
+
+                            <div className='collapse' id='collapseEditCollectionDetails'>
+                                <div className='card card-body mt-3'>
+                                    <form className='mt-3'>
+                                        <div className="mb-3">
+                                            <label className="form-label">Collection Title</label>
+                                            <input
+                                                className="form-control"
+                                                value={title}
+                                                onChange={(e) => setTitle(e.target.value)}
+                                                // disabled={!isEditing}
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="form-label">Collection Description</label>
+                                            <TextareaAutosize
+                                                className="form-control"
+                                                minRows={2}
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                // disabled={!isEditing}
+                                            />
+                                            
+                                        </div>                        
+                                    </form>
+                                    <div className='d-flex gap-2'>
+                                        <button
+                                            className='btn btn-primary'
+                                            onClick={onSave}
+                                        >
+                                            Save
+                                        </button>
+                                        <button
+                                            className='btn btn-secondary'
+                                            onClick={onCancel}
+                                        >
+                                            Cancel
+                                        </button>                                
+                                    </div>
+                                </div>
+                            </div>
+
+                            </>                            
                         ) : (
-                            <>
+                            <>                            
 
                             <div className='d-flex gap-2'>
                                 <button
@@ -824,13 +874,14 @@ export default function CollectionPage() {
                     </div>  
 
                     <hr/>
-                    <div className='d-flex gap-2'>
+                    <div className='d-flex gap-2 flex-wrap'>
                         <button
                             className='btn btn-primary'
                             onClick={() => navigate(`/collections/${collection.id}/map`)}
                         >
-                            Map view
+                            Map View
                         </button>
+
                         <button
                             className='btn btn-primary'
                             onClick={() => {
@@ -847,6 +898,7 @@ export default function CollectionPage() {
                         >
                             Slideshow Resized
                         </button>
+
                         <button
                             className='btn btn-primary'
                             onClick={() => {
@@ -861,21 +913,103 @@ export default function CollectionPage() {
                                 setLightboxOpen(true);
                             }}>
                             Slideshow Originals
-                        </button>
-                        {/* <button className='btn btn-primary'>
-                            Download originals
-                        </button> */}
+                        </button>                        
+
                         <button
                             className='btn btn-primary'
                             onClick={downloadStandardZipHandler}
                         >
                             Download Resized ZIP
+                        </button>              
+                        
+                        <button 
+                            className='btn btn-primary' 
+                            type='button' 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapseShareLink" 
+                            aria-expanded="false" 
+                            aria-controls="collapseShareLink"
+                        >
+                            Share Collection
                         </button>
-                        <button className='btn btn-primary'>
-                            Share link
-                        </button>
+                    </div>
+
+                    
+                    <div className='collapse' id='collapseShareLink'>                            
+                        <div className='card card-body mt-3'>
+                            
+                            <div className='small'>Active share link: No active link yet</div>                                
+
+                            <hr/>                            
+
+                            <div className='d-flex gap-2 flex-wrap'>
+                                <button className='btn btn-primary' type='button'
+                                >
+                                    Copy Link
+                                </button>
+                                <button className='btn btn-primary' type='button'
+                                >
+                                    Disable Link
+                                </button>                                
+                            </div>                 
+
+                            <hr/>           
+
+                            <div className='small mb-2'>
+                                Shared page includes by default:
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareCollectionTitleAndDescription' checked disabled/>
+                                <label className='form-check-label small' htmlFor='shareCollectionTitleAndDescription'>Collection title and description</label>                                
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareMapView' checked disabled/>
+                                <label className='form-check-label small' htmlFor='shareMapView'>Map View</label>                                
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareSlideshowResized' checked disabled/>
+                                <label className='form-check-label small' htmlFor='shareSlideshowResized'>Slideshow Resized</label>                                
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='sharePhotoCard' checked disabled/>
+                                <label className='form-check-label small' htmlFor='disabledCheckBox'>Photo Card: View Original, Location, Coordinates, Description</label>                                
+                            </div>                            
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareArchiveCard' checked disabled/>
+                                <label className='form-check-label small' htmlFor='shareArchiveCard'>Archive Card: Download, Description</label>                                
+                            </div>                            
+
+                            <div className='small mt-3 mb-2'>
+                                Additional options for this share link:
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareSlideshowOriginals'/>
+                                <label className='form-check-label small' htmlFor='shareSlideshowOriginals'>Slideshow Originals</label>                                
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareDownloadResizedZip'/>
+                                <label className='form-check-label small' htmlFor='shareDownloadResizedZip'>Download Resized ZIP</label>                                
+                            </div>
+                            <div className='form-check form-switch'>                                
+                                <input className='form-check-input' type='checkbox' role='switch' id='shareDownloadOriginalFromPhotoCard'/>
+                                <label className='form-check-label small' htmlFor='shareDownloadOriginalFromPhotoCard'>Download Original from Photo Card</label>                                
+                            </div>
+
+                            <hr/>
+
+                            <div className='d-flex gap-2 flex-wrap'>                                
+                                <button className='btn btn-primary' type='button'
+                                >
+                                    Create New Link
+                                </button>
+                            </div>                 
+                            
+
+                        </div>
                         
                     </div>
+                    
+                    
                     <hr/>
 
                     {/* <hr/>                             */}
@@ -1073,7 +1207,7 @@ export default function CollectionPage() {
                         slides={slides}
                         plugins={[Slideshow, Counter, Fullscreen, Zoom]}
                         slideshow={{
-                            delay: viewerMode === "standard" ? 2000 : 5000, 
+                            delay: viewerMode === "standard" ? 2000 : 4000, 
                             autoplay: true
                         }}                        
                     />
