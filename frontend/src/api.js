@@ -426,7 +426,29 @@ export function getStorageSummary() {
 export function updateArchiveDescription(archiveId, description) {
     return request(`/api/archives/${archiveId}/description`,{
         method: "PUT",
-        auth:true,
+        auth: true,
         body: { description }
-    })
+    });
+}
+
+export function createOrUpdateSharedLink(collectionId, payload){
+    return request(`/api/share-links`,{
+        method: "POST",
+        auth: true,
+        body: {collectionId, ...payload}
+    });
+}
+
+export function getSharedLinkByCollectionId(collectionId){
+    return request(`/api/share-links/collection/${collectionId}`,{
+        method: "GET",
+        auth: true
+    });
+}
+
+export function revokeSharedLink(sharedLinkId) {
+    return request(`/api/share-links/${sharedLinkId}/revoke`,{
+        method: "POST",
+        auth: true
+    });
 }

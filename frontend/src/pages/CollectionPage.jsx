@@ -772,6 +772,8 @@ export default function CollectionPage() {
                         {!isEditing ? (
                             <>
 
+                            {/* <hr/> */}
+
                             <button
                                 className='btn btn-outline-secondary'
                                 type='button'
@@ -945,11 +947,11 @@ export default function CollectionPage() {
                             <div className='d-flex gap-2 flex-wrap'>
                                 <button className='btn btn-primary' type='button'
                                 >
-                                    Copy Link
+                                    Copy Existing Link
                                 </button>
                                 <button className='btn btn-primary' type='button'
                                 >
-                                    Disable Link
+                                    Disable Existing Link
                                 </button>                                
                             </div>                 
 
