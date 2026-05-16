@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeArchiveUpload, completeUpload, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
+import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
 import "yet-another-react-lightbox/styles.css";
 // import { Slideshow } from 'yet-another-react-lightbox/plugins';
@@ -75,8 +75,10 @@ export default function CollectionPage() {
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [viewerMode, setViewerMode] = useState("standard");
 
-    
-    
+    const [shareLink, setShareLink] = useState(null);
+    const [allowSlideshowOriginals, setAllowSlideshowOriginals] = useState(false);
+    const [allowDownloadResizedZip, setAllowDownloadResizedZip] = useState(false);
+    const [allowDownloadOriginalFromCard, setAllowDownloadOriginalFromCard] = useState(false);
     
 
     async function load() {
@@ -95,9 +97,20 @@ export default function CollectionPage() {
             setTitle(data?.title ?? "");
             setDescription(data?.description ?? "");
             setArchives(data?.archives ?? data?.Archives ?? []);
+
+            const currentSharedLink = await getSharedLinkByCollectionId(id);
+            setShareLink(currentSharedLink);
+
+            if (currentSharedLink && !(currentSharedLink.isRevoked ?? currentSharedLink.IsRevoked)) {
+                setAllowSlideshowOriginals(currentSharedLink.allowSlideshowOriginals ?? currentSharedLink.AllowSlideshowOriginals ?? false);
+                setAllowDownloadResizedZip(currentSharedLink.allowDownloadResizedZip ?? currentSharedLink.AllowDownloadResizedZip ?? false);
+                setAllowDownloadOriginalFromCard(currentSharedLink.allowDownloadOriginalFromCard ?? currentSharedLink.AllowDownloadOriginalFromCard ?? false);
+            }
+
         } catch (err) {
             setError(err.message);
             setCollection(null);
+            setShareLink(null);
         } finally {
             setLoading(false);
         }
@@ -685,6 +698,62 @@ export default function CollectionPage() {
         }
     }
 
+    async function createNewShareLinkHandler() {
+        try {
+            setError("");
+
+            const created = await createOrUpdateSharedLink(id, {
+                allowSlideshowOriginals,
+                allowDownloadResizedZip,
+                allowDownloadOriginalFromCard
+            });
+
+            setShareLink(created);
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
+    async function copySharedLinkHandler() {
+        const url = shareLink?.url ?? shareLink?.Url;
+
+        if (!url) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch (err) {
+            setError("Failed to copy share link.")
+        }
+    }
+
+    async function disableShareLinkHandler() {
+        const shareLinkId = shareLink?.id ?? shareLink?.Id;
+
+        if (!shareLinkId) {
+            return;
+        }
+
+        const confirmed = confirm("Disable this share link?");
+        if(!confirmed){
+            return;
+        }
+
+        try {
+            setError("");
+            await revokeSharedLink(shareLinkId);
+
+            setShareLink(prev => prev 
+                ? {...prev, isRevoked: true, IsRevoked: true}
+                : prev
+            );
+                
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
 
 
     
@@ -940,16 +1009,31 @@ export default function CollectionPage() {
                     <div className='collapse' id='collapseShareLink'>                            
                         <div className='card card-body mt-3'>
                             
-                            <div className='small'>Active share link: No active link yet</div>                                
+                            {/* <div className='small'>Active share link: No active link yet</div>                                 */}
+                            <div className='small'>
+                                Active share link: {
+                                    shareLink && !(shareLink.isRevoked ?? shareLink.IsRevoked)
+                                        ? (shareLink.url ?? shareLink.Url)
+                                        : "No active link yet"
+                                }
+                            </div>
 
                             <hr/>                            
 
                             <div className='d-flex gap-2 flex-wrap'>
-                                <button className='btn btn-primary' type='button'
+                                <button 
+                                    className='btn btn-primary' 
+                                    type='button'
+                                    onClick={copySharedLinkHandler}
+                                    disabled={!shareLink || (shareLink.isRevoked ?? shareLink.IsRevoked)}
                                 >
                                     Copy Existing Link
                                 </button>
-                                <button className='btn btn-primary' type='button'
+                                <button 
+                                    className='btn btn-primary' 
+                                    type='button'
+                                    onClick={disableShareLinkHandler}
+                                    disabled={!shareLink || (shareLink.isRevoked ?? shareLink.IsRevoked)}
                                 >
                                     Disable Existing Link
                                 </button>                                
@@ -974,7 +1058,7 @@ export default function CollectionPage() {
                             </div>
                             <div className='form-check form-switch'>                                
                                 <input className='form-check-input' type='checkbox' role='switch' id='sharePhotoCard' checked disabled/>
-                                <label className='form-check-label small' htmlFor='disabledCheckBox'>Photo Card: View Original, Location, Coordinates, Description</label>                                
+                                <label className='form-check-label small' htmlFor='sharePhotoCard'>Photo Card: View Original, Location, Coordinates, Description</label>                                
                             </div>                            
                             <div className='form-check form-switch'>                                
                                 <input className='form-check-input' type='checkbox' role='switch' id='shareArchiveCard' checked disabled/>
@@ -985,22 +1069,45 @@ export default function CollectionPage() {
                                 Additional options for this share link:
                             </div>
                             <div className='form-check form-switch'>                                
-                                <input className='form-check-input' type='checkbox' role='switch' id='shareSlideshowOriginals'/>
+                                <input 
+                                    className='form-check-input' 
+                                    type='checkbox' role='switch' 
+                                    id='shareSlideshowOriginals'
+                                    checked={allowSlideshowOriginals}
+                                    onChange={(e) => setAllowSlideshowOriginals(e.target.checked)}
+                                />
                                 <label className='form-check-label small' htmlFor='shareSlideshowOriginals'>Slideshow Originals</label>                                
                             </div>
                             <div className='form-check form-switch'>                                
-                                <input className='form-check-input' type='checkbox' role='switch' id='shareDownloadResizedZip'/>
+                                <input 
+                                    className='form-check-input' 
+                                    type='checkbox' 
+                                    role='switch' 
+                                    id='shareDownloadResizedZip'
+                                    checked={allowDownloadResizedZip}
+                                    onChange={(e) => setAllowDownloadResizedZip(e.target.checked)}
+                                />
                                 <label className='form-check-label small' htmlFor='shareDownloadResizedZip'>Download Resized ZIP</label>                                
                             </div>
                             <div className='form-check form-switch'>                                
-                                <input className='form-check-input' type='checkbox' role='switch' id='shareDownloadOriginalFromPhotoCard'/>
+                                <input 
+                                    className='form-check-input' 
+                                    type='checkbox' 
+                                    role='switch' 
+                                    id='shareDownloadOriginalFromPhotoCard'
+                                    checked={allowDownloadOriginalFromCard}
+                                    onChange={(e) => setAllowDownloadOriginalFromCard(e.target.checked)}
+                                />
                                 <label className='form-check-label small' htmlFor='shareDownloadOriginalFromPhotoCard'>Download Original from Photo Card</label>                                
                             </div>
 
                             <hr/>
 
                             <div className='d-flex gap-2 flex-wrap'>                                
-                                <button className='btn btn-primary' type='button'
+                                <button 
+                                    className='btn btn-primary' 
+                                    type='button'
+                                    onClick={createNewShareLinkHandler}
                                 >
                                     Create New Link
                                 </button>
