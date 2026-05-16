@@ -439,10 +439,19 @@ export function createOrUpdateSharedLink(collectionId, payload){
     });
 }
 
+// For collection owner
 export function getSharedLinkByCollectionId(collectionId){
     return request(`/api/share-links/collection/${collectionId}`,{
         method: "GET",
         auth: true
+    });
+}
+
+// For guests or shared link
+export function getSharedCollection(token) {
+    return request(`/api/share-links/public/${token}`,{
+        method: "GET",
+        auth: false
     });
 }
 
@@ -452,3 +461,4 @@ export function revokeSharedLink(sharedLinkId) {
         auth: true
     });
 }
+
