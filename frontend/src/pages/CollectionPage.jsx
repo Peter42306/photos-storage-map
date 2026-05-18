@@ -1014,10 +1014,20 @@ export default function CollectionPage() {
                                 {
                                     shareLink && !(shareLink.isRevoked ?? shareLink.IsRevoked)
                                         ? (
-                                            <div className='alert alert-warning'>Active share link: {shareLink.url ?? shareLink.Url}</div>
+                                            <div className='alert alert-warning'>
+                                                Active share link:{" "}
+                                                <a
+                                                    href={shareLink.url ?? shareLink.Url}
+                                                    target='_blank'
+                                                    rel='noopener noreferrer'
+                                                >
+                                                    {shareLink.url ?? shareLink.Url}
+                                                </a>
+                                                
+                                            </div>
                                         )
                                         : (
-                                            <div className='alert alert-info'>Active share link: "No active link yet"</div>
+                                            <div className='alert alert-info'>Active share link: No active link yet</div>
                                         )
                                 }
                             </div>

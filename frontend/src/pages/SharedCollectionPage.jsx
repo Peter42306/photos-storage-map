@@ -146,6 +146,11 @@ export default function SharedCollectionPage() {
     }
 
     function downloadResizedZipHandler() {
+        const confirmed = confirm("Download all resized photos as ZIP archive?");
+        if (!confirmed) {
+            return;
+        }
+        
         downloadSharedCollectionStandardZip(token);
     }
 
