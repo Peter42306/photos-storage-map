@@ -54,6 +54,8 @@ export default function SharedCollectionPage() {
 
     const navigate = useNavigate();
 
+    const [zipPreparing, setZipPreparing] = useState(false);
+
 
     async function load() {
         try {
@@ -151,7 +153,10 @@ export default function SharedCollectionPage() {
             return;
         }
         
-        downloadSharedCollectionStandardZip(token);
+        setError("");
+        setZipPreparing(true);
+
+        downloadSharedCollectionStandardZip(token);        
     }
 
 
@@ -250,6 +255,20 @@ export default function SharedCollectionPage() {
                     </button>
                 )}
             </div>
+
+            {zipPreparing && (
+                <div className="alert alert-info mt-3">
+                    Preparing ZIP archive...
+
+                    <div className="progress mt-2">
+                        <div
+                            className="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar"
+                            style={{ width: "100%"}}
+                        />
+                    </div>                    
+                </div>
+            )}
             
             <hr/>
 
@@ -258,7 +277,7 @@ export default function SharedCollectionPage() {
             <h5>Photos</h5>
 
             <div className="small mb-3">
-                {/* Distance by geo tags: {formatDistance(totalDistance)}<br/> */}
+                Distance by geo tags: {formatDistance(totalDistance)}<br/>
                 Total photos: {totalPhotos}
             </div>
 
