@@ -1011,14 +1011,18 @@ export default function CollectionPage() {
                             
                             {/* <div className='small'>Active share link: No active link yet</div>                                 */}
                             <div className='small'>
-                                Active share link: {
+                                {
                                     shareLink && !(shareLink.isRevoked ?? shareLink.IsRevoked)
-                                        ? (shareLink.url ?? shareLink.Url)
-                                        : "No active link yet"
+                                        ? (
+                                            <div className='alert alert-warning'>Active share link: {shareLink.url ?? shareLink.Url}</div>
+                                        )
+                                        : (
+                                            <div className='alert alert-info'>Active share link: "No active link yet"</div>
+                                        )
                                 }
                             </div>
 
-                            <hr/>                            
+                            {/* <hr/>                             */}
 
                             <div className='d-flex gap-2 flex-wrap'>
                                 <button 

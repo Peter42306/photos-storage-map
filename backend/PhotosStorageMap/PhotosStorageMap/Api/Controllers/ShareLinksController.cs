@@ -21,17 +21,20 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IFileStorage _storage;
         private readonly IConfiguration _configuration;
+        private readonly IArchiveCollectionService _archiveCollectionService;
         private readonly ILogger<ShareLinksController> _logger;
         
         public ShareLinksController(
             ApplicationDbContext db,
             IFileStorage storage,
             IConfiguration configuration,
+            IArchiveCollectionService archiveCollectionService,
             ILogger<ShareLinksController> logger)
         {
             _db = db;
             _storage = storage;
             _configuration = configuration;
+            _archiveCollectionService = archiveCollectionService;
             _logger = logger;
         }
 
@@ -44,21 +47,30 @@ namespace PhotosStorageMap.Api.Controllers
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            var collection = await _db.UploadCollections
-                .Include(c => c.ShareLink)
-                .FirstOrDefaultAsync(c => 
-                c.Id == request.CollectionId &&
-                c.OwnerUserId == userId &&
-                !c.IsDeleted,
-                ct);
+            //var collection = await _db.UploadCollections
+            //    .Include(c => c.ShareLink)
+            //    .FirstOrDefaultAsync(c => 
+            //    c.Id == request.CollectionId &&
+            //    c.OwnerUserId == userId &&
+            //    !c.IsDeleted,
+            //    ct);
 
-            if (collection == null) return NotFound("Collection not found.");
+            var collection = await _db.UploadCollections
+                .FirstOrDefaultAsync(c => 
+                    c.Id == request.CollectionId && 
+                    c.OwnerUserId == userId &&
+                    !c.IsDeleted,
+                    ct);
+
+            if (collection is null) return NotFound("Collection not found.");
+
+            var shareLink = await _db.ShareLinks.SingleOrDefaultAsync(s => s.UploadCollectionId == collection.Id, ct);
 
             var token = Guid.NewGuid().ToString("N");
 
-            if (collection.ShareLink is null)
+            if (shareLink is null)
             {
-                collection.ShareLink = new ShareLink
+                shareLink = new ShareLink
                 {
                     UploadCollectionId = collection.Id,
                     Token = token,
@@ -68,21 +80,48 @@ namespace PhotosStorageMap.Api.Controllers
                     AllowDownloadResizedZip = request.AllowDownloadResizedZip,
                     AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard
                 };
+
+                _db.ShareLinks.Add(shareLink);
             }
-            else 
+            else
             {
-                collection.ShareLink.Token = token;
-                collection.ShareLink.CreatedAtUtc = DateTime.UtcNow;
-                collection.ShareLink.IsRevoked = false;
-                collection.ShareLink.AllowSlideshowOriginals = request.AllowSlideshowOriginals;
-                collection.ShareLink.AllowDownloadResizedZip = request.AllowDownloadResizedZip;
-                collection.ShareLink.AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard;
+                shareLink.Token = token;
+                shareLink.CreatedAtUtc = DateTime.UtcNow;
+                shareLink.IsRevoked = false;
+                shareLink.AllowSlideshowOriginals = request.AllowSlideshowOriginals;
+                shareLink.AllowDownloadResizedZip = request.AllowDownloadResizedZip;
+                shareLink.AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard;
             }
+
+            //if (collection.ShareLink is null)
+            //{
+            //    collection.ShareLink = new ShareLink
+            //    {
+            //        UploadCollectionId = collection.Id,
+            //        Token = token,
+            //        CreatedAtUtc = DateTime.UtcNow,
+            //        IsRevoked = false,
+            //        AllowSlideshowOriginals = request.AllowSlideshowOriginals,
+            //        AllowDownloadResizedZip = request.AllowDownloadResizedZip,
+            //        AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard
+            //    };
+            //}
+            //else 
+            //{
+            //    collection.ShareLink.Token = token;
+            //    collection.ShareLink.CreatedAtUtc = DateTime.UtcNow;
+            //    collection.ShareLink.IsRevoked = false;
+            //    collection.ShareLink.AllowSlideshowOriginals = request.AllowSlideshowOriginals;
+            //    collection.ShareLink.AllowDownloadResizedZip = request.AllowDownloadResizedZip;
+            //    collection.ShareLink.AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard;
+            //}
 
             await _db.SaveChangesAsync(ct);
 
-            var shareLink = collection.ShareLink;
+            //var shareLink = collection.ShareLink;
+
             var url = BuildShareLink(shareLink.Token);
+
             //var url = $"{Request.Scheme}://{Request.Host}/shared/{shareLink.Token}";
 
             return Ok(new ShareLinkResponse(
@@ -303,10 +342,84 @@ namespace PhotosStorageMap.Api.Controllers
                     Archives = archives
                 }
             });
-
-
-
         }
+
+        [AllowAnonymous]
+        [HttpGet("public/{token}/download-standard-zip")]
+        public async Task<IActionResult> DownloadStandardZipByToekn(
+            string token,
+            CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(token)) return NotFound();
+
+            var shareLink = await _db.ShareLinks
+                .SingleOrDefaultAsync(s =>
+                    s.Token == token && 
+                    !s.IsRevoked &&
+                    !s.UploadCollection.IsDeleted,
+                    ct);
+
+            if (shareLink is null) return NotFound();
+            if (shareLink.ExpiresAtUtc.HasValue && shareLink.ExpiresAtUtc.Value < DateTime.UtcNow) return NotFound();
+            if (!shareLink.AllowDownloadResizedZip) return Forbid();
+
+            var collectionId = shareLink.UploadCollectionId;
+
+            try
+            {
+                var result = await _archiveCollectionService.BuildStandardZipAsync(collectionId, ct);
+                _logger.LogInformation(
+                    "Shared standard ZIP built. CollectionId={CollectionId}, ShareLinkId={ShareLinkId}, FilesCount={FilesCount}, TotalBytes={TotalBytes}",
+                    collectionId,
+                    shareLink.Id,
+                    result.FilesCount,
+                    result.TotalBytes);
+
+                Response.OnCompleted(() =>
+                {
+                    try
+                    {
+                        result.Stream.Dispose();
+
+                        if (result.Stream is FileStream fileStream)
+                        {
+                            var path = fileStream.Name;
+                            if (System.IO.File.Exists(path))
+                            {
+                                System.IO.File.Delete(path);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Failed to cleanup temp shared archive file for CollectionId={CollectionId}",
+                            collectionId);
+                    }
+
+                    return Task.CompletedTask;
+                });
+
+                return File(result.Stream, result.ContentType, result.FileName);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to build shared standard ZIP for CollectionId={CollectionId}",
+                    collectionId);
+
+                return StatusCode(500, "Failed to create ZIP archive");
+            }
+        }
+
+
+
 
         
         //-------------------------------------------------------
@@ -321,9 +434,10 @@ namespace PhotosStorageMap.Api.Controllers
 
         private string BuildShareLink(string token)
         {
-            var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
+            var frontendBaseUrl = _configuration["Frontend:BaseUrl"]?.TrimEnd('/');
 
-            return $"{frontendBaseUrl}://{Request.Host}/shared/{token}";
+            //return $"{frontendBaseUrl}://{Request.Host}/shared/{token}";
+            return $"{frontendBaseUrl}/shared/{token}";
         }
     }
 }

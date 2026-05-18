@@ -462,3 +462,6 @@ export function revokeSharedLink(sharedLinkId) {
     });
 }
 
+export function downloadSharedCollectionStandardZip(token) {
+    window.location.href = `${BASE_URL}/api/share-links/public/${token}/download-standard-zip`;
+}

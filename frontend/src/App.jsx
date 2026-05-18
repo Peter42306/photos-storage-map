@@ -15,6 +15,8 @@ import UploadTestpage from './pages/UploadTestPage';
 import CollectionsPage from './pages/CollectionsPage';
 import CollectionPage from './pages/CollectionPage';
 import MapPage from './pages/MapPage';
+import SharedCollectionPage from './pages/SharedCollectionPage';
+import SharedMapPage from './pages/SharedMapPage';
 
 
 function App() {  
@@ -33,6 +35,8 @@ function App() {
         <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
         <Route path='/resend-confirmation' element={<ResendConfirmationPage/>}/>        
         <Route path='/reset-password' element={<ResetPasswordPage/>}/>        
+        <Route path='/shared/:token' element={<SharedCollectionPage/>}/>
+        <Route path='/shared/:token/map' element={<SharedMapPage/>}/>
 
           {/* protected */}
           <Route element={<ProtectedRoute/>}>
