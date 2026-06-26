@@ -20,17 +20,20 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly IFileStorage _storage;
         private readonly ILogger<CollectionsController> _logger;
         private readonly IArchiveCollectionService _archiveCollectionService;
+        private readonly IZipJobStore _zipJobStore;
 
         public CollectionsController(
             ApplicationDbContext db,
             IFileStorage storage,
             ILogger<CollectionsController> logger,
-            IArchiveCollectionService archiveCollectionService)
+            IArchiveCollectionService archiveCollectionService,
+            IZipJobStore zipJobStore)
         {
             _db = db;
             _storage = storage;
             _logger = logger;            
             _archiveCollectionService = archiveCollectionService;
+            _zipJobStore = zipJobStore;
         }
 
 
@@ -463,6 +466,141 @@ namespace PhotosStorageMap.Api.Controllers
                 .ToListAsync(ct);
 
             return Ok(archives);
+        }
+
+        //-------------------------------------------------------
+        // Progress bar for ZIP archive download
+        //-------------------------------------------------------
+
+        [HttpPost("{id:guid}/standard-zip-jobs")]
+        public async Task<IActionResult> StartStandardZipJob(
+            Guid id,
+            CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (!string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var collectionExists = await _db.UploadCollections
+                .AnyAsync(c =>
+                    c.Id == id &&
+                    c.OwnerUserId == userId &&
+                    !c.IsDeleted,
+                    ct);
+
+            //var collection = await _db.UploadCollections
+            //    .Include(c => c.Photos)
+            //    .FirstOrDefaultAsync(c =>
+            //        c.Id == id &&
+            //        c.OwnerUserId == userId &&
+            //        !c.IsDeleted,
+            //        ct);
+
+            if (!collectionExists) return NotFound();
+
+            var totalFiles = await _db.PhotoItems
+                .CountAsync(p =>
+                    p.UploadCollectionId == id &&
+                    p.Status == PhotoStatus.Ready && 
+                    !string.IsNullOrWhiteSpace(p.StandardKey),
+                    ct);
+
+            //var totalFiles = collection.Photos
+            //    .Count(p =>
+            //        p.Status == PhotoStatus.Ready &&
+            //        !string.IsNullOrWhiteSpace(p.StandardKey));
+
+            if (totalFiles == 0) return BadRequest("No resized photos available for ZIP archive.");
+
+            var jobId = _zipJobStore.Create(totalFiles);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await _archiveCollectionService.BuildStandardZipAsync(
+                        id,
+                        jobId,
+                        _zipJobStore,
+                        CancellationToken.None);
+
+                    if (result.Stream is FileStream fileStream)
+                    {
+                        _zipJobStore.MarkReady(
+                            jobId,
+                            fileStream.Name,
+                            result.FileName,
+                            result.ContentType);
+                    }
+                    else
+                    {
+                        _zipJobStore.MarkFailed(jobId, "ZIP stream is not a file stream.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Standard ZIP job failed. JobId={JobId}, CollectionId={CollectionId}", jobId, id);
+                    _zipJobStore.MarkFailed(jobId, ex.Message);
+                }
+            });
+
+            return Ok(new { jobId });
+        }
+
+        [HttpGet("standard-zip-jobs/{jobId:guid}/status")]
+        public IActionResult GetStandardZipJobStatus(Guid jobId)
+        {
+            var job = _zipJobStore.Get(jobId);
+
+            if (job is null) return NotFound();
+
+            return Ok(new
+            {
+                job.JobId,
+                Status = job.Status.ToString(),
+                job.ProcessedFiles,
+                job.TotalFiles,
+                job.Percent,
+                job.Error
+            });
+        }
+
+        [HttpGet("standard-zip-jobs/{jobId:guid}/download")]
+        public IActionResult DownloadStandardZipJob(Guid jobId)
+        {
+            var job = _zipJobStore.Get(jobId);
+
+            if (job is null) return NotFound();
+            if (job.Status != ZipJobStatus.Ready) return BadRequest("ZIP archive is not ready yet.");
+            if (string.IsNullOrWhiteSpace(job.FilePath) || !System.IO.File.Exists(job.FilePath)) return NotFound("ZIP file not found.");
+
+            var stream = new FileStream(
+                job.FilePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
+
+            Response.OnCompleted(() =>
+            {
+                try
+                {
+                    stream.Dispose();
+
+                    if (System.IO.File.Exists(job.FilePath))
+                    {
+                        System.IO.File.Delete(job.FilePath);
+                    }
+
+                    _zipJobStore.Remove(jobId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to cleanup ZIP job file. JobId={JobId}", jobId);
+                }
+
+                return Task.CompletedTask;
+            });
+
+            return File(stream, job.ContentType, job.FileName);
         }
 
 

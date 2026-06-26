@@ -11,6 +11,7 @@ using PhotosStorageMap.Infrastructure.Images;
 using PhotosStorageMap.Infrastructure.Policies;
 using PhotosStorageMap.Infrastructure.Services;
 using PhotosStorageMap.Infrastructure.Storage;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,14 @@ builder.Services.AddScoped<IArchiveCollectionService, ArchiveCollectionService>(
 builder.Services.AddScoped<ICollectionStatsService, CollectionStatsService>();
 builder.Services.AddHostedService<PhotoCleanupWorker>();
 builder.Services.AddHostedService<CollectionCleanupWorker>();
+builder.Services.AddSingleton<IZipJobStore, ZipJobStore>();
+
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 var app = builder.Build();
 

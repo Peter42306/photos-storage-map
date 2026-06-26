@@ -1,7 +1,5 @@
-const API_PORT = 5008;
 const BASE_URL = 
-    import.meta.env.VITE_API_BASE_URL || 
-    `${window.location.protocol}//${window.location.hostname}:${API_PORT}`;
+    import.meta.env.VITE_API_BASE_URL || "";
 
 export function getToken(){
     return localStorage.getItem("accessToken");
@@ -462,6 +460,52 @@ export function revokeSharedLink(sharedLinkId) {
     });
 }
 
-export function downloadSharedCollectionStandardZip(token) {
-    window.location.href = `${BASE_URL}/api/share-links/public/${token}/download-standard-zip`;
+// export function downloadSharedCollectionStandardZip(token) {
+//     window.location.href = `${BASE_URL}/api/share-links/public/${token}/download-standard-zip`;
+// }
+
+export async function downloadSharedCollectionStandardZip(token) {
+    const res = await fetch(`${BASE_URL}/api/share-links/public/${token}/download-standard-zip`, {
+        method: "GET"
+    });
+}
+
+
+// Owner collection ZIP job
+export function startCollectionStandardZipJob(collectionId) {
+    return request(`/api/collections/${collectionId}/standard-zip-jobs`,{
+        method: "POST",
+        auth: true
+    });
+}
+
+export function getCollectionStandardZipJobStatus(jobId) {
+    return request(`/api/collections/standard-zip-jobs/${jobId}/status`,{
+        method: "GET",
+        auth: true
+    });
+}
+
+export function downloadCollectionStandardZipJob(jobId) {
+    window.location.href = `${BASE_URL}/api/collections/standard-zip-jobs/${jobId}/download`;
+}
+
+
+// Shared ZIP job
+export function startSharedStandardZipJob(token) {
+    return request(`/api/share-links/public/${token}/standard-zip-jobs`,{
+        method: "POST",
+        auth: false
+    });
+}
+
+export function getSharedStandardZipJobStatus(jobId) {
+    return request(`/api/share-links/public/standard-zip-jobs/${jobId}/status`,{
+        method: "GET",
+        auth: false
+    });
+}
+
+export function downloadSharedStandardZipJob(jobId) {
+    window.location.href = `${BASE_URL}/api/share-links/public/standard-zip-jobs/${jobId}/download`;
 }

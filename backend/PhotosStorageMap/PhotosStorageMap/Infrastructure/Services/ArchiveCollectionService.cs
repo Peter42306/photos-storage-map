@@ -26,22 +26,48 @@ namespace PhotosStorageMap.Infrastructure.Services
             _logger = logger;
         }
 
-        public Task<ArchiveBuildResult> BuildOriginalZipAsync(Guid collectionId, CancellationToken ct = default)
+        public Task<ArchiveBuildResult> BuildOriginalZipAsync(
+            Guid collectionId, 
+            CancellationToken ct = default)
         {
-            return BuildZipAsync(collectionId, ArchiveType.Original, ct);
+            return BuildZipAsync(
+                collectionId, 
+                ArchiveType.Original, 
+                ct);
         }
 
-        public Task<ArchiveBuildResult> BuildStandardZipAsync(Guid collectionId, CancellationToken ct = default)
+        public Task<ArchiveBuildResult> BuildStandardZipAsync(
+            Guid collectionId, 
+            Guid? jobId, 
+            IZipJobStore? zipJobStore, 
+            CancellationToken ct = default)
         {
-            return BuildZipAsync(collectionId, ArchiveType.Standard, ct);
+            return BuildZipAsync(
+                collectionId, 
+                ArchiveType.Standard, 
+                ct, 
+                jobId, 
+                zipJobStore);
+        }
+
+        public Task<ArchiveBuildResult> BuildStandardZipAsync(
+            Guid collectionId, 
+            CancellationToken ct = default)
+        {
+            return BuildZipAsync(
+                collectionId, 
+                ArchiveType.Standard, ct);
         }
 
 
+        
 
         private async Task<ArchiveBuildResult> BuildZipAsync(
             Guid collectionId,
             ArchiveType type,
-            CancellationToken ct)
+            CancellationToken ct,
+            Guid? jobId = null,
+            IZipJobStore? zipJobStore = null)
         {
             var sw = Stopwatch.StartNew();
 
@@ -109,9 +135,14 @@ namespace PhotosStorageMap.Infrastructure.Services
                         var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
 
                         await using var entryStream = entry.Open();
-                        await sourceStream.CopyToAsync(entryStream, ct);                        
+                        await sourceStream.CopyToAsync(entryStream, ct);
 
                         filesCount++;
+
+                        if (jobId.HasValue && zipJobStore is not null)
+                        {
+                            zipJobStore.Update(jobId.Value, filesCount);
+                        }
 
                         _logger.LogInformation(
                             "Archieved photo to zip. FileNo={FileCount}, CollectionId={CollectionId}, PhotoId={PhotoId}, Type={Type}, Key={StorageKey}",
@@ -152,7 +183,8 @@ namespace PhotosStorageMap.Infrastructure.Services
                     //    filesCount,
                     //    totalBytes);
                 }
-            };
+            }
+            ;
 
             if (filesCount == 0)
             {
@@ -249,6 +281,7 @@ namespace PhotosStorageMap.Infrastructure.Services
 
             return value.Trim();
         }
+        
 
         private enum ArchiveType
         {

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { downloadSharedCollectionStandardZip, getSharedCollection } from "../api";
+import { downloadSharedCollectionStandardZip, downloadSharedStandardZipJob, getSharedCollection, getSharedStandardZipJobStatus, startSharedStandardZipJob } from "../api";
 import { configMLGL } from "@maptiler/sdk";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/counter.css";
 import { Counter, Fullscreen, Slideshow, Zoom } from "yet-another-react-lightbox/plugins";
+import ZipProgressBar from "../components/ZipProgressBar";
 
 function formatBytes(bytes) {
     if (!bytes) return "0 B";
@@ -55,6 +56,11 @@ export default function SharedCollectionPage() {
     const navigate = useNavigate();
 
     const [zipPreparing, setZipPreparing] = useState(false);
+
+    const [zipStatus, setZipStatus] = useState("");
+    const [zipProgress, setZipProgress] = useState(0);
+    const [zipProcessedFiles, setZipProcessedFiles] = useState(0);
+    const [zipTotalFiles, setZipTotalFiles] = useState(0);
 
 
     async function load() {
@@ -158,6 +164,62 @@ export default function SharedCollectionPage() {
 
         downloadSharedCollectionStandardZip(token);        
     }
+
+    // const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    // async function downloadResizedZipHandler() {
+    //     const confirmed = confirm("Download all resized photos as ZIP archive?");
+    //     if (!confirmed) return;        
+        
+    //     try {
+    //         setError("");
+    //         setZipStatus("Starting ZIP archive...");
+    //         setZipProgress(0);
+    //         setZipProcessedFiles(0);
+    //         setZipTotalFiles(0);
+
+    //         const started = await startSharedStandardZipJob(token);
+    //         const jobId = started.jobId ?? started.JobId;
+
+    //         while(true){
+    //             const status = await getSharedStandardZipJobStatus(jobId);
+
+    //             const currentStatus = status.status ?? status.Status;
+    //             const percent = status.percent ?? status.Percent ?? 0;
+    //             const processedFiles = status.processedFiles ?? status.ProcessedFiles ?? 0;
+    //             const totalFiles = status.totalFiles ?? status.TotalFiles ?? 0;
+
+    //             setZipProgress(percent);
+    //             setZipProcessedFiles(processedFiles);
+    //             setZipTotalFiles(totalFiles);
+    //             setZipStatus(`Preparing ZIP archive: ${percent}%`);
+
+    //             if (currentStatus === "Ready") {
+    //                 setZipProgress(100);
+    //                 setZipStatus("ZIP archive is ready. Starting download...");
+    //                 downloadSharedStandardZipJob(jobId);
+
+    //                 setTimeout(() => {
+    //                     setZipStatus("");
+    //                     setZipProgress(0);
+    //                     setZipProcessedFiles(0);
+    //                     setZipTotalFiles(0);
+    //                 }, 3000);
+
+    //                 break;
+    //             }
+
+    //             if (currentStatus === "Failed") {
+    //                 throw new Error(status.error ?? status.Error ?? "ZIP archive creation failed.")
+    //             }
+
+    //             await sleep(1000);
+    //         }
+    //     } catch (err) {
+    //         setError(err.message);
+    //         setZipStatus("");
+    //     } 
+    // }
 
 
 
@@ -269,6 +331,13 @@ export default function SharedCollectionPage() {
                     </div>                    
                 </div>
             )}
+
+            <ZipProgressBar
+                status={zipStatus}
+                percent={zipProgress}
+                processedFiles={zipProcessedFiles}
+                totalFiles={zipTotalFiles}
+            />
             
             <hr/>
 

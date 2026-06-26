@@ -4,7 +4,18 @@ namespace PhotosStorageMap.Application.Interfaces
 {
     public interface IArchiveCollectionService
     {
-        Task<ArchiveBuildResult> BuildStandardZipAsync(Guid collectionId, CancellationToken ct = default);
-        Task<ArchiveBuildResult> BuildOriginalZipAsync(Guid collectionId, CancellationToken ct = default);
+        Task<ArchiveBuildResult> BuildStandardZipAsync(
+            Guid collectionId, 
+            CancellationToken ct = default);
+
+        Task<ArchiveBuildResult> BuildStandardZipAsync(
+            Guid collectionId,
+            Guid? jobId,
+            IZipJobStore? zipJobStore,
+            CancellationToken ct = default);
+
+        Task<ArchiveBuildResult> BuildOriginalZipAsync(
+            Guid collectionId, 
+            CancellationToken ct = default);        
     }
 }
