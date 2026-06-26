@@ -96,6 +96,13 @@ export default function SharedCollectionPage() {
     const totalDistance = collection?.totalDistance ?? collection?.TotalDistance ?? 0;
     const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
 
+    const hasGeoPhotos = photos.some(p => {
+        const lat = p.latitude ?? p.Latitude;
+        const lon = p.longitude ?? p.longitude;
+
+        return lat != null && lon != null;
+    })
+
     const standardSlides = photos
         .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
         .map(p => ({
@@ -265,12 +272,15 @@ export default function SharedCollectionPage() {
             <p>{collection?.description ?? collection?.Description ?? "No description yet."}</p>
             <hr/>
             <div className="d-flex gap-2 flex-wrap">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => navigate(`/shared/${token}/map`)}
-                >
-                    Map View
-                </button>
+                {hasGeoPhotos && (
+                    <button
+                        className="btn btn-primary"                    
+                        onClick={() => navigate(`/shared/${token}/map`)}
+                    >
+                        Map View
+                    </button>
+                )}
+                
 
                 <button
                     className="btn btn-primary"

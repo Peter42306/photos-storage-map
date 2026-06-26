@@ -771,6 +771,13 @@ export default function CollectionPage() {
     
     const photos = collection?.photos ?? collection?.Photos ?? [];
 
+    const hasGeoPhotos = photos.some(p => {
+        const lat = p.latitude ?? p.Latitude;
+        const lon = p.longitude ?? p.Longitude;
+
+        return lat != null && lon != null;
+    });
+
     // const totalArchives = archives.length;
     // const totalArchivesSize = archives.reduce(
     //     (sum, archive) => sum + (archive.sizeBytes ?? archive.SizeBytes ?? 0),
@@ -959,6 +966,7 @@ export default function CollectionPage() {
                     <div className='d-flex gap-2 flex-wrap'>
                         <button
                             className='btn btn-primary'
+                            disabled={!hasGeoPhotos}                            
                             onClick={() => navigate(`/collections/${collection.id}/map`)}
                         >
                             Map View
@@ -1014,6 +1022,12 @@ export default function CollectionPage() {
                         >
                             Share Collection
                         </button>
+
+                        {!hasGeoPhotos && (
+                            <div className='small text-muted w-100'>
+                                Map View is unavailable: no photos with GPS coordinates.
+                            </div>
+                        )}
                     </div>
 
                     
