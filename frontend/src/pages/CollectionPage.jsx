@@ -190,6 +190,17 @@ export default function CollectionPage() {
 
         const files = Array.from(e.target.files || []);
 
+        const invalidFiles = files.filter(f => {
+            const ext = f.name.split('.').pop()?.toLowerCase();
+            return ext !== "jpg" && ext !== "jpeg";
+        });
+
+        if (invalidFiles.length > 0) {
+            setError("Only JPG and JPEG photos are supported. iPhone users: Settings → Camera → Formats → Most Compatible.");
+            e.target.value = "";
+            return;
+        }
+
 
         if (files.length === 0) return;
 
@@ -1144,7 +1155,7 @@ export default function CollectionPage() {
                         <input
                             type='file'
                             className='form-control mb-3'
-                            accept='image/*'
+                            accept='.jpg,.jpeg,image/jpeg'
                             multiple
                             disabled={uploading || isEditing}
                             onChange={onFilesSelected}
@@ -1239,7 +1250,7 @@ export default function CollectionPage() {
                     ) : (
                         <div className='row'>
                             {archives.map((a) => (
-                                <div key={a.id ?? a.Id} className='col-6 col-md-4 col-lg-3 mb-3'>
+                                <div key={a.id ?? a.Id} className='col-12 col-md-6 col-lg-3 mb-3'>
                                     <ArchiveCard
                                         archive={a}
                                         onDownload={downloadArchiveHandler}

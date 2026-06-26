@@ -12,9 +12,16 @@ namespace PhotosStorageMap.Infrastructure.Images
 {
     public sealed class ImageSharpImageProcessor : IImageProcessor
     {
+        private readonly ILogger<ImageSharpImageProcessor> _logger;
+
+        public ImageSharpImageProcessor(ILogger<ImageSharpImageProcessor> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<ImageProcessResult> ProcessAsync(Stream original, CancellationToken ct = default)
         {
-            ct.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested();            
 
             if (original is null)
             {
@@ -108,7 +115,7 @@ namespace PhotosStorageMap.Infrastructure.Images
         // EXIF/GPS via MetadataExtractor
         //-----------------------------------------------------------
 
-        private static ExifData ReadExifWithMetadataExtractor(Stream stream)
+        private ExifData ReadExifWithMetadataExtractor(Stream stream)
         {
             if (stream.CanSeek)
             {
@@ -147,8 +154,21 @@ namespace PhotosStorageMap.Infrastructure.Images
             var gpsDir = directories.OfType<GpsDirectory>().FirstOrDefault();            
             if (gpsDir is not null && gpsDir.TryGetGeoLocation(out var location))
             {
-                lat = location.Latitude;
-                lon = location.Longitude;                
+                var parsedLatitude = location.Latitude;
+                var parsedLongitude = location.Longitude;
+
+                _logger.LogInformation("EXIF GPS detected: Latiitude {Latitude}, Longitude {Longitude}.", parsedLatitude, parsedLongitude);
+
+                
+                if (!(parsedLatitude == 0 && parsedLongitude == 0))
+                {
+                    lat = parsedLatitude;
+                    lon = parsedLongitude;
+                }                
+            }
+            else
+            {
+                _logger.LogInformation("EXIF GPS not found.");
             }
 
             return new ExifData(takenAt, lat, lon);

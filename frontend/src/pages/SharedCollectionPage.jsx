@@ -356,7 +356,7 @@ export default function SharedCollectionPage() {
             ) : (
                 <div className="row">
                     {photos.map((p, index) => (
-                        <div key={p.id ?? p.Id} className="col-6 col-md-4 col-lg-3 mb-3">
+                        <div key={p.id ?? p.Id} className='col-12 col-md-6 col-lg-3 mb-3'>
                             <SharedPhotoCard
                                 photo={p}
                                 onViewOriginal={viewOriginalHandler}
@@ -387,7 +387,7 @@ export default function SharedCollectionPage() {
             ) : (
                 <div className="row">
                     {archives.map((a) => (
-                        <div key={a.id ?? a.Id} className="col-6 col-md-4 col-lg-3 mb-3">
+                        <div key={a.id ?? a.Id} className='col-12 col-md-6 col-lg-3 mb-3'>
                             <SharedArchiveCard
                                 archive={a}
                                 onDownload={downloadArchiveHandler}
