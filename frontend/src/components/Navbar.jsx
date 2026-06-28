@@ -59,16 +59,16 @@ export default function Navbar(){
                         </li>
                         {token ? (
                             <>
-                                <li className="nav-item">
+                                {/* <li className="nav-item">
                                     <NavLink className="nav-link" to="/dashboard">
                                         Dashboard
                                     </NavLink>
-                                </li>
-                                <li className="nav-item">
+                                </li> */}
+                                {/* <li className="nav-item">
                                     <NavLink className="nav-link" to="/upload-test">
                                         Upload Test
                                     </NavLink>
-                                </li>
+                                </li> */}
                                 <li className="nav-item">
                                     <NavLink className="nav-link" to="/collections">
                                         My Collections
