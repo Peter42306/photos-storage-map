@@ -155,7 +155,7 @@ export default function CollectionsPage() {
             <hr/>
 
             {error ? <div className="alert alert-danger">{error}</div> : null}
-            {status ? <div className="alert alert-info">{status}</div> : null}
+            {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
             {summary && (
                 <div className="d-flex align-items-start justify-content-between small mb-3">
