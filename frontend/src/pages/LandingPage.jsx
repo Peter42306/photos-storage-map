@@ -5,11 +5,14 @@ export default function LandingPage(){
     const token = getToken();
     
     return(
-        <div className="container py-4">
-            <section className="row align-items-center g-4 mb-5">
+        <>
+        <section className="container py-5">
+            <div className="row align-items-center g-4 mb-5">
                 <div className="col-12 col-lg-7">                    
-                    <h1 className="display-5 fw-semibold mb-3">Store, share and explore your photo collections on a map</h1>
-                    <p className="lead text-muted ">Upload JPG photos, keep collections and archives together, view GPS locations, add notes, download resized ZIP files, and share selected collections.</p>
+                    <h1 className="display-5 fw-semibold mb-3">Store and explore your photo collections</h1>
+                    <p className="lead text-muted ">PhotoMap is designed for people who need more than just a photo gallery. Whether you're traveling, documenting inspections, working in the field, or creating project records, your photos stay connected with locations, notes, and related archive files.</p>
+                    <p className="lead text-muted ">Upload original photos to secure cloud storage, organize them into collections, and explore GPS locations on an interactive map.</p>                    
+                    <p className="lead text-muted ">Add notes to photos and archives, download resized ZIP files, and share your collections through secure read-only links.</p>
 
                     {!token ? (
                         <div className="d-flex gap-2 flex-wrap">
@@ -47,140 +50,133 @@ export default function LandingPage(){
                 <div className="col-12 col-lg-5">
                     <div className="card shadow-sm">
                         <div className="card-body p-4">
-                            <h5>What you can do</h5>
+                            {/* <h5>WHAT YOU CAN DO</h5> */}
+                            <h4 >What you can do</h4>
                             <hr/>
                             <div className="d-flex flex-column gap-3">
-                                <FeatureLine title="Photo collections" text="Upload and organize original photos."/>
-                                <FeatureLine title="Map view" text="Show photos on a map when GPS data is available."/>
-                                <FeatureLine title="Archives" text="Store ZIP archives together with collections."/>
-                                <FeatureLine title="Sharing" text="Create read-only links for selected collections."/>
+                                <FeatureLine title="Photo collections" text="Upload original JPG photos into collections."/>
+                                <FeatureLine title="Interactive map" text="View photos on an interactive map when GPS information is available."/>
+                                <FeatureLine title="Archives" text="Store ZIP archives together with your photo collections."/>
+                                <FeatureLine title="Notes" text="Add notes to photos and archives."/>                                
+                                <FeatureLine title="Sharing" text="Share collections using secure read-only links."/>
                             </div>                            
                         </div>
                     </div>
                 </div>                
-            </section>
-
-            <section className="mb-5">
-                <div className="row g-3">
-                    <div className="col-12 col-lg-4">
-                        <div className="card shadow-sm overflow-hidden">
-                            <img
-                                src="/images/landing/20260531_224234.jpg"
-                                alt="PhotosStorageMap collection page"
-                                className="img-fluid"
-                            />
-                            <div className="card-body">
-                                <h5 className="mb-1">Collections, maps and archives</h5>
-                                <div className="text-muted">
-                                    Organize photos, view GPS locations and share collections.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-12 col-lg-4">
-                        <div className="card shadow-sm overflow-hidden">
-                            <img
-                                src="/images/landing/20260531_224234.jpg"
-                                alt="PhotosStorageMap collection page"
-                                className="img-fluid"
-                            />
-                            <div className="card-body">
-                                <h5 className="mb-1">Collections, maps and archives</h5>
-                                <div className="text-muted">
-                                    Organize photos, view GPS locations and share collections.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-12 col-lg-4">
-                        <div className="card shadow-sm overflow-hidden">
-                            <img
-                                src="/images/landing/20260531_224234.jpg"
-                                alt="PhotosStorageMap collection page"
-                                className="img-fluid"
-                            />
-                            <div className="card-body">
-                                <h5 className="mb-1">Collections, maps and archives</h5>
-                                <div className="text-muted">
-                                    Organize photos, view GPS locations and share collections.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </section>            
                 
-            </section>
-
-            
-
-            <section className="mb-5">
+        <section className="bg-secondary py-5">
+            <div className="container">
                 <div className="row g-3">
-                    <FeatureCard
-                        icon="bi-images"
-                        title="Photo storage"
-                        text="Upload JPG/JPEG photos, generate resized versions and thumbnails, and keep the original files in storage."
-                    />
-                    <FeatureCard
-                        icon="bi-geo-alt"
-                        title="GPS and map"
-                        text="View photo locations, distance between photos, and total distance based on available geolocation metadata. "
-                    />
-                    <FeatureCard
-                        icon="bi-card-text"
-                        title="Notes and description"
-                        text="Add comments to photos and archives. Useful for travel notes, inspections, reports, or project documentation."
-                    />
-                    <FeatureCard
-                        icon="bi-file-earmark-zip"
-                        title="ZIP Archives"
-                        text="Upload ZIP archives, download resized photo ZIP files, and keep additional project files near the photo collection."
-                    />
-                    <FeatureCard
-                        icon="bi-share"
-                        title="Shared collections"
-                        text="Share collections with public read-only links. Choose what can be viewed or downloaded."
-                    />
-                    <FeatureCard
-                        icon="bi-cloud-arrow-up"
-                        title="Cloud storage"
-                        text="Files are stored in S3-compatible object storage, while metadata is managed by the application."
+                <div className="col-12 col-lg-4">
+                    <ImageCard
+                        image="/images/landing/Screenshot-2026-06-29-150758-my-collections.jpg"                            
+                        title="My Collections"
+                        text="Create and manage your photo collections. View storage statistics."
                     />
                 </div>
-            </section>            
-
-            <section className="row g-4 align-items-center mb-5">
-                <div className="col-12 col-md-6">
-                    <h3>Designed for real photo workflows</h3>
-                    <p>PhotosStorageMap is useful when photos are more than just images: trips, inspections, surveys, field work, technical reports, and any case where for your reporting location and notes matter.</p>
+                <div className="col-12 col-lg-4">
+                    <ImageCard
+                        image="/images/landing/Screenshot-2026-06-29-150857-collection-page.jpg"                            
+                        title="Collection Details"
+                        text="Manage photos and archives, add notes, see slideshow, and share collection."
+                    />
                 </div>
-
-                <div className="col-12 col-md-6">
-                    <div className="card shadow-sm">
-                        <div className="card-body">
-                            <h5 className="card-title">How it works</h5>                            
-                            <hr/>
-                            <ol>
-                                <li>Create an account</li>
-                                <li>Create a photo collection</li>
-                                <li>Upload JPG photos and ZIP archives</li>
-                                <li>View gallery, map, slideshow and statistics</li>
-                                <li>Share the collections</li>
-                            </ol>
-                        </div>                        
-                    </div>
-                    
+                <div className="col-12 col-lg-4">
+                    <ImageCard
+                        image="/images/landing/Screenshot-2026-06-29 151055-map-page.jpg"                            
+                        title="Interactive Map"
+                        text="Explore photos by location using GPS information."
+                    />
                 </div>
-            </section>
-
-            <section className="border-top pt-4">
-                <div className="d-flex flex-column flex-md-row justify-content-between gap-3 text-muted small">
-                    <div>
-                        PhotosStorageMap © 2026
-                    </div>
-                </div>
-            </section>
+            </div>                
+            </div>
             
-        </div>
+        </section>
+        
+
+        <section className="container py-5">
+            <div className="row g-3">
+                <FeatureCard
+                    icon="bi-images"
+                    title="Photo storage"
+                    text="Upload original JPG/JPEG photos, generate resized versions and thumbnails automatically."
+                />
+                <FeatureCard
+                    icon="bi-geo-alt"
+                    title="GPS and map"
+                    text="View photo locations, measure distances between photos, and calculate the total distance using GPS metadata. "
+                />
+                <FeatureCard
+                    icon="bi-card-text"
+                    title="Notes and description"
+                    text="Add notes to photos and archives. Perfect for travel, inspections, reports, and project documentation."
+                />
+                <FeatureCard
+                    icon="bi-file-earmark-zip"
+                    title="ZIP Archives"
+                    text="Upload ZIP archives, download resized photo ZIP files, and keep related project files together with your collections."
+                />
+                <FeatureCard
+                    icon="bi-share"
+                    title="Shared collections"
+                    text="Share your collections using a public read-only link. Anyone with the link always sees the latest version of your collection. You can disable the sharing link at any time."
+                />
+                <FeatureCard
+                    icon="bi-cloud-arrow-up"
+                    title="Cloud storage"
+                    text="Photos are securely stored in S3-compatible object storage, while metadata is managed by the application."
+                 />
+            </div>
+        </section>            
+
+        <section className="bg-info py-5">
+            <div className="container">
+                <div className="row g-4 align-items-center">                    
+                    <div className="col-12 col-md-7">
+                        <div className="card shadow-sm">
+                            <div className="card-body">
+                                <h5 className="card-title">How it works</h5>                            
+                                <hr/>
+                                <ol>
+                                    <li>Create an account</li>
+                                    <li>Create your collections</li>
+                                    <li>Upload JPG photos</li>
+                                    <li>Upload ZIP archives (optional)</li>
+                                    <li>Add notes to photos and archives</li>
+                                    <li>Explore the gallery, map, slideshow and statistics</li>
+                                    <li>Share your collections</li>
+                                    <li>Stop sharing at any time</li>
+
+                                </ol>
+                            </div>                        
+                        </div>                    
+                    </div>
+                    <div className="col-12 col-md-5">      
+                        {/* <p>Watch YouTube demo</p>                   */}
+                        <div className="ratio ratio-16x9 mb-2">                            
+                            <iframe
+                                src="https://www.youtube-nocookie.com/embed/w-mKc8zRkAc?rel=0"
+                                title="Brief Application Demo"
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen>                                
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>       
+
+        <footer>
+            <div className="container py-4 text-muted small">
+                <div>
+                    PhotoMap © 2026
+                </div>
+            </div>
+        </footer>
+        </>        
     );
 }
 
@@ -197,14 +193,37 @@ function FeatureCard({ icon, title, text}) {
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 function FeatureLine({ title, text }) {
     return(
         <div>
-            <div className="fw-semibold">{title}</div>
+            <h5>{title}</h5>
+            {/* <div className="fw-semibold">{title}</div> */}
             <div className="text-muted">{text}</div>
         </div>
-    )
+    );
+}
+
+function ImageCard({ image, title, text }) {
+    return(
+        <div className="card shadow-sm overflow-hidden h-100">
+            <img 
+                src={image} 
+                alt={title ?? "Photo"} 
+                className="img-fluid"
+            />
+            <div className="card-body">                    
+                {title && (                        
+                    <h5>{title}</h5>                                                    
+                )}
+                {text && (
+                    <div className="text-muted">
+                        {text}                            
+                    </div>
+                )}
+            </div>
+        </div>        
+    );
 }

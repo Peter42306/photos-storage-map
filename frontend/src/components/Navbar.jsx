@@ -35,7 +35,8 @@ export default function Navbar(){
         <nav className="navbar navbar-expand-lg bg-white border-bottom">
             <div className="container">
                 <Link className="navbar-brand fw-semibold" to="/">
-                    PhotosStorageMap
+                <i className="bi bi-camera fs-5 text-primary"> </i>
+                    PhotoMap
                 </Link>
 
                 <button

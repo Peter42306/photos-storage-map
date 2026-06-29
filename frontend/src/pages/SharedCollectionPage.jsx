@@ -265,6 +265,7 @@ export default function SharedCollectionPage() {
     }
 
     return(
+        <>
         <div className="container py-4">                        
             <h2>{collection?.title ?? collection?.Title ?? "-"}</h2>
             <hr/>
@@ -393,7 +394,7 @@ export default function SharedCollectionPage() {
             </div>
 
             {archives.length === 0 ? (
-                <div>No archives available.</div>
+                <div className='alert alert-info'>No archives available.</div>
             ) : (
                 <div className="row">
                     {archives.map((a) => (
@@ -406,7 +407,6 @@ export default function SharedCollectionPage() {
                     ))}
                 </div>
             )}
-
             
             <Lightbox
                 open={lightboxOpen}
@@ -421,6 +421,14 @@ export default function SharedCollectionPage() {
             />
 
         </div>
+        <footer className="border-top">
+            <div className="container py-4 text-muted small">
+                <div>
+                    PhotosMap © 2026
+                </div>
+            </div>
+        </footer>
+        </>        
     );
 }
 

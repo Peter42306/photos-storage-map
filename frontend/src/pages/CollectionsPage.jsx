@@ -140,6 +140,7 @@ export default function CollectionsPage() {
     }, []);
 
     return(
+        <>
         <div className="container py-4">
         {/* <div className="container py-4" style={{maxWidth: 900}}> */}
             <div className="d-flex align-items-center justify-content-between">
@@ -185,7 +186,7 @@ export default function CollectionsPage() {
                                     </h5>
                                     <hr/>
                                     <div className="text-muted small">
-                                        Created: {formatTakenAt (new Date(c.createdAtUtc).toLocaleString())}
+                                        Created: {formatTakenAt (c.createdAtUtc)}
                                     </div>
                                     {/* <div className="text-muted small">
                                         Id: {c.id}
@@ -257,8 +258,15 @@ export default function CollectionsPage() {
                 </div>
             </div>
             )}
-
-
         </div>
+        <footer className="border-top">
+            <div className=" container py-4 text-muted small">
+                <div>
+                    PhotosMap © 2026
+                </div>
+            </div>
+        </footer>
+        </>
+        
     );
 }

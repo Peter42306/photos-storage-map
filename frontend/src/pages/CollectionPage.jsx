@@ -832,6 +832,7 @@ export default function CollectionPage() {
     }
 
     return(
+        <>
         <div className="container py-4">
         {/* <div className="container py-4" style={{ maxWidth: 900 }}> */}
             {/* <div className="card shadow-sm"> */}
@@ -1326,6 +1327,8 @@ export default function CollectionPage() {
                         </div>
                     )}
 
+                    
+
                     {/* Lightbox gallery */}
                     {/* <div className='row'>
                         {photos.map((p, index) =>{
@@ -1364,6 +1367,15 @@ export default function CollectionPage() {
                 {/* </div>                 */}
             {/* </div> */}
         </div>        
+        <footer className="border-top">
+            <div className="container py-4 text-muted small">
+                <div>
+                    PhotosMap © 2026
+                </div>
+            </div>
+        </footer>
+        </>
+        
     );
 }
 
@@ -1713,6 +1725,7 @@ const ArchiveCard = React.memo(function ArchiveCard({
                     </button>                    
                 </div>
             </div>
+            
         </div>
     );
 });
