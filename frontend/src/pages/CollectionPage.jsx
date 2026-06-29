@@ -852,7 +852,7 @@ export default function CollectionPage() {
                     {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
                     {/* <h5>{collection?.title}</h5> */}
-                    <p>{collection?.description || "No description of collection yet."}</p>
+                    <p >{collection?.description || "No description of collection yet."}</p>
                     {/* <p>Collection Id: {collection?.id}</p> */}
 
                     <div className='mb-2'>
