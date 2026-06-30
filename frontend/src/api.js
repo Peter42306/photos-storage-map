@@ -464,10 +464,42 @@ export function revokeSharedLink(sharedLinkId) {
 //     window.location.href = `${BASE_URL}/api/share-links/public/${token}/download-standard-zip`;
 // }
 
-export async function downloadSharedCollectionStandardZip(token) {
+// export async function downloadSharedCollectionStandardZip(token) {
+//     const res = await fetch(`${BASE_URL}/api/share-links/public/${token}/download-standard-zip`, {
+//         method: "GET"
+//     });
+// }
+
+export async function downloadSharedCollectionStandardZip(token) {    
     const res = await fetch(`${BASE_URL}/api/share-links/public/${token}/download-standard-zip`, {
         method: "GET"
     });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+
+    const blob = await res.blob();
+
+    let fileName = "shared_collection_standard.zip";
+    const contentDisposition = res.headers.get("Content-Disposition");
+
+    const parsedFileName = getFileNameFromContentDisposition(contentDisposition);
+    if (parsedFileName) {
+        fileName = parsedFileName;        
+    }  
+
+    const objectUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(objectUrl);    
 }
 
 

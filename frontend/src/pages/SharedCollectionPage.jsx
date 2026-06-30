@@ -160,16 +160,23 @@ export default function SharedCollectionPage() {
         if (url) window.location.href = url;
     }
 
-    function downloadResizedZipHandler() {
+    async function downloadResizedZipHandler() {
         const confirmed = confirm("Download all resized photos as ZIP archive?");
         if (!confirmed) {
             return;
         }
         
-        setError("");
-        setZipPreparing(true);
+        // setError("");
+        // setZipPreparing(true);
 
-        downloadSharedCollectionStandardZip(token);        
+        // downloadSharedCollectionStandardZip(token);        
+
+        try {
+            setError("");
+            await downloadSharedCollectionStandardZip(token);
+        } catch (err) {
+            setError(err.message);
+        }
     }
 
     // const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -329,7 +336,7 @@ export default function SharedCollectionPage() {
                 )}
             </div>
 
-            {zipPreparing && (
+            {/* {zipPreparing && (
                 <div className="alert alert-info mt-3">
                     Preparing ZIP archive...
 
@@ -341,7 +348,7 @@ export default function SharedCollectionPage() {
                         />
                     </div>                    
                 </div>
-            )}
+            )} */}
 
             <ZipProgressBar
                 status={zipStatus}
