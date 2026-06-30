@@ -75,6 +75,11 @@ export default function Navbar(){
                                         My Collections
                                     </NavLink>
                                 </li>
+                                <li className="nav-item">
+                                    <NavLink className="nav-link" to="/admin">
+                                        Admin Panel
+                                    </NavLink>
+                                </li>
                             </>                            
                         ) : null}
                     </ul>

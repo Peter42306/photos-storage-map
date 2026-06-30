@@ -541,3 +541,21 @@ export function getSharedStandardZipJobStatus(jobId) {
 export function downloadSharedStandardZipJob(jobId) {
     window.location.href = `${BASE_URL}/api/share-links/public/standard-zip-jobs/${jobId}/download`;
 }
+
+export async function getAdminUsers() {
+    const token = getToken();
+
+    const res = await fetch(`${BASE_URL}/api/admin/users`,{
+        headers:{
+            Authorization:`Bearer ${token}`
+        }
+    })
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+
+    return await res.json();
+}
+

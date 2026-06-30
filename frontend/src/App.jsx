@@ -17,7 +17,7 @@ import CollectionPage from './pages/CollectionPage';
 import MapPage from './pages/MapPage';
 import SharedCollectionPage from './pages/SharedCollectionPage';
 import SharedMapPage from './pages/SharedMapPage';
-
+import AdminPage from './pages/AdminPage';
 
 function App() {  
 
@@ -50,8 +50,7 @@ function App() {
             <Route path='/collections/:id' element={<CollectionPage/>}/>
             <Route path='/collections/:id/map' element={<MapPage/>}/>
 
-
-
+            <Route path='/admin' element={<AdminPage/>}/>
           </Route>
 
           {/* fallback */}
