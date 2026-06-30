@@ -157,7 +157,7 @@ namespace PhotosStorageMap.Infrastructure.Images
                 var parsedLatitude = location.Latitude;
                 var parsedLongitude = location.Longitude;
 
-                _logger.LogInformation("EXIF GPS detected: Latiitude {Latitude}, Longitude {Longitude}.", parsedLatitude, parsedLongitude);
+                _logger.LogInformation("EXIF GPS detected: Latitude {Latitude}, Longitude {Longitude}.", parsedLatitude, parsedLongitude);
 
                 
                 if (!(parsedLatitude == 0 && parsedLongitude == 0))

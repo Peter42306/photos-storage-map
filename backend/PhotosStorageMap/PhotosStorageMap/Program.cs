@@ -7,6 +7,7 @@ using PhotosStorageMap.Application.Interfaces;
 using PhotosStorageMap.Infrastructure.BackgroundProcessing;
 using PhotosStorageMap.Infrastructure.Email;
 using PhotosStorageMap.Infrastructure.Extensions;
+using PhotosStorageMap.Infrastructure.Identity;
 using PhotosStorageMap.Infrastructure.Images;
 using PhotosStorageMap.Infrastructure.Policies;
 using PhotosStorageMap.Infrastructure.Services;
@@ -73,6 +74,11 @@ builder.Services
     });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+}
 
 if (app.Environment.IsDevelopment())
 {
