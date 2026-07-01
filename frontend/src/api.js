@@ -559,3 +559,22 @@ export async function getAdminUsers() {
     return await res.json();
 }
 
+export async function updateUserActive(userId, isActive) {
+    const token = getToken();
+
+    const res = await fetch(`${BASE_URL}/api/admin/users/${userId}/active`,{
+        method:"PATCH",
+        headers:{
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            isActive
+        })
+    });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+}

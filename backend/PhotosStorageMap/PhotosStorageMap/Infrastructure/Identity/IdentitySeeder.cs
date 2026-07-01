@@ -21,12 +21,15 @@ namespace PhotosStorageMap.Infrastructure.Identity
                 return;
             }
 
-            var adminUser = await userManager.FindByNameAsync(adminEmail);
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser is null)
             {
                 return;
             }
+
+            adminUser.IsActive = true;
+            await userManager.UpdateAsync(adminUser);
 
             if (!await userManager.IsInRoleAsync(adminUser, RoleNames.Admin))
             {

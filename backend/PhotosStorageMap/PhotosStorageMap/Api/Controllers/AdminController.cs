@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using PhotosStorageMap.Application.DTOs;
 using PhotosStorageMap.Infrastructure.Data;
 using PhotosStorageMap.Infrastructure.Identity;
+using System.Security.Claims;
 
 namespace PhotosStorageMap.Api.Controllers
 {    
@@ -66,6 +67,32 @@ namespace PhotosStorageMap.Api.Controllers
                 .ToListAsync(ct);
 
             return Ok(users);
+        }
+
+        [HttpPatch("users/{userId}/active")]
+        public async Task<IActionResult> UpdateUserActive(
+            string userId,
+            [FromBody] UpdateUserActiveRequest request,
+            CancellationToken ct)
+        {
+            var currentUserId = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (currentUserId == userId && request.IsActive == false)
+            {
+                return BadRequest("You cannot deactivate your own admin account.");
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            user.IsActive = request.IsActive;
+
+            await _db.SaveChangesAsync(ct);
+
+            return NoContent();
         }
     }
 }

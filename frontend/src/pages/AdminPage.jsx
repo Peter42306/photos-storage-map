@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAdminUsers } from "../api";
+import { getAdminUsers, updateUserActive } from "../api";
 
 export default function AdminPage() {
 
@@ -18,6 +18,27 @@ export default function AdminPage() {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleUserActiveChange(userId, isActive) {
+        const confirmed = confirm(
+                    
+            isActive
+                ? "Activate this user?"
+                : "Deactivate this user?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {        
+            setError("");
+            await updateUserActive(userId, isActive);
+            await loadUsers();
+        } catch (err) {
+            setError(err.message);
         }
     }
 
@@ -49,7 +70,7 @@ export default function AdminPage() {
             )}
 
             <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle">
+                <table className="table table-sm align-middle">
                     <thead>
                         <tr>
                             <th className="text-nowrap">Email</th>
@@ -69,7 +90,18 @@ export default function AdminPage() {
                                 <td className="text-nowrap">{u.email}</td>
                                 <td className="text-nowrap">{u.fullName || "-"}</td>
                                 <td className="text-nowrap">{u.storagePlan}</td>
-                                <td className="text-nowrap">{u.isActive ? "Yes" : "No"}</td>
+                                {/* <td className="text-nowrap">{u.isActive ? "Yes" : "No"}</td> */}
+                                <td>
+                                    <div className="form-check form-switch">                                        
+                                        <input
+                                            className="form-check-input"
+                                            type="checkbox"
+                                            role="switch"                                            
+                                            checked={u.isActive}
+                                            onChange={() => handleUserActiveChange(u.userId, !u.isActive)}
+                                        />                                        
+                                    </div>                                    
+                                </td>
                                 <td className="text-nowrap">{u.collectionsCount}</td>
                                 <td className="text-nowrap">{u.photosCount}</td>
                                 <td className="text-nowrap">{u.archivesCount}</td>
@@ -86,25 +118,25 @@ export default function AdminPage() {
 }
 
 function formatBytes(bytes) {
-        if (!bytes) {
-            return "0 B";
-        }
-
-        const sizes = ["B", "KB", "MB", "GB", "TB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-
-        return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+    if (!bytes) {
+        return "0 B";
     }
 
-    function formatDate(dateString) {
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+}
+
+function formatDate(dateString) {
     if (!dateString) return "-";
 
     const date = new Date(dateString);
-        if (isNaN(date)) return "-";
+    if (isNaN(date)) return "-";
 
-        return new Intl.DateTimeFormat("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-        }).format(date);
-    }
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    }).format(date);
+}

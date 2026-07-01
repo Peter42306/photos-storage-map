@@ -23,7 +23,7 @@ namespace PhotosStorageMap.Application.DTOs
 
         public long PhotosBytes {  get; init; }
         public long ArchivesBytes { get; init; }
-        public long TotalStorageBytes { get; init; }
+        public long TotalStorageBytes { get; init; }        
 
         public string? AdminNote { get; init; }
     }
