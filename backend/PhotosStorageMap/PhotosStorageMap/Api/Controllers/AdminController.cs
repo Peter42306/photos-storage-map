@@ -86,9 +86,34 @@ namespace PhotosStorageMap.Api.Controllers
             if (user is null)
             {
                 return NotFound();
-            }
+            }            
 
             user.IsActive = request.IsActive;
+
+            await _db.SaveChangesAsync(ct);
+
+            return NoContent();
+        }
+
+        [HttpPatch("users/{userId}/storage-plan")]
+        public async Task<IActionResult> UpdateUserStoragePlan(
+            string userId,
+            [FromBody] UpdateUserStoragePlanRequest request,
+            CancellationToken ct)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            if (!Enum.IsDefined(request.StoragePlan))
+            {
+                return BadRequest("Invalid storage plan.");
+            }
+
+            user.StoragePlan = request.StoragePlan;
 
             await _db.SaveChangesAsync(ct);
 

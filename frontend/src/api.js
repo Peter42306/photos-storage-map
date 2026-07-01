@@ -578,3 +578,23 @@ export async function updateUserActive(userId, isActive) {
         throw new Error(text || `HTTP ${res.status}`);
     }
 }
+
+export async function updateUserStoragePlan(userId, storagePlan) {
+    const token = getToken();
+
+    const res = await fetch(`${BASE_URL}/api/admin/users/${userId}/storage-plan`,{
+        method:"PATCH",
+        headers:{
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            storagePlan
+        })
+    });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAdminUsers, updateUserActive } from "../api";
+import { getAdminUsers, updateUserActive, updateUserStoragePlan } from "../api";
 
 export default function AdminPage() {
 
@@ -42,9 +42,29 @@ export default function AdminPage() {
         }
     }
 
+    async function handleUserStoragePlanChange(userId, isPro) {
+        const storagePlan = isPro ? "Pro" : "Free";
+
+        const confirmed = confirm(
+            `Change user plan to ${storagePlan}?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setError("");
+            await updateUserStoragePlan(userId, storagePlan);
+            await loadUsers();
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
     useEffect(() => {
         loadUsers();
-    }, [])
+    }, []);
 
     if (loading) {
         return(
@@ -75,8 +95,8 @@ export default function AdminPage() {
                         <tr>
                             <th className="text-nowrap">Email</th>
                             <th className="text-nowrap">Name</th>
-                            <th className="text-nowrap">Plan</th>
-                            <th className="text-nowrap">Active</th>
+                            <th className="text-nowrap">Storage Plan Pro</th>
+                            <th className="text-nowrap">Is Active</th>
                             <th className="text-nowrap">Collections</th>
                             <th className="text-nowrap">Photos</th>
                             <th className="text-nowrap">Archives</th>
@@ -89,7 +109,18 @@ export default function AdminPage() {
                             <tr key={u.userId}>
                                 <td className="text-nowrap">{u.email}</td>
                                 <td className="text-nowrap">{u.fullName || "-"}</td>
-                                <td className="text-nowrap">{u.storagePlan}</td>
+                                {/* <td className="text-nowrap">{u.storagePlan}</td> */}
+                                <td className="text-nowrap">
+                                    <div className="form-check form-switch">                                        
+                                        <input
+                                            className="form-check-input"
+                                            type="checkbox"
+                                            role="switch"                                            
+                                            checked={u.storagePlan === "Pro"}
+                                            onChange={() => handleUserStoragePlanChange(u.userId, u.storagePlan !== "Pro")}
+                                        />                                        
+                                    </div>                                    
+                                </td>
                                 {/* <td className="text-nowrap">{u.isActive ? "Yes" : "No"}</td> */}
                                 <td>
                                     <div className="form-check form-switch">                                        
