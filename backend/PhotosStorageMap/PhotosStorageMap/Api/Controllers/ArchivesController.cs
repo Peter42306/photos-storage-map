@@ -18,17 +18,21 @@ namespace PhotosStorageMap.Api.Controllers
     [ApiController]
     [Authorize]
     public class ArchivesController : ControllerBase
-    {
+    {       
         private readonly ApplicationDbContext _db;
+        private readonly IStorageLimitService _storageLimitService;
         private readonly IFileStorage _storage;
         private readonly ILogger<ArchivesController> _logger;
 
-        public ArchivesController(
+        public ArchivesController(            
             ApplicationDbContext db,
+            IStorageLimitService storageLimitService,
             IFileStorage storage,
             ILogger<ArchivesController> logger)
         {
+            
             _db = db;
+            _storageLimitService = storageLimitService;
             _storage = storage;
             _logger = logger;
         }
@@ -62,6 +66,18 @@ namespace PhotosStorageMap.Api.Controllers
                     ct);
 
             if (collection is null) return NotFound("Collection not found.");
+
+            // check if user can upload, if have enough space by plan
+            var storageCheck = await _storageLimitService.CanAddBytesAsync(
+                userId,
+                request.FileSize,
+                ct);
+
+            if (!storageCheck.Allowed)
+            {
+                return BadRequest(storageCheck.Message);
+            }
+            
 
             var archiveId = Guid.NewGuid();
             var storageKey = StorageKeys.Archive(userId, request.CollectionId, archiveId, extension);

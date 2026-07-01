@@ -19,6 +19,7 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly IFileStorage _fileStorage;
         private readonly IPhotoProcessingQueue _queue;
         private readonly ICollectionStatsService _statsService;
+        private readonly IStorageLimitService _storageLimitService;
         private readonly ApplicationDbContext _db;
         private readonly ILogger<UploadsController> _logger;
 
@@ -26,12 +27,14 @@ namespace PhotosStorageMap.Api.Controllers
             IFileStorage fileStorage,
             IPhotoProcessingQueue queue,
             ICollectionStatsService statsService,
+            IStorageLimitService storageLimitService,
             ApplicationDbContext db,
             ILogger<UploadsController> logger)
         {
             _fileStorage = fileStorage;
             _queue = queue;
             _statsService = statsService;
+            _storageLimitService = storageLimitService;
             _db = db;
             _logger = logger;
         }
@@ -66,15 +69,40 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections.FindAsync(new object[] { collectionId }, ct);
             if (collection is null) return NotFound();
-            if (collection.OwnerUserId != userId) return Forbid();
+            if (collection.OwnerUserId != userId) return Forbid();            
 
-            // 1) altual totals from DB
+
+            // 1) actual totals from DB
             var actualStats = await _statsService.SyncStoredStatsAsync(collectionId, ct);
 
             // 2) validate limits
-            if (actualStats.TotalPhotos >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
+            //if (actualStats.TotalPhotos >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
+            //{
+            //    return BadRequest($"Collection limit reached. Maximum collection photos: {Limits.UploadCollection.MaxPhotosPerCollectionPro}.");
+            //}
+
+            // 2) validate plan limits
+            var limits = await _storageLimitService.GetUserLimitsAsync(userId, ct);
+
+            if (!limits.Success) return Unauthorized();            
+
+            if (actualStats.TotalPhotos >= limits.MaxPhotosPerCollection)
             {
-                return BadRequest($"Collection limit reached. Maximum collection photos: {Limits.UploadCollection.MaxPhotosPerCollectionPro}.");
+                return BadRequest($"Collection photo limit reached. Maximum photos per collection for your plan: {limits.MaxPhotosPerCollection}.");
+            }
+
+            if (fileSize.HasValue && fileSize.Value > 0)
+            {
+                // check if user can upload, if have enough space by plan
+                var storageCheck = await _storageLimitService.CanAddBytesAsync(
+                    userId, 
+                    fileSize.Value,
+                    ct);
+
+                if (!storageCheck.Allowed)
+                {
+                    return BadRequest(storageCheck.Message);
+                }
             }
 
             //var currentPhotoCount = await _db.PhotoItems.CountAsync(p => p.UploadCollectionId == collectionId, ct);

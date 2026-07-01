@@ -33,7 +33,7 @@ builder.Services.AddApplicationCors();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
-builder.Services.AddControllers();
+//builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddApplicationSwagger();
@@ -65,6 +65,7 @@ builder.Services.AddScoped<ICollectionStatsService, CollectionStatsService>();
 builder.Services.AddHostedService<PhotoCleanupWorker>();
 builder.Services.AddHostedService<CollectionCleanupWorker>();
 builder.Services.AddSingleton<IZipJobStore, ZipJobStore>();
+builder.Services.AddScoped<IStorageLimitService, StorageLimitService>();
 
 builder.Services
     .AddControllers()

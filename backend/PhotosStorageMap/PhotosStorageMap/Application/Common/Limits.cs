@@ -2,6 +2,12 @@
 {
     public static class Limits
     {
+        public static class UserStorage
+        {
+            public const long MaxBytesPro = 50L * 1024 * 1024 * 1024; // 50 GB
+            public const long MaxBytesFree = 5L * 1024 * 1024 * 1024; // 5 GB
+        }
+
         public static class UploadCollection
         {
             public const int Title = 200;
