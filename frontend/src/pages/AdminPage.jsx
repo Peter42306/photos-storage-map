@@ -62,6 +62,20 @@ export default function AdminPage() {
         }
     }
 
+    const totals = users.reduce(
+        (acc, u) => ({
+            collections: acc.collections + (u.collectionsCount ?? 0),
+            photos: acc.photos + (u.photosCount ?? 0),
+            archives: acc.archives + (u.archivesCount ?? 0),
+            storage: acc.storage + (u.totalStorageBytes ?? 0)
+        }),{
+            collections: 0,
+            photos: 0,
+            archives: 0,
+            storage: 0
+        }
+    );
+
     useEffect(() => {
         loadUsers();
     }, []);
@@ -93,6 +107,7 @@ export default function AdminPage() {
                 <table className="table table-sm align-middle">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th className="text-nowrap">Email</th>
                             <th className="text-nowrap">Name</th>
                             <th className="text-nowrap">Storage Plan Pro</th>
@@ -102,11 +117,13 @@ export default function AdminPage() {
                             <th className="text-nowrap">Archives</th>
                             <th className="text-nowrap">Storage</th>
                             <th className="text-nowrap">Last Login</th>
+                            <th className="text-nowrap">Created</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((u) => (
+                        {users.map((u, index) => (
                             <tr key={u.userId}>
+                                <td>{index + 1}.</td>
                                 <td className="text-nowrap">{u.email}</td>
                                 <td className="text-nowrap">{u.fullName || "-"}</td>
                                 {/* <td className="text-nowrap">{u.storagePlan}</td> */}
@@ -138,9 +155,21 @@ export default function AdminPage() {
                                 <td className="text-nowrap">{u.archivesCount}</td>
                                 <td className="text-nowrap">{formatBytes(u.totalStorageBytes)}</td>
                                 <td className="text-nowrap">{formatDate(u.lastLoginAt)}</td>                                
+                                <td className="text-nowrap">{formatDate(u.createdAt)}</td>                                
                             </tr>
                         ))}
                     </tbody>
+                    <tfoot>
+                        <tr className="fw-bold">
+                            <td colSpan="5">Totals</td>
+                            <td>{totals.collections}</td>
+                            <td>{totals.photos}</td>
+                            <td>{totals.archives}</td>
+                            <td>{formatBytes(totals.storage)}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
