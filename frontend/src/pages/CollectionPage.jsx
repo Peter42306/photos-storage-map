@@ -1,7 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
+import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
 import "yet-another-react-lightbox/styles.css";
 // import { Slideshow } from 'yet-another-react-lightbox/plugins';
@@ -735,7 +735,7 @@ export default function CollectionPage() {
         try {
             await navigator.clipboard.writeText(url);
         } catch (err) {
-            setError("Failed to copy share link.")
+            setError("Failed to copy share link.", err)
         }
     }
 
@@ -765,6 +765,30 @@ export default function CollectionPage() {
         }
     }
 
+    async function deleteOriginalPhotosFromCollectionHandler() {
+        const confirmed = confirm(
+            "Delete all original photos from this collection?\n\n" + 
+            "Resized photos, thumbnails, descriptions, map view, sharing and archives will remain available.\n\n" +
+            "This action cannot be undone."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setError("")
+            const result = await deleteOriginalPhotosFromCollection(id);
+
+            alert(`${result.queued} original photos were queued for deletion.`);
+
+            await refreshCollectionData();
+            
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
 
 
     
@@ -777,6 +801,10 @@ export default function CollectionPage() {
 
         return lat != null && lon != null;
     });
+
+    const hasOriginalPhotos = photos.some(p => 
+        (p.originalSizeBytes ?? p.OriginalSizeBytes ?? 0) > 0
+    );
 
     // const totalArchives = archives.length;
     // const totalArchivesSize = archives.reduce(
@@ -968,6 +996,7 @@ export default function CollectionPage() {
                         <button
                             className='btn btn-primary'
                             disabled={!hasGeoPhotos}                            
+                            title='View all geotagged photos on an interactive map.'
                             onClick={() => navigate(`/collections/${collection.id}/map`)}
                         >
                             Map View
@@ -975,6 +1004,8 @@ export default function CollectionPage() {
 
                         <button
                             className='btn btn-primary'
+                            title='Start a slideshow using resized photos.'
+                            disabled={totalPhotos === 0}
                             onClick={() => {
                                 if(standardSlides.length === 0){
                                     setError("No resized photos available for slideshow.");
@@ -987,11 +1018,13 @@ export default function CollectionPage() {
                                 setLightboxOpen(true);
                             }}
                         >
-                            Slideshow Resized
+                            Slideshow
                         </button>
 
                         <button
                             className='btn btn-primary'
+                            title='Start a slideshow using original full-resolution photos.'
+                            disabled={!hasOriginalPhotos}
                             onClick={() => {
                                 if(originalSlides.length === 0){
                                     setError("No original photos available for slideshow.");
@@ -1008,6 +1041,8 @@ export default function CollectionPage() {
 
                         <button
                             className='btn btn-primary'
+                            title='Download all resized photos as a ZIP archive.'
+                            disabled={totalPhotos === 0}
                             onClick={downloadStandardZipHandler}
                         >
                             Download Resized ZIP
@@ -1015,6 +1050,8 @@ export default function CollectionPage() {
                         
                         <button 
                             className='btn btn-primary' 
+                            title='Create and manage a shareable link for this collection.'
+                            disabled={totalPhotos === 0}
                             type='button' 
                             data-bs-toggle="collapse" 
                             data-bs-target="#collapseShareLink" 
@@ -1215,6 +1252,26 @@ export default function CollectionPage() {
                             ))}
                         </div>
                     )}
+
+                    <section className='mt-2'>
+                        <h6>Storage optimisation</h6>
+
+                        {totalPhotos === 0 ? (
+                            <p className='small'>Upload photos to this collection before using storage optimisation.</p>
+                        ) : hasOriginalPhotos ? (
+                            <p className='small'>Delete original photo files to reduce storage usage. Resized photos, thumbnails, notes, map view, sharing and archives will remain available. Original photo downloads and original slideshow will no longer be available.</p>                            
+                        ) : (
+                            <p className='small'> Original photo files have already been removed from this collection.</p>
+                        )}
+                        
+                        <button
+                            className='btn btn-danger'
+                            disabled={!hasOriginalPhotos}
+                            onClick={deleteOriginalPhotosFromCollectionHandler}
+                        >
+                            Delete Originals
+                        </button>
+                    </section>
 
                     
                     <hr/>

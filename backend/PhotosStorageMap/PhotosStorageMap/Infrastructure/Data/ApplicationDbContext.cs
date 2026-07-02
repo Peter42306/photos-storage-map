@@ -86,11 +86,15 @@ namespace PhotosStorageMap.Infrastructure.Data
 
                 entity.Property(e => e.ThumbKey)                    
                     .HasMaxLength(Limits.PhotoItem.StorageKey);
+
+                entity.Property(e => e.OriginalDeleteRequested)
+                    .HasMaxLength(Limits.PhotoItem.Error);
                 
                 entity.HasIndex(e => e.UploadCollectionId);
                 entity.HasIndex(e => new { e.UploadCollectionId, e.Status });
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.TakenAt);
+                entity.HasIndex(e => new { e.OriginalDeleteRequested, e.OriginalDeleteRequestedAtUtc});
             });
 
             builder.Entity<ShareLink>(entity =>

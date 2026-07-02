@@ -39,5 +39,11 @@ namespace PhotosStorageMap.Domain.Entities
         public string? Error { get; set; }
         
         public DateTime? StandardDeletedAtUtc { get; set; }
+
+        // delete original files from collection
+        public bool OriginalDeleteRequested { get; set; }
+        public DateTime? OriginalDeleteRequestedAtUtc { get; set; }
+        public DateTime? OriginalDeletedAtUtc { get; set; }
+        public string? OriginalDeleteError { get; set; }
     }
 }

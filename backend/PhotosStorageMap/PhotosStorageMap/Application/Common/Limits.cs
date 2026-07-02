@@ -46,6 +46,12 @@
             public const int LoopDelay = 7; // 5 minutes
         }
 
+        public static class OriginalPhotosCleanupWorker
+        {
+            public const int BatchSize = 100; // 20 photos !!!
+            public const int LoopDelay = 8; // 8 minutes
+        }
+
         public static class ArchiveItem
         {
             public const int OriginalFileName = 255;

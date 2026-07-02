@@ -97,6 +97,10 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     if (photo.Status == PhotoStatus.Ready)
                     {
                         photo.Status = PhotoStatus.PendingDelete;
+
+                        photo.OriginalDeleteRequested = false; // for case if user deleted originals and after again deleted collection !!!
+                        photo.OriginalDeleteError = null;
+
                         markedPhotosCount++;
                     }
                 }

@@ -8,6 +8,7 @@ using PhotosStorageMap.Infrastructure.Data;
 using System.Security.Claims;
 using PhotosStorageMap.Domain.Enums;
 using PhotosStorageMap.Application.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -308,6 +309,47 @@ namespace PhotosStorageMap.Api.Controllers
             return NoContent();
         }
 
+
+        [HttpPost("{id:guid}/delete-originals")]
+        public async Task<IActionResult> DeleteOriginals(Guid id, CancellationToken ct)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var collectionExists = await _db.UploadCollections
+                .AnyAsync(c => c.Id == id && c.OwnerUserId == userId && !c.IsDeleted, ct);
+
+            if (!collectionExists) return NotFound();
+
+            var now = DateTime.UtcNow;
+                         
+            var markedOriginalsToDelete = await _db.PhotoItems
+                .Where(p =>
+                    p.UploadCollectionId == id &&
+                    p.Status == PhotoStatus.Ready &&
+                    p.OriginalKey != null &&
+                    p.OriginalKey != "" &&
+                    !p.OriginalDeleteRequested)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.OriginalDeleteRequested, true)
+                    .SetProperty(p => p.OriginalDeleteRequestedAtUtc, now),
+                    ct);
+
+            _logger.LogInformation(
+                "DELETE ORIGINALS: marked originals for deletion. CollectionId={CollectionId}, UserId={UserId}, Count={Count}",
+                id,
+                userId,
+                markedOriginalsToDelete);
+
+            return Ok(new
+            {
+                message = "Original files were queued for deletion.",
+                queued = markedOriginalsToDelete
+            });
+
+        }
+
+
         [HttpGet("{id:guid}/map")]
         public async Task<ActionResult> GetCollectionMap(Guid id, CancellationToken ct)
         {
@@ -322,7 +364,7 @@ namespace PhotosStorageMap.Api.Controllers
             var photos = await _db.PhotoItems
                 .Where(p => 
                     p.UploadCollectionId == id && 
-                    p.Status == Domain.Enums.PhotoStatus.Ready && 
+                    p.Status == PhotoStatus.Ready && 
                     p.Latitude.HasValue && 
                     p.Longitude.HasValue)
                 .OrderBy(p => p.TakenAt ?? p.CreatedAtUtc)

@@ -392,6 +392,8 @@ export default function SharedCollectionPage() {
                 </div>
             )}
 
+            
+
             <hr/>
 
             <h5>Archives</h5>

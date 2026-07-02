@@ -598,3 +598,21 @@ export async function updateUserStoragePlan(userId, storagePlan) {
         throw new Error(text || `HTTP ${res.status}`);
     }
 }
+
+export async function deleteOriginalPhotosFromCollection(collectionId) {
+    const token = getToken();
+
+    const res = await fetch(`${BASE_URL}/api/collections/${collectionId}/delete-originals`,{
+        method:"POST",
+        headers:{
+            Authorization: `Bearer ${token}`,            
+        }        
+    });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+
+    return await res.json();
+}

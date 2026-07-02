@@ -64,6 +64,7 @@ builder.Services.AddScoped<IArchiveCollectionService, ArchiveCollectionService>(
 builder.Services.AddScoped<ICollectionStatsService, CollectionStatsService>();
 builder.Services.AddHostedService<PhotoCleanupWorker>();
 builder.Services.AddHostedService<CollectionCleanupWorker>();
+builder.Services.AddHostedService<OriginalPhotosCleanupWorker>();
 builder.Services.AddSingleton<IZipJobStore, ZipJobStore>();
 builder.Services.AddScoped<IStorageLimitService, StorageLimitService>();
 
