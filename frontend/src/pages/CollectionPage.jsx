@@ -780,7 +780,7 @@ export default function CollectionPage() {
             setError("")
             const result = await deleteOriginalPhotosFromCollection(id);
 
-            alert(`${result.queued} original photos were queued for deletion.`);
+            // alert(`${result.queued} original photos were queued for deletion.`);
 
             await refreshCollectionData();
             
@@ -803,7 +803,7 @@ export default function CollectionPage() {
     });
 
     const hasOriginalPhotos = photos.some(p => 
-        (p.originalSizeBytes ?? p.OriginalSizeBytes ?? 0) > 0
+        p.originalUrl ?? p.OriginalUrl
     );
 
     // const totalArchives = archives.length;
@@ -837,9 +837,9 @@ export default function CollectionPage() {
         }));
 
     const originalSlides = photos
-        .filter(p => (p.originalUrl ?? p.OriginalUrl ?? p.standardUrl ?? p.StandardUrl))
+        .filter(p => (p.originalUrl ?? p.OriginalUrl))
         .map(p => ({
-            src: p.originalUrl ?? p.OriginalUrl ??p.standardUrl ?? p.StandardUrl,
+            src: p.originalUrl ?? p.OriginalUrl,
             alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
         }));
 
@@ -1261,7 +1261,7 @@ export default function CollectionPage() {
                         ) : hasOriginalPhotos ? (
                             <p className='small'>Delete original photo files to reduce storage usage. Resized photos, thumbnails, notes, map view, sharing and archives will remain available. Original photo downloads and original slideshow will no longer be available.</p>                            
                         ) : (
-                            <p className='small'> Original photo files have already been removed from this collection.</p>
+                            <p className='small'>Original photo files have been queued for background deletion. They are no longer available in this collection and will be physically removed from storage soon. The storage statistics above show the current actual stored size and may update after background cleanup is completed.</p>
                         )}
                         
                         <button
@@ -1448,6 +1448,8 @@ const PhotoCard = React.memo(function PhotoCard({
         // const [thumbUrl, setThumbUrl] = useState("");
         
         const thumbUrl = photo.thumbUrl ?? photo.ThumbUrl;
+        const originalUrl = photo.originalUrl ?? photo.OriginalUrl;
+        const hasOriginal = originalUrl != null;
         const [isEditingDescriptionPhoto, setIsEditingDescriptionPhoto] = useState(false);
         const [descriptionPhoto, setDescriptionPhoto] = useState(photo.description ?? photo.Description ?? "");
 
@@ -1460,6 +1462,9 @@ const PhotoCard = React.memo(function PhotoCard({
         const longitude = photo.longitude ?? photo.Longitude;
         const distanceFromPrevious = photo.distanceFromPrevious ?? photo.DistanceFromPrevious;
         const takenAt = photo.takenAt ?? photo.TakenAt;
+
+        
+        
 
         // useEffect(() => {
         //     let cancelled = false;            
@@ -1619,21 +1624,27 @@ const PhotoCard = React.memo(function PhotoCard({
                         >                            
                         </button>
 
-                        <button
-                            className='btn btn-outline-secondary btn-sm'
-                            onClick={() => onViewOriginal?.(photoId, originalFileName)}
-                            title='View original'
-                        >
-                            <i className='bi bi-eye'></i>
-                        </button>
+                        
+                        {hasOriginal && (
+                            <>
+                            <button
+                                className='btn btn-outline-secondary btn-sm'
+                                onClick={() => onViewOriginal?.(photoId, originalFileName)}
+                                title='View original'
+                            >
+                                <i className='bi bi-eye'></i>
+                            </button>
 
-                        <button
-                            className='btn btn-outline-secondary btn-sm'
-                            onClick={() => onDownloadOriginal?.(photoId, originalFileName)}
-                            title='Download original'
-                        >
-                            <i className='bi bi-download'></i>
-                        </button>
+                            <button
+                                className='btn btn-outline-secondary btn-sm'
+                                onClick={() => onDownloadOriginal?.(photoId, originalFileName)}
+                                title='Download original'                            
+                            >
+                                <i className='bi bi-download'></i>
+                            </button>
+                            </>
+                        )}
+                        
 
                         {latitude != null && longitude != null && (
                             <>

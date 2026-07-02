@@ -7,9 +7,12 @@ export default function Navbar(){
     const token = getToken();
 
     const [userEmail, setUserEmail] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
 
     function logout(){
         clearToken();
+        setUserEmail("");
+        setIsAdmin(false);
         navigate("/login", {replace: true});
     }
 
@@ -23,10 +26,14 @@ export default function Navbar(){
         me()
             .then((data) => {
                 setUserEmail(data.email);
+
+                const roles = data.roles ?? data.Roles ?? [];
+                setIsAdmin(roles.includes("Admin"));
             })
             .catch(() =>{
                 clearToken();
                 setUserEmail("");
+                setIsAdmin(false);
                 navigate("/login", { replace: true });
             })
     }, [token, navigate])
@@ -75,11 +82,14 @@ export default function Navbar(){
                                         My Collections
                                     </NavLink>
                                 </li>
-                                <li className="nav-item">
-                                    <NavLink className="nav-link" to="/admin">
-                                        Admin Panel
-                                    </NavLink>
-                                </li>
+                                {isAdmin && (
+                                    <li className="nav-item">
+                                        <NavLink className="nav-link" to="/admin">
+                                            Admin Panel
+                                        </NavLink>
+                                    </li>
+                                )}
+                                
                             </>                            
                         ) : null}
                     </ul>

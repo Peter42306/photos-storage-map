@@ -111,7 +111,10 @@ namespace PhotosStorageMap.Api.Controllers
                             p.Longitude,
                             //Status = p.Status.ToString(),
                             p.Status,
-                            p.Error
+                            p.Error,
+                            p.OriginalDeleteRequested,
+                            p.OriginalDeletedAtUtc,
+                            p.OriginalDeleteError
                         })
                         .ToList(),
 
@@ -159,7 +162,7 @@ namespace PhotosStorageMap.Api.Controllers
                 {
                     standardUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.StandardKey, TimeSpan.FromHours(2));
                 }
-                if (!string.IsNullOrWhiteSpace(p.OriginalKey))
+                if (!string.IsNullOrWhiteSpace(p.OriginalKey) && !p.OriginalDeleteRequested)
                 {
                     originalUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.OriginalKey, TimeSpan.FromHours(2));
                 }
@@ -202,6 +205,9 @@ namespace PhotosStorageMap.Api.Controllers
                     ThumbUrl = thumbUrl,
                     StandardUrl = standardUrl,
                     OriginalUrl = originalUrl,
+                    p.OriginalDeleteRequested,
+                    p.OriginalDeletedAtUtc,
+                    p.OriginalDeleteError,
                     DistanceFromPrevious = distanceFromPrevious
                 });
 
