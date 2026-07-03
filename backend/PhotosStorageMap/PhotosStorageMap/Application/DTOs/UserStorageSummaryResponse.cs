@@ -6,5 +6,9 @@
         long TotalPhotosBytes,
         int TotalArchives,        
         long TotalArchivesBytes,
-        long TotalStorageBytes);    
+        long TotalUsedStorageBytes,
+        string StoragePlan,
+        long StoragePlanLimitBytes,
+        long StorageFreeBytes,
+        double StorageUsedPercent);    
 }

@@ -45,6 +45,13 @@ export default function CollectionsPage() {
 
     const [summary, setSummary] = useState(null);
 
+    const totalUsedStorageBytes = summary?.totalUsedStorageBytes ?? summary?.TotalUsedStorageBytes ?? 0;
+    const storagePlan = summary?.storagePlan ?? summary?.StoragePlan ?? "Free";
+    const storagePlanLimitBytes = summary?.storagePlanLimitBytes ?? summary?.StoragePlanLimitBytes ?? 0;
+    const storageFreeBytes = summary?.storageFreeBytes ?? summary?.StorageFreeBytes ?? 0;
+    const storageUsedPercent = summary?.storageUsedPercent ?? summary?.StorageUsedPercent ?? 0;
+    const storageFreePercent = ((storageFreeBytes / storagePlanLimitBytes) * 100).toFixed(1);
+
     async function loadMe() {
             setError("");
             setStatus("Loading /api/me...");
@@ -159,15 +166,42 @@ export default function CollectionsPage() {
             {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
             {summary && (
-                <div className="d-flex align-items-start justify-content-between small mb-3">
+                <>
+                <div className="d-flex align-items-start justify-content-between small mb-2">
                     <div>                        
+                        Collections: {summary.totalCollections ?? summary.TotalCollections ?? 0} / {formatBytes(summary.totalUsedStorageBytes ?? summary.TotalUsedStorageBytes ?? 0)}<br/>
                         Photos: {summary.totalPhotos ?? summary.TotalPhotos ?? 0} / {formatBytes(summary.totalPhotosBytes ?? summary.TotalPhotosBytes ?? 0)}<br/>
                         Archives: {summary.totalArchives ?? summary.TotalArchives ?? 0} / {formatBytes(summary.totalArchivesBytes ?? summary.TotalArchivesBytes ?? 0)}<br/>
                     </div>
                     <div className="text-end">                        
-                        Collections: {summary.totalCollections ?? summary.TotalCollections ?? 0} / {formatBytes(summary.totalStorageBytes ?? summary.totalStorageBytes ?? 0)}<br/>
-                    </div>
-                </div>
+                        Storage Plan: {storagePlan}<br/>
+                        Storage: {formatBytes(totalUsedStorageBytes)} / {formatBytes(storagePlanLimitBytes)}<br/>
+                        {/* Free space: {formatBytes(storageFreeBytes)} / {storageFreePercent}%<br/> */}
+                        Used space: {storageUsedPercent}%
+                        <div className="progress mt-2" style={{ height: 4 }}>
+                            <div
+                                className="progress-bar"
+                                role="progressbar"
+                                style={{ width: `${Math.min(storageUsedPercent, 100)}%` }}
+                                aria-valuenow={storageUsedPercent}
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                            />
+                        </div>
+                    </div>                    
+                </div>                
+                {/* <div className="progress mt-2 mb-3" style={{ height: 4 }}>
+                    <div
+                        className="progress-bar"
+                        role="progressbar"
+                        style={{ width: `${Math.min(storageUsedPercent, 100)}%` }}
+                        aria-valuenow={storageUsedPercent}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                    />
+                </div>                 */}
+                </>
+                
             )}            
 
             {loading ? (

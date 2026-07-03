@@ -806,6 +806,12 @@ export default function CollectionPage() {
         p.originalUrl ?? p.OriginalUrl
     );
 
+    const originalsQueuedToDelete = photos.some(p =>
+        p.originalDeleteRequested ?? p.OriginalDeleteRequested
+    );
+
+    const originalDeleted = !hasOriginalPhotos && !originalsQueuedToDelete
+
     // const totalArchives = archives.length;
     // const totalArchivesSize = archives.reduce(
     //     (sum, archive) => sum + (archive.sizeBytes ?? archive.SizeBytes ?? 0),
@@ -820,7 +826,7 @@ export default function CollectionPage() {
     const totalThumb = collection?.totalThumbSizeBytes ?? collection?.TotalThumbSizeBytes ?? 0;
 
     const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
-    const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;    
+    const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;        
 
     // const slides = photos
     //     .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
@@ -1260,8 +1266,10 @@ export default function CollectionPage() {
                             <p className='small'>Upload photos to this collection before using storage optimisation.</p>
                         ) : hasOriginalPhotos ? (
                             <p className='small'>Delete original photo files to reduce storage usage. Resized photos, thumbnails, notes, map view, sharing and archives will remain available. Original photo downloads and original slideshow will no longer be available.</p>                            
-                        ) : (
+                        ) : originalsQueuedToDelete ? (
                             <p className='small'>Original photo files have been queued for background deletion. They are no longer available in this collection and will be physically removed from storage soon. The storage statistics above show the current actual stored size and may update after background cleanup is completed.</p>
+                        ) : (
+                            <p className="small">Original photo files have been removed. This collection now contains only resized photos and thumbnails.</p>
                         )}
                         
                         <button
