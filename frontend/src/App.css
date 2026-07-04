@@ -18,6 +18,29 @@ footer a:hover {
     opacity: .8;
 }
 
+/* button back to top */
+.back-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    z-index: 1050;
+
+    opacity: 0.75;
+
+    transition:
+        opacity .25s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.back-to-top:hover {
+  opacity: 1;
+  transform: scale(1.08);
+    
+}
+
 /* @media (max-width: 768px) {
     .faq-parallax {
         background-attachment: scroll;

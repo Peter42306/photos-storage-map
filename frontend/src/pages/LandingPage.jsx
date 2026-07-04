@@ -13,7 +13,7 @@ export default function LandingPage(){
     
     return(
         <>
-        <section className="container py-5">
+        <section className="container py-5" id="home">
             <div className="row align-items-center g-4 mb-5">
                 <div className="col-12 col-lg-7">                    
                     <h1 className="display-5 fw-semibold mb-3">Store and explore your photo collections</h1>
@@ -127,7 +127,7 @@ export default function LandingPage(){
             </div>
         </section>            
                 
-        <section className="bg-light py-5">
+        <section className="bg-light py-5" id="about">
             <div className="container">
                 <div className="mb-3">
                     <h2 className="display-6 text-center mb-4">ABOUT</h2>                    
@@ -178,7 +178,7 @@ export default function LandingPage(){
         </section>
         
 
-        <section className="container py-5">
+        <section className="container py-5" id="features">
             <div className="mb-4">
                 <h2 className="display-6 text-center mb-4">FEATURES</h2>                                    
                 <p className="text-center text-muted">Covers the most common workflows for organising, managing and sharing photo collections.</p>
@@ -217,7 +217,7 @@ export default function LandingPage(){
             </div>
         </section>            
 
-        <section className="faq-parallax py-5">
+        <section className="faq-parallax py-5" id="how-it-works">
             <div className="container">
                 <div className="text-center mb-5">
                     <h2 className="display-6 mb-4 text-white">HOW IT WORKS</h2>
@@ -258,7 +258,7 @@ export default function LandingPage(){
             </div>
         </section>       
 
-        <section className="container py-5">
+        <section className="container py-5" id="pricing">
             <div className="text-center mb-4">
                 <h2 className=" display-6 mb-4">PRICING</h2>
                 <p className="text-muted">Choose the plan that fits your storage needs.</p>                
@@ -350,14 +350,14 @@ export default function LandingPage(){
             </div>
         </section>
 
-        <section className="faq-parallax py-5">
+        <section className="faq-parallax py-5" id="faq">
             <div className="container text-center mb-4 text-white">
                 <h2 className="display-6 mb-4">FAQ</h2>
                 <p>Have a question, suggestion, or feedback?<br/>Send me a message.</p>
             </div>
         </section>
 
-        <section className="container py-5">
+        <section className="container py-5" id="contact">
             <div className="text-center mb-4">
                 <h2 className="display-6 mb-4">CONTACT</h2>
                 {/* <p className="text-muted">

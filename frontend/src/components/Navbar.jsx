@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { clearToken, getToken, me } from "../api";
 import { useEffect, useState } from "react";
+import { HashLink } from "react-router-hash-link";
 
 export default function Navbar(){
     const navigate = useNavigate();
@@ -61,9 +62,34 @@ export default function Navbar(){
                 <div className="collapse navbar-collapse" id="nav">
                     <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                         <li className="nav-item">
-                            <NavLink className="nav-link" to="/">
+                            <HashLink smooth className="nav-link" to="/#home">
                                 Home
-                            </NavLink>                            
+                            </HashLink>                            
+                        </li>
+                        <li className="nav-item">
+                            <HashLink smooth className="nav-link" to="/#about">
+                                About
+                            </HashLink>                            
+                        </li>
+                        <li className="nav-item">
+                            <HashLink smooth className="nav-link" to="/#features">
+                                Features
+                            </HashLink>                            
+                        </li>
+                        <li className="nav-item">
+                            <HashLink smooth className="nav-link" to="/#how-it-works">
+                                How It Works
+                            </HashLink>                            
+                        </li>
+                        <li className="nav-item">
+                            <HashLink smooth className="nav-link" to="/#faq">
+                                FAQ
+                            </HashLink>                            
+                        </li>
+                        <li className="nav-item">
+                            <HashLink smooth className="nav-link" to="/#contact">
+                                Contact
+                            </HashLink>                            
                         </li>
                         {token ? (
                             <>

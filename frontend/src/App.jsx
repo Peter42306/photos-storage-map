@@ -20,11 +20,14 @@ import SharedMapPage from './pages/SharedMapPage';
 import AdminPage from './pages/AdminPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import ScrollToTop from './components/ScrollToTop';
+import BackToTopButton from './components/BackToTopButton';
 
 function App() {  
 
   return (
     <BrowserRouter>
+      <ScrollToTop/>
       <Navbar/>
 
       <Routes>        
@@ -64,6 +67,8 @@ function App() {
           {/* fallback */}
           <Route path='*' element={<Navigate to="/" replace/>}/>          
       </Routes>
+
+      <BackToTopButton/>
     </BrowserRouter>    
   )
 }
