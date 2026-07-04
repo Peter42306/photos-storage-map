@@ -4,6 +4,7 @@ import { useState } from "react";
 import ProPlanModal from "../components/ProPlanModal";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import FaqAccordion from "../components/faqAccordion";
 
 export default function LandingPage(){
     const token = getToken();
@@ -351,10 +352,17 @@ export default function LandingPage(){
         </section>
 
         <section className="faq-parallax py-5" id="faq">
-            <div className="container text-center mb-4 text-white">
-                <h2 className="display-6 mb-4">FAQ</h2>
-                <p>Have a question, suggestion, or feedback?<br/>Send me a message.</p>
-            </div>
+            <div className="container">
+                <div className="text-center text-white mb-4">
+                    <h2 className="display-6 mb-4">FAQ</h2>                
+                    <p>Frequently asked questions.</p>
+                </div>
+                <div className="row justify-content-center">
+                    <div className="col-12 col-lg-8">
+                        <FaqAccordion/>
+                    </div>
+                </div>
+            </div>            
         </section>
 
         <section className="container py-5" id="contact">
