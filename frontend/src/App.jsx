@@ -18,6 +18,8 @@ import MapPage from './pages/MapPage';
 import SharedCollectionPage from './pages/SharedCollectionPage';
 import SharedMapPage from './pages/SharedMapPage';
 import AdminPage from './pages/AdminPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 
 function App() {  
 
@@ -28,6 +30,7 @@ function App() {
       <Routes>        
         {/* public */}        
         <Route path='/' element={<LandingPage/>}/>
+
         <Route path='/login' element={<LoginPage/>}/>
         <Route path='/register' element={<RegisterPage/>}/>
         <Route path='/check-email' element={<CheckEmailPage/>}/>
@@ -35,8 +38,13 @@ function App() {
         <Route path='/forgot-password' element={<ForgotPasswordPage/>}/>
         <Route path='/resend-confirmation' element={<ResendConfirmationPage/>}/>        
         <Route path='/reset-password' element={<ResetPasswordPage/>}/>        
+
+        <Route path='/terms' element={<TermsPage/>}/>        
+        <Route path='/privacy' element={<PrivacyPage/>}/>        
+
         <Route path='/shared/:token' element={<SharedCollectionPage/>}/>
         <Route path='/shared/:token/map' element={<SharedMapPage/>}/>
+
 
           {/* protected */}
           <Route element={<ProtectedRoute/>}>
@@ -54,7 +62,7 @@ function App() {
           </Route>
 
           {/* fallback */}
-          <Route path='*' element={<Navigate to="/" replace/>}/>
+          <Route path='*' element={<Navigate to="/" replace/>}/>          
       </Routes>
     </BrowserRouter>    
   )

@@ -175,7 +175,7 @@ export default function CollectionsPage() {
                     </div>
                     <div className="text-end">                        
                         Storage Plan: {storagePlan}<br/>
-                        Storage: {formatBytes(totalUsedStorageBytes)} / {formatBytes(storagePlanLimitBytes)}<br/>
+                        Used {formatBytes(totalUsedStorageBytes)} of {formatBytes(storagePlanLimitBytes)}<br/>
                         {/* Free space: {formatBytes(storageFreeBytes)} / {storageFreePercent}%<br/> */}
                         Used space: {storageUsedPercent}%
                         <div className="progress mt-2" style={{ height: 4 }}>
@@ -214,7 +214,7 @@ export default function CollectionsPage() {
                         <div key={c.id} className="col-md-4 mb-3">
                             <div className="card shadow-sm h-100">
                                 <div className="card-body d-flex flex-column">
-                                    <h5 className="card-title"
+                                    <h5 className="card-title mb-0"
                                     >
                                         {c.title || "Untitled"}
                                     </h5>

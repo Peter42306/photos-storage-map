@@ -1222,14 +1222,14 @@ export default function CollectionPage() {
                     
                     <div className="d-flex align-items-start justify-content-between small mb-3">
                         <div>
-                            Distance by geo tags: {formatDistance(totalDistance)}<br/>
+                            Distance: {formatDistance(totalDistance)}<br/>
                             Photos: {totalPhotos}<br/>
                             Size: {formatBytes(totalPhotosSize)}
                         </div>
                         <div className='text-end'>                        
-                            Originals size: {formatBytes(totalOriginal)}<br/>
-                            Resized standards size: {formatBytes(totalStandard)}<br/>
-                            Resized thumbnails size: {formatBytes(totalThumb)}<br/>
+                            Originals: {formatBytes(totalOriginal)}<br/>
+                            Resized photos: {formatBytes(totalStandard)}<br/>
+                            Thumbnails: {formatBytes(totalThumb)}<br/>
                         </div>
                     </div>                    
 

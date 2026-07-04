@@ -1,8 +1,15 @@
 import { Link } from "react-router-dom";
 import { getToken } from "../api";
+import { useState } from "react";
+import ProPlanModal from "../components/ProPlanModal";
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 export default function LandingPage(){
     const token = getToken();
+    const [showProPlanModal, setShowProPlanModal] = useState(false);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
     
     return(
         <>
@@ -12,17 +19,17 @@ export default function LandingPage(){
                     <h1 className="display-5 fw-semibold mb-3">Store and explore your photo collections</h1>
                     <p className="lead text-muted ">PhotoMap is designed for people who need more than just a photo gallery. Whether you're traveling, documenting inspections, working in the field, or creating project records, your photos stay connected with locations, notes, and related archive files.</p>
                     <p className="lead text-muted ">Upload original photos to secure cloud storage, organize them into collections, and explore GPS locations on an interactive map.</p>                    
-                    <p className="lead text-muted ">Add notes to photos and archives, download resized ZIP files, and share your collections through secure read-only links.</p>
+                    <p className="lead text-muted ">Add notes to photos, archives, and collections, download resized ZIP files, and share your collections through secure read-only links.</p>
 
                     {!token ? (
                         <div className="d-flex gap-2 flex-wrap">
-                            <Link 
+                            {/* <Link 
                                 className="btn btn-outline-primary"
                                 to="/register"
                                 title="Register as new user"
                             >
                                 Create account
-                            </Link>
+                            </Link> */}
 
                             <Link 
                                 className="btn btn-outline-primary"
@@ -31,16 +38,51 @@ export default function LandingPage(){
                             >
                                 Sign in
                             </Link>
+
+                            
+
+                            <Link 
+                                className="btn btn-outline-success"
+                                to="/shared/547530dbfe594b038907d65be19fd7a5"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open Demo link of Shared Link"
+                            >
+                                Demo
+                            </Link>
+                            {/* <Link 
+                                className="btn btn-outline-success"
+                                to="/shared/547530dbfe594b038907d65be19fd7a5/map"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open Demo link of Shared Link"
+                            >
+                                Demo Map
+                            </Link> */}
                         </div>
                         
+                        
                     ) : (
-                        <Link 
-                            className="btn btn-outline-primary"
-                            to="/collections"
-                            title="Go to your activities page"
-                        >
-                            Open my collections
-                        </Link>
+                        <div className="d-flex gap-2 flex-wrap">
+                            <Link 
+                                className="btn btn-outline-primary"
+                                to="/collections"
+                                title="Go to your activities page"
+                            >
+                                Open my collections
+                            </Link>
+                            <Link 
+                                className="btn btn-outline-success"
+                                to="/shared/547530dbfe594b038907d65be19fd7a5"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open Demo link of Shared Link"
+                            >
+                                Demo
+                            </Link>
+                        </div>
+
+                        
                     )}
                         
                         {/* <Link className="btn btn-outline-secondary" to="/login">Sign in</Link> */}
@@ -54,11 +96,30 @@ export default function LandingPage(){
                             <h4 >What you can do</h4>
                             <hr/>
                             <div className="d-flex flex-column gap-3">
-                                <FeatureLine title="Photo collections" text="Upload original JPG photos into collections."/>
-                                <FeatureLine title="Interactive map" text="View photos on an interactive map when GPS information is available."/>
-                                <FeatureLine title="Archives" text="Store ZIP archives together with your photo collections."/>
-                                <FeatureLine title="Notes" text="Add notes to photos and archives."/>                                
-                                <FeatureLine title="Sharing" text="Share collections using secure read-only links."/>
+                                <FeatureLine 
+                                    title="Photo collections" 
+                                    text="Upload original JPG photos into collections."
+                                />
+                                <FeatureLine 
+                                    title="Interactive map" 
+                                    text="View photos on an interactive map when GPS information is available."
+                                    // link="http://192.168.1.108:5173/shared/547530dbfe594b038907d65be19fd7a5/map"
+                                    // linkText="Open demo shared map"
+                                />
+                                <FeatureLine 
+                                    title="Archives" 
+                                    text="Store ZIP archives together with your photo collections."
+                                />
+                                <FeatureLine 
+                                    title="Notes" 
+                                    text="Add notes to photos, archives, and collections."
+                                />                                
+                                <FeatureLine 
+                                    title="Sharing" 
+                                    text="Share collections using secure read-only links. "
+                                    // link="http://192.168.1.108:5173/shared/547530dbfe594b038907d65be19fd7a5"
+                                    // linkText="Open demo shared collection"
+                                />
                             </div>                            
                         </div>
                     </div>
@@ -66,37 +127,62 @@ export default function LandingPage(){
             </div>
         </section>            
                 
-        <section className="bg-secondary py-5">
+        <section className="bg-light py-5">
             <div className="container">
+                <div className="mb-3">
+                    <h2 className="display-6 text-center mb-4">ABOUT</h2>                    
+                    <div className="row justify-content-center">                        
+                        <div className="col-12 col-lg-8">
+                            <p className="text-muted">Photos are organised into collections for trips, inspections, projects or any other activity. Notes can be added to individual photos and archives, making collections useful for both professional reporting and personal memories. Everything stays easy to browse, manage and securely share.</p>
+                        </div>                                                
+                    </div>                    
+                </div>                
+
                 <div className="row g-3">
-                <div className="col-12 col-lg-4">
-                    <ImageCard
-                        image="/images/landing/Screenshot-2026-06-29-150758-my-collections.jpg"                            
-                        title="My Collections"
-                        text="Create and manage your photo collections. View storage statistics."
-                    />
-                </div>
-                <div className="col-12 col-lg-4">
-                    <ImageCard
-                        image="/images/landing/Screenshot-2026-06-29-150857-collection-page.jpg"                            
-                        title="Collection Details"
-                        text="Manage photos and archives, add notes, see slideshow, and share collection."
-                    />
-                </div>
-                <div className="col-12 col-lg-4">
-                    <ImageCard
-                        image="/images/landing/Screenshot-2026-06-29 151055-map-page.jpg"                            
-                        title="Interactive Map"
-                        text="Explore photos by location using GPS information."
-                    />
-                </div>
-            </div>                
+                    <div className="col-12 col-lg-4">
+                        <ImageCard
+                            image="/images/landing/Screenshot-2026-06-29-150758-my-collections.jpg"                            
+                            title="My Collections"
+                            text="Create and manage your photo collections. View storage statistics."
+                            onClick={() =>{
+                                setSelectedImage("/images/landing/Screenshot-2026-06-29-150758-my-collections.jpg")
+                                setLightboxOpen(true);
+                            }}
+                        />
+                    </div>
+                    <div className="col-12 col-lg-4">
+                        <ImageCard
+                            image="/images/landing/Screenshot-2026-06-29-150857-collection-page.jpg"                            
+                            title="Collection Details"
+                            text="Manage photos and archives, add notes, see slideshow, and share collection."
+                            onClick={() =>{
+                                setSelectedImage("/images/landing/Screenshot-2026-06-29-150857-collection-page.jpg")
+                                setLightboxOpen(true);
+                            }}
+                        />
+                    </div>
+                    <div className="col-12 col-lg-4">
+                        <ImageCard
+                            image="/images/landing/Screenshot-2026-06-29 151055-map-page.jpg"                            
+                            title="Interactive Map"
+                            text="Explore photos by location using GPS information."
+                            onClick={() =>{
+                                setSelectedImage("/images/landing/Screenshot-2026-06-29 151055-map-page.jpg")
+                                setLightboxOpen(true);
+                            }}
+                        />
+                    </div>
+                </div>                
             </div>
             
         </section>
         
 
         <section className="container py-5">
+            <div className="mb-4">
+                <h2 className="display-6 text-center mb-4">FEATURES</h2>                                    
+                <p className="text-center text-muted">Covers the most common workflows for organising, managing and sharing photo collections.</p>
+            </div>                
             <div className="row g-3">
                 <FeatureCard
                     icon="bi-images"
@@ -110,8 +196,8 @@ export default function LandingPage(){
                 />
                 <FeatureCard
                     icon="bi-card-text"
-                    title="Notes and description"
-                    text="Add notes to photos and archives. Perfect for travel, inspections, reports, and project documentation."
+                    title="Notes"
+                    text="Add notes to individual photos, archives, and collections. Perfect for travel, inspections, reporting and project documentation."
                 />
                 <FeatureCard
                     icon="bi-file-earmark-zip"
@@ -131,29 +217,32 @@ export default function LandingPage(){
             </div>
         </section>            
 
-        <section className="bg-info py-5">
+        <section className="faq-parallax py-5">
             <div className="container">
-                <div className="row g-4 align-items-center">                    
+                <div className="text-center mb-5">
+                    <h2 className="display-6 mb-4 text-white">HOW IT WORKS</h2>
+                </div>
+                <div className="row g-4 align-items-center justify-content-between">                    
                     <div className="col-12 col-md-7">
                         <div className="card shadow-sm">
                             <div className="card-body">
-                                <h5 className="card-title">How it works</h5>                            
-                                <hr/>
+                                {/* <h5 className="card-title">How it works</h5>                             */}
+                                {/* <hr/> */}
                                 <ol>
                                     <li>Create an account</li>
                                     <li>Create your collections</li>
                                     <li>Upload JPG photos</li>
                                     <li>Upload ZIP archives (optional)</li>
-                                    <li>Add notes to photos and archives</li>
+                                    <li>Add notes to photos, archives, collections</li>
                                     <li>Explore the gallery, map, slideshow and statistics</li>
                                     <li>Share your collections</li>
-                                    <li>Stop sharing at any time</li>
+                                    <li>Disable sharing link at any time</li>
 
                                 </ol>
                             </div>                        
                         </div>                    
                     </div>
-                    <div className="col-12 col-md-5">      
+                    <div className="col-12 col-md-4">      
                         {/* <p>Watch YouTube demo</p>                   */}
                         <div className="ratio ratio-16x9 mb-2">                            
                             <iframe
@@ -169,13 +258,257 @@ export default function LandingPage(){
             </div>
         </section>       
 
-        <footer>
-            <div className="container py-4 text-muted small">
-                <div>
-                    PhotoMap © 2026
+        <section className="container py-5">
+            <div className="text-center mb-4">
+                <h2 className=" display-6 mb-4">PRICING</h2>
+                <p className="text-muted">Choose the plan that fits your storage needs.</p>                
+            </div>
+
+            <div className="row justify-content-center g-4">
+
+                {/* Free */}
+                <div className="col-12 col-md-6 col-lg-4">
+                    <div className="card shadow-sm h-100">
+                        {/* <div className="card-header text-center display-4">
+                            Free
+                        </div> */}
+                        <div className="card-header text-center">
+                            <h3 className="mb-0">Free Plan</h3>
+                        </div>
+                        
+                        <div className="card-body d-flex flex-column">
+                            <div className="text-center mb-3">
+                                <span className="display-4">&#8364;0.00</span>
+                                <span className="text-muted"> / month</span>
+                            </div>
+                            
+                            <ul className="list-group list-group-flush mb-3">
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>5 GB cloud storage</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>500 photos per collection</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Interactive maps</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Slideshows</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>ZIP archives</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Photo & archive notes</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Secure sharing</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Storage optimisation</li>
+                            </ul>                            
+
+                            <div className="mt-auto text-center">
+                                <Link
+                                    to="/register"
+                                    className="btn btn-outline-secondary"
+                                >
+                                    Start Free
+                                </Link>
+                            </div>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+
+                {/* Pro */}
+                <div className="col-12 col-md-6 col-lg-4">
+                    <div className="card shadow-sm h-100">
+                        {/* <div className="card-header text-center display-4">
+                            Pro
+                        </div> */}
+                        <div className="card-header text-center">
+                            <h3 className="mb-0">Pro Plan</h3>
+                        </div>
+                        
+                        <div className="card-body d-flex flex-column">
+                            <div className="text-center mb-3">
+                                <span className="display-4">&#8364;4.99</span>
+                                <span className="text-muted"> / month</span>
+                            </div>
+                            
+                            <ul className="list-group list-group-flush mb-3">
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>50 GB cloud storage</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>1500 photos per collection</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Interactive maps</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Slideshows</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>ZIP archives</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Photo & archive notes</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Secure sharing</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Storage optimisation</li>
+                            </ul>                            
+
+                            <div className="mt-auto text-center">
+                                <button 
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => setShowProPlanModal(true)}
+                                >
+                                    Activate Pro
+                                </button>
+                            </div>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section className="faq-parallax py-5">
+            <div className="container text-center mb-4 text-white">
+                <h2 className="display-6 mb-4">FAQ</h2>
+                <p>Have a question, suggestion, or feedback?<br/>Send me a message.</p>
+            </div>
+        </section>
+
+        <section className="container py-5">
+            <div className="text-center mb-4">
+                <h2 className="display-6 mb-4">CONTACT</h2>
+                {/* <p className="text-muted">
+                    Have a question, suggestion, or feedback?<br/>Send me a message.
+                </p> */}
+            </div>            
+            
+            <div className="row justify-content-center align-items-start">                
+                <div className="col-12 col-lg-4">
+                    <div className="card mb-3">
+                <div className="card-body p-4">                    
+
+                    <p className="text-muted">Have a question, suggestion, or feedback? Send me a message by email or by contact form.</p>                    
+
+                    <div className="d-flex align-items-center">
+                        <i className="bi bi-envelope fs-4 text-primary me-2"></i><span className="text-muted">Email: pzalizko@gmail.com</span>
+                    </div>
+                    {/* <div className="d-flex align-items-center mb-3">
+                        <i className="bi bi-geo-alt fs-4 text-primary me-2"></i><span className="text-muted">Location: Constanta, Romania</span>
+                    </div> */}                    
+                    {/* <div className="d-flex align-items-center">
+                        <i className="bi bi-code-slash fs-4 text-primary me-2"></i><span className="text-muted">Developed by Petr Zalizko</span>
+                    </div>                     */}
+                </div>
+            </div>       
+
+                </div>
+                <div className="col-12 col-lg-5">
+                    <div className="card shadow-sm h-100">
+                        <div className="card-body">
+                            <div className="row justify-content-center">
+                                <div className="col-12">
+                                    <form>
+                                        <div className="mb-3">
+                                            <label htmlFor="name" className="form-label">Name</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="name"
+                                                name="name"                                        
+                                                required
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="email" className="form-label">Email</label>
+                                            <input
+                                                type="email"
+                                                className="form-control"
+                                                id="email"
+                                                name="email"                                        
+                                                required
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="subject" className="form-label">Subject</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="subject"
+                                                name="subject"                                        
+                                                required
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="message" className="form-label">Message</label>
+                                            <textarea
+                                                className="form-control"
+                                                id="message"
+                                                name="message"                                        
+                                                rows={5}
+                                                required
+                                            />                                    
+                                        </div>
+                                        <div className="text-center">
+                                            <button type="submit" className="btn btn-primary">
+                                                Send Message
+                                            </button>
+                                        </div>                                
+                                    </form>
+                                </div>
+                            </div>                    
+                        </div>                        
+                    </div>                    
+                </div>
+            </div>
+        </section>        
+
+        <footer className="border-top">            
+            <div className="container py-4 d-flex justify-content-between align-items-center">
+                <div className="text-muted small">                    
+                    <div>
+                        PhotoMap © 2026
+                    </div>
+                    <div>
+                        <Link to="/privacy" className="text-decoration-none text-muted">
+                            Privacy Policy
+                        </Link>
+                    </div>
+                    <div>
+                        <Link to="/terms" className="text-decoration-none text-muted">
+                            Terms of Service
+                        </Link>
+                    </div>
+                    
+                    
+                </div>
+
+                <div className="d-flex gap-3">
+                    <a 
+                        href="https://www.linkedin.com/in/petr-zalizko/" 
+                        target="_blank" 
+                        rel="noreferrer noopener">
+                        <i className="bi bi-linkedin fs-5 text-primary"></i>
+                    </a>
+                    <a 
+                        href="https://github.com/Peter42306" 
+                        target="_blank" 
+                        rel="noreferrer noopener">
+                        <i className="bi bi-github fs-5 text-black"></i>
+                    </a>
+                    <a 
+                        href="https://github.com/Peter42306" 
+                        target="_blank" 
+                        rel="noreferrer noopener">
+                        <i className="bi bi-youtube fs-5 text-danger"></i>
+                    </a>
+                    <a 
+                        href="mailto:pzalizko@gmail.com" 
+                        target="_blank" 
+                        rel="noreferrer noopener">
+                        <i className="bi bi-envelope fs-5 text-primary"></i>
+                    </a>
                 </div>
             </div>
         </footer>
+
+        <ProPlanModal
+            show={showProPlanModal}
+            onHide={() => setShowProPlanModal(false)}
+        />
+        <Lightbox
+            open={lightboxOpen}
+            close={() => setLightboxOpen(false)}
+            slides={[
+                { src: selectedImage }
+            ]}
+            carousel={{
+                finite: true
+            }}
+            plugins={[Zoom]}
+        />
         </>        
     );
 }
@@ -196,23 +529,35 @@ function FeatureCard({ icon, title, text}) {
     );
 }
 
-function FeatureLine({ title, text }) {
+function FeatureLine({ title, text, link, linkText }) {
     return(
         <div>
-            <h5>{title}</h5>
-            {/* <div className="fw-semibold">{title}</div> */}
+            <h5>{title}</h5>            
             <div className="text-muted">{text}</div>
+            {link && (
+                <Link 
+                    to={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-decoration-none"
+                    
+                >
+                    {linkText} &rarr;
+                </Link>
+            )}
         </div>
     );
 }
 
-function ImageCard({ image, title, text }) {
+function ImageCard({ image, title, text, onClick }) {
     return(
         <div className="card shadow-sm overflow-hidden h-100">
             <img 
                 src={image} 
                 alt={title ?? "Photo"} 
                 className="img-fluid"
+                style={{ cursor: "pointer" }}
+                onClick={onClick}
             />
             <div className="card-body">                    
                 {title && (                        

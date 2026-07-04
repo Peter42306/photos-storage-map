@@ -1,3 +1,29 @@
+.faq-parallax {
+    min-height: 350px;
+
+    background-image:
+        
+        url("/images/landing/20250928_111140.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
+    display: flex;
+    align-items: center;
+}
+
+footer a:hover {
+    opacity: .8;
+}
+
+/* @media (max-width: 768px) {
+    .faq-parallax {
+        background-attachment: scroll;
+    }
+} */
+
 /* #root {
   max-width: 1280px;
   margin: 0 auto;

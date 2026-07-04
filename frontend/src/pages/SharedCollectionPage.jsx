@@ -390,9 +390,7 @@ export default function SharedCollectionPage() {
                         </div>
                     ))}
                 </div>
-            )}
-
-            
+            )}            
 
             <hr/>
 
@@ -509,16 +507,17 @@ function SharedPhotoCard({
 
                 <hr/>
 
-                <div className="d-flex flex-wrap gap-1 mt-auto">
-                    <button
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={() => onViewOriginal?.(photo)}
-                        title="View original"
-                    >
-                        <i className="bi bi-eye"></i>
-                    </button>
+                <div className="d-flex flex-wrap gap-1 mt-auto">                    
 
                     {onDownloadOriginal && (
+                        <>
+                        <button
+                            className="btn btn-outline-secondary btn-sm"
+                            onClick={() => onViewOriginal?.(photo)}
+                            title="View original"
+                        >
+                            <i className="bi bi-eye"></i>
+                        </button>
                         <button
                             className="btn btn-outline-secondary btn-sm"
                             onClick={() => onDownloadOriginal?.(photo)}
@@ -526,6 +525,8 @@ function SharedPhotoCard({
                         >
                             <i className="bi bi-download"></i>
                         </button>
+                        </>
+                        
                     )}
 
                     {latitude != null && longitude != null && (
