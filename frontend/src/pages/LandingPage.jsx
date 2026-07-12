@@ -423,7 +423,7 @@ export default function LandingPage(){
                     <div className="card mb-3">
                 <div className="card-body p-4">                    
 
-                    <p className="text-muted">Have a question, suggestion, or feedback? Send me a message by email or by contact form.</p>                    
+                    <p className="text-muted">Have a question or need assistance? Send me a message by email or using contact form.</p>                    
 
                     <div className="d-flex align-items-center">
                         <i className="bi bi-envelope fs-4 text-primary me-2"></i><span className="text-muted">Email: pzalizko@gmail.com</span>
@@ -541,6 +541,11 @@ export default function LandingPage(){
                     <div>
                         <Link to="/terms" className="text-decoration-none text-muted">
                             Terms of Service
+                        </Link>
+                    </div>
+                    <div>
+                        <Link to="/terms" className="text-decoration-none text-muted">
+                            Feedback
                         </Link>
                     </div>
                     
