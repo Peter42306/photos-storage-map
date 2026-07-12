@@ -5,12 +5,56 @@ import ProPlanModal from "../components/ProPlanModal";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import FaqAccordion from "../components/faqAccordion";
+import { sendContactMessage } from "../contactFormApi";
 
 export default function LandingPage(){
     const token = getToken();
     const [showProPlanModal, setShowProPlanModal] = useState(false);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [contactForm, setContactForm] = useState({
+        senderName: "",
+        senderEmail: "",
+        subject: "",
+        body: "",
+    });
+    const [contactFormSending, setContactFormSending] = useState(false);
+    const [contactFormSuccess, setContactFormSuccess] = useState("");
+    const [contactFormError, setContactFormError] = useState("");
+
+    async function handleContactFormSubmit(event) {
+        event.preventDefault();
+
+        setContactFormSending(true);
+        setContactFormSuccess("");
+        setContactFormError("");
+
+        try {
+            const result = await sendContactMessage(contactForm);
+
+            setContactFormSuccess(result.message || "Your message has been sent successfully.");
+
+            setContactForm({
+                senderName: "",
+                senderEmail: "",
+                subject: "",
+                body: "",
+            });
+        } catch (err) {
+            setContactFormError(err.message || "Failed to send the message.");
+        } finally {
+            setContactFormSending(false);
+        }
+    }
+
+    function handleContactFormChange(event){
+        const { name, value } = event.target;
+
+        setContactForm(current => ({
+            ...current,
+            [name]: value,
+        }));
+    }
     
     return(
         <>
@@ -365,6 +409,7 @@ export default function LandingPage(){
             </div>            
         </section>
 
+        {/* Contact Form section */}
         <section className="container py-5" id="contact">
             <div className="text-center mb-4">
                 <h2 className="display-6 mb-4">CONTACT</h2>
@@ -398,49 +443,78 @@ export default function LandingPage(){
                         <div className="card-body">
                             <div className="row justify-content-center">
                                 <div className="col-12">
-                                    <form>
+                                    <form onSubmit={handleContactFormSubmit}>
                                         <div className="mb-3">
-                                            <label htmlFor="name" className="form-label">Name</label>
+                                            <label htmlFor="contact-form-name" className="form-label">Name</label>
                                             <input
                                                 type="text"
                                                 className="form-control"
-                                                id="name"
-                                                name="name"                                        
+                                                id="contact-form-name"
+                                                name="senderName"                                        
+                                                value={contactForm.senderName}
+                                                onChange={handleContactFormChange}
+                                                maxLength={100}
                                                 required
                                             />
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="email" className="form-label">Email</label>
+                                            <label htmlFor="contact-form-email" className="form-label">Email</label>
                                             <input
                                                 type="email"
                                                 className="form-control"
-                                                id="email"
-                                                name="email"                                        
+                                                id="contact-form-email"
+                                                name="senderEmail"                                        
+                                                value={contactForm.senderEmail}
+                                                onChange={handleContactFormChange}
+                                                maxLength={200}
                                                 required
                                             />
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="subject" className="form-label">Subject</label>
+                                            <label htmlFor="contact-form-subject" className="form-label">Subject</label>
                                             <input
                                                 type="text"
                                                 className="form-control"
-                                                id="subject"
+                                                id="contact-form-subject"
                                                 name="subject"                                        
+                                                value={contactForm.subject}
+                                                onChange={handleContactFormChange}
+                                                maxLength={200}
                                                 required
                                             />
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="message" className="form-label">Message</label>
+                                            <label htmlFor="contact-form-message" className="form-label">Message</label>
                                             <textarea
                                                 className="form-control"
-                                                id="message"
-                                                name="message"                                        
+                                                id="contact-form-message"
+                                                name="body"                                        
+                                                value={contactForm.body}
+                                                onChange={handleContactFormChange}
                                                 rows={5}
+                                                maxLength={5000}
                                                 required
                                             />                                    
                                         </div>
+
+                                        {contactFormSuccess && (
+                                            <div className="alert alert-success" role="alert">
+                                                {contactFormSuccess}
+                                            </div>
+                                        )}
+
+                                        {contactFormError && (
+                                            <div className="alert alert-danger" role="alert">
+                                                {contactFormError}
+                                            </div>
+                                        )}
+
                                         <div className="text-center">
-                                            <button type="submit" className="btn btn-primary">
+                                            <button 
+                                                type="submit" 
+                                                className="btn btn-primary"
+                                                disabled={contactFormSending}
+                                            >
                                                 Send Message
                                             </button>
                                         </div>                                
