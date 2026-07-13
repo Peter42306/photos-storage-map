@@ -421,22 +421,19 @@ export default function LandingPage(){
             <div className="row justify-content-center align-items-start">                
                 <div className="col-12 col-lg-4">
                     <div className="card mb-3">
-                <div className="card-body p-4">                    
-
-                    <p className="text-muted">Have a question or need assistance? Send me a message by email or using contact form.</p>                    
-
-                    <div className="d-flex align-items-center">
-                        <i className="bi bi-envelope fs-4 text-primary me-2"></i><span className="text-muted">Email: pzalizko@gmail.com</span>
-                    </div>
-                    {/* <div className="d-flex align-items-center mb-3">
-                        <i className="bi bi-geo-alt fs-4 text-primary me-2"></i><span className="text-muted">Location: Constanta, Romania</span>
-                    </div> */}                    
-                    {/* <div className="d-flex align-items-center">
-                        <i className="bi bi-code-slash fs-4 text-primary me-2"></i><span className="text-muted">Developed by Petr Zalizko</span>
-                    </div>                     */}
-                </div>
-            </div>       
-
+                        <div className="card-body p-4">                    
+                        <p className="text-muted">Have a question or need assistance? Send me a message by email or using contact form.</p>                    
+                        <div className="d-flex align-items-center">
+                            <i className="bi bi-envelope fs-4 text-primary me-2"></i><span className="text-muted">Email: pzalizko@gmail.com</span>
+                        </div>
+                        {/* <div className="d-flex align-items-center mb-3">
+                            <i className="bi bi-geo-alt fs-4 text-primary me-2"></i><span className="text-muted">Location: Constanta, Romania</span>
+                        </div> */}                    
+                        {/* <div className="d-flex align-items-center">
+                            <i className="bi bi-code-slash fs-4 text-primary me-2"></i><span className="text-muted">Developed by Petr Zalizko</span>
+                        </div>                     */}
+                        </div>
+                    </div>       
                 </div>
                 <div className="col-12 col-lg-5">
                     <div className="card shadow-sm h-100">
@@ -495,6 +492,9 @@ export default function LandingPage(){
                                                 maxLength={5000}
                                                 required
                                             />                                    
+                                            <div className="form-text text-end">
+                                                {contactForm.body.length} / 5000
+                                            </div>
                                         </div>
 
                                         {contactFormSuccess && (
