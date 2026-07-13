@@ -293,13 +293,13 @@ export default function CollectionsPage() {
             </div>
             )}
         </div>
-        <footer className="border-top">
+        {/* <footer className="border-top">
             <div className=" container py-4 text-muted small">
                 <div>
                     PhotosMap © 2026
                 </div>
             </div>
-        </footer>
+        </footer> */}
         </>
         
     );

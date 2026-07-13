@@ -267,9 +267,9 @@ export default function LandingPage(){
                 <div className="text-center mb-5">
                     <h2 className="display-6 mb-4 text-white">HOW IT WORKS</h2>
                 </div>
-                <div className="row g-4 align-items-center justify-content-between">                    
-                    <div className="col-12 col-md-7">
-                        <div className="card shadow-sm">
+                <div className="row g-4 align-items-stretch">                    
+                    <div className="col-12 col-md-8 d-flex">
+                        <div className="card shadow-sm w-100">
                             <div className="card-body">
                                 {/* <h5 className="card-title">How it works</h5>                             */}
                                 {/* <hr/> */}
@@ -287,9 +287,9 @@ export default function LandingPage(){
                             </div>                        
                         </div>                    
                     </div>
-                    <div className="col-12 col-md-4">      
+                    <div className="col-12 col-md-4 d-flex">      
                         {/* <p>Watch YouTube demo</p>                   */}
-                        <div className="ratio ratio-16x9 mb-2">                            
+                        <div className="ratio ratio-16x9 mb-2 w-100 h-100">                            
                             <iframe
                                 src="https://www.youtube-nocookie.com/embed/w-mKc8zRkAc?rel=0"
                                 title="Brief Application Demo"
@@ -544,7 +544,7 @@ export default function LandingPage(){
                         </Link>
                     </div>
                     <div>
-                        <Link to="/terms" className="text-decoration-none text-muted">
+                        <Link to="/feedback" className="text-decoration-none text-muted">
                             Feedback
                         </Link>
                     </div>

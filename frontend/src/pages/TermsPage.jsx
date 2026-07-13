@@ -77,7 +77,8 @@ export default function TermsPage() {
                 the Contact page.
             </p>
 
-            <div className="mt-5">
+            <hr className="mt-5"/>
+            <div className="text-center mt-5">
                 <Link
                     to="/"
                     className="btn btn-outline-secondary"

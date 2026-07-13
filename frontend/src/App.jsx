@@ -22,6 +22,7 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import ScrollToTop from './components/ScrollToTop';
 import BackToTopButton from './components/BackToTopButton';
+import FeedbackPage from './pages/FeedbackPage';
 
 function App() {  
 
@@ -44,6 +45,7 @@ function App() {
 
         <Route path='/terms' element={<TermsPage/>}/>        
         <Route path='/privacy' element={<PrivacyPage/>}/>        
+        <Route path='/feedback' element={<FeedbackPage/>}/>        
 
         <Route path='/shared/:token' element={<SharedCollectionPage/>}/>
         <Route path='/shared/:token/map' element={<SharedMapPage/>}/>
