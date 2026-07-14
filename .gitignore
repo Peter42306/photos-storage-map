@@ -11,6 +11,7 @@
 *.sln.docstates
 appsettings.Development.json
 appsettings.Production.json
+**/keys/
 
 # Node / React
 **/node_modules/
