@@ -2,17 +2,25 @@
 {
     public static class CorsExtensions
     {
-        public static IServiceCollection AddApplicationCors(this IServiceCollection services)
+        public static IServiceCollection AddApplicationCors(
+            this IServiceCollection services,
+            IConfiguration configuration)
         {
+            var allowedOrigins = configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>() ?? [];
+
+            if (allowedOrigins.Length == 0)
+            {
+                throw new InvalidOperationException("No CORS origins configured.");
+            }
+
             services.AddCors(options =>
             {
-                options.AddPolicy(CorsPolicies.Dev, policy =>
+                options.AddPolicy(CorsPolicies.Default, policy =>
                 {
                     policy
-                    .WithOrigins(
-                        "http://localhost:5173",
-                        "http://127.0.0.1:5173",
-                        "http://192.168.1.108:5173")
+                    .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .WithExposedHeaders("Content-Disposition");

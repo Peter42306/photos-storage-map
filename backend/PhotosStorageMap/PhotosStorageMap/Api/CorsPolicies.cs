@@ -4,5 +4,6 @@
     {
         public const string Dev = "DevCors";
         public const string Prod = "ProdCors";
+        public const string Default = "DefaultCors";
     }
 }

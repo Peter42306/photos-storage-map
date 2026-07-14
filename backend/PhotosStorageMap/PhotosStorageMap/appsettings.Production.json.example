@@ -1,0 +1,42 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": ""
+  },
+  "Jwt": {
+    "Issuer": "PhotosStorageMap",
+    "Audience": "PhotosStorageMap",
+    "Key": "",
+    "ExpiresMinutes": 5
+  },
+  "Storage": {
+    "Provider": "S3",
+    "S3": {
+      "ServiceUrl": "",
+      "AccessKey": "",
+      "SecretKey": "",
+      "Bucket": "",
+      "ForcePathStyle": true
+    }
+  },
+  "Cors": {
+    "AllowedOrigins": []
+  },    
+  "Frontend": {
+    "BaseUrl": ""
+  },
+  "Authentication": {
+    "Google": {
+      "ClientId": ""
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Warning",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Admin": {
+    "Email": ""
+  }
+}

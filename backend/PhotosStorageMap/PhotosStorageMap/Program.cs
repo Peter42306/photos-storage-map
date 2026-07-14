@@ -16,6 +16,11 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+//Console.WriteLine($"Development config exists: {File.Exists(Path.Combine(builder.Environment.ContentRootPath, "appsettings.Development.json"))}");
+//Console.WriteLine($"Content root: {builder.Environment.ContentRootPath}");
+//Console.WriteLine($"Cors value: {builder.Configuration["Cors:AllowedOrigins:0"] ?? "<missing>"}");
+
 // DbContext (Postgres)
 builder.Services.AddDatabase(builder.Configuration);
 
@@ -28,7 +33,7 @@ builder.Services.AddApplicationIdentity();
 
 
 // CORS (dev)
-builder.Services.AddApplicationCors();
+builder.Services.AddApplicationCors(builder.Configuration);
 
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -93,7 +98,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-app.UseCors(CorsPolicies.Dev);
+app.UseCors(CorsPolicies.Default);
 
 app.UseAuthentication();
 app.UseAuthorization();

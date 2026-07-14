@@ -62,9 +62,9 @@ export default function LandingPage(){
             <div className="row align-items-center g-4 mb-5">
                 <div className="col-12 col-lg-7">                    
                     <h1 className="display-5 fw-semibold mb-3">Store and explore your photo collections</h1>
-                    <p className="lead text-muted ">PhotoMap is designed for people who need more than just a photo gallery. Whether you're traveling, documenting inspections, working in the field, or creating project records, your photos stay connected with locations, notes, and related archive files.</p>
-                    <p className="lead text-muted ">Upload original photos to secure cloud storage, organize them into collections, and explore GPS locations on an interactive map.</p>                    
-                    <p className="lead text-muted ">Add notes to photos, archives, and collections, download resized ZIP files, and share your collections through secure read-only links.</p>
+                    <p className="lead text-muted ">Organize photos into collections, view them on a map, add notes, and share them with secure links.</p>
+                    <p className="lead text-muted">Built for travel, field work, inspections, and project documentation.</p>
+                    
 
                     {!token ? (
                         <div className="d-flex gap-2 flex-wrap">
