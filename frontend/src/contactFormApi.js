@@ -1,7 +1,7 @@
 const CONTACT_FORM_API_URL = import.meta.env.VITE_CONTACT_FORM_API_URL || "";
 
 async function publicFormRequest(path, body) {
-    const response = await fetch(`${CONTACT_FORM_API_URL}${path}`,{
+    const response = await fetch(`${CONTACT_FORM_API_URL}${path}`, {
         method:"POST",
         headers:{
             "Content-Type": "application/json",

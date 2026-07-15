@@ -1,0 +1,29 @@
+Purpose:
+
+CORS configuration for Hetzner Object Storage bucket.
+Applied manually using AWS CLI.
+
+
+Show version:
+
+aws --version
+
+
+Show lists:
+
+aws configure list
+
+
+Apply:
+
+aws s3api put-bucket-cors \
+  --bucket photos-storage-map \
+  --cors-configuration file://photo-map-s3-cors.json \
+  --endpoint-url https://hel1.your-objectstorage.com
+
+Verify:
+
+aws s3api get-bucket-cors \
+  --bucket photos-storage-map \
+  --endpoint-url https://hel1.your-objectstorage.com
+

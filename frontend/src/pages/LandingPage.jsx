@@ -65,6 +65,7 @@ export default function LandingPage(){
                     <p className="lead text-muted ">Organize photos into collections, view them on a map, add notes, and share them with secure links.</p>
                     <p className="lead text-muted">Built for travel, field work, inspections, and project documentation.</p>
                     
+                    
 
                     {!token ? (
                         <div className="d-flex gap-2 flex-wrap">
@@ -167,7 +168,7 @@ export default function LandingPage(){
                                 />
                             </div>                            
                         </div>
-                    </div>
+                    </div>                    
                 </div>                
             </div>
         </section>            

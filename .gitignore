@@ -11,12 +11,13 @@
 *.sln.docstates
 appsettings.Development.json
 appsettings.Production.json
+!appsettings.Production.json.example
 **/keys/
 
 # Node / React
 **/node_modules/
-dist/
-.vite/
+**/dist/
+**/.vite/
 
 # Secrets
 .env

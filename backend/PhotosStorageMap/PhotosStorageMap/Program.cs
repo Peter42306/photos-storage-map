@@ -31,11 +31,12 @@ builder.Services.AddDatabase(builder.Configuration);
 //builder.Services.AddDataProtection();
 var dataProtectionKeyPath = builder.Environment.IsDevelopment()
     ? Path.Combine(builder.Environment.ContentRootPath, "keys")
-    : "var/lib/photo-map/keys";
+    : "/var/lib/photo-map/keys";
+
 builder.Services
     .AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeyPath))
-    .SetApplicationName("PhotoStorageMap");
+    .SetApplicationName("PhotosStorageMap");
 builder.Services.AddSingleton(TimeProvider.System);
 
 // Identity
@@ -54,7 +55,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApplicationSwagger();
 
 builder.Services.AddScoped<JwtTokenService>();
-builder.Services.AddScoped<IEmailService, DevEmailService>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<IEmailService, DevEmailService>();
+}
+else
+{
+    builder.Services
+        .AddOptions<SendGridOptions>()
+        .Bind(builder.Configuration.GetSection("SendGrid"))
+        .Validate(options => !string.IsNullOrWhiteSpace(options.ApiKey), "SendGrid:ApiKey is required.")
+        .Validate(options => !string.IsNullOrWhiteSpace(options.FromEmail), "SendGrid:FromEmail is required.")
+        .ValidateOnStart();
+
+    builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+}
+
 builder.Services.AddScoped<IRetentionPolicy, DefaultRetentionPolicy>();
 
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
@@ -128,8 +145,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-if (!app.Environment.IsDevelopment())
+else
 {
     app.UseHttpsRedirection();
 }

@@ -1,0 +1,21 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": [
+        "http://192.168.1.108:5173",      
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://photo-map.zalizko.site"
+      ],
+      "AllowedMethods": [
+        "PUT", 
+        "GET", 
+        "HEAD"
+      ],
+      "AllowedHeaders": [
+        "*"
+      ],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+}
