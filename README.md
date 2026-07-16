@@ -1,195 +1,155 @@
-# Photos Storage Map
+# PhotoMap
 
-TODO
+***PhotoMap*** is a web application for storing, organizing and exploring photo collections.
 
-Features:
-- 
+Designed to create collections, upload photos, add notes, view them on an interactive map, generate archives, and securely share collections with others.
+
+## Features
+- Photo collections
+- Interactive map
+- Notes
+- ZIP archives
+- Secure sharing
+- Object Storage (S3)
+- JWT Authentication
+- Google Sign-In
+- Collection statistics
+- Background cleanup workers
 
 ## Screenshots
 
-## Technology stack
+<img width="1920" height="1080" alt="Screenshot-2026-06-29 151055-map-page" src="https://github.com/user-attachments/assets/51fa8cea-f2eb-4ab3-94f7-de3a291eaecc" />
 
-**Backend**
+<img width="1904" height="1071" alt="Screenshot-2026-06-29-150857-collection-page" src="https://github.com/user-attachments/assets/564630aa-a7d8-4b98-a29d-4eeb961a3ebf" />
 
-- ASP.NET Core Web API
-- Entity Framework Core
-- PostgreSQL
-- RESTful API design
-- File upload & storage (local filesystem)
+<img width="1904" height="1071" alt="Screenshot-2026-06-29-150758-my-collections" src="https://github.com/user-attachments/assets/90dd9959-8e0d-4d4e-ac22-cbcf00d3e46f" />
 
- **Frontend**
-
-- React (Vite)
-- JavaScript
-- Bootstrap 5
-
-**Infrastructure**
-
-- Docker
-- docker-compose
-- Nginx (reverse proxy)
-- Linux server deployment 
-
-## Project structure
+## Project Structure
 ```text
-TODO
 photos-storage-map/
-│
 ├── backend/
 │   └── PhotosStorageMap/
-│       └── PhotosStorageMap/
-│           ├── Program.cs
-│           └── ...
+│       ├── Api/
+│       │   ├── Authorization/
+│       │   ├── Controllers/
+│       │   ├── Extensions/
+│       │   ├── Services/
+│       │   └── CorsPolicies.cs
+│       │
+│       ├── Application/
+│       │   ├── Common/
+│       │   ├── DTOs/
+│       │   ├── Images/
+│       │   └── Interfaces/
+│       │
+│       ├── Domain/
+│       │   ├── Entities/
+│       │   ├── Enums/
+│       │   └── ValueObjects/
+│       │
+│       ├── Infrastructure/
+│       │   ├── BackgroundProcessing/
+│       │   ├── Data/
+│       │   ├── Email/
+│       │   ├── Extensions/
+│       │   ├── Identity/
+│       │   ├── Images/
+│       │   ├── Policies/
+│       │   ├── Services/
+│       │   └── Storage/
+│       │
+│       ├── Program.cs
+│       └── appsettings.json
 │
 ├── frontend/
-│   └── photos-storage-map-ui/
-│       ├── src/
-│       ├── package.json
-│       └── vite.config.ts
+│   ├── public/
+│   │   └── images/
+│   │       └── landing/
+│   │
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── api.js
+│   │   ├── contactFormApi.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   ├── package.json
+│   └── vite.config.js
 │
+├── .github/
+├── .gitignore
 └── README.md
 ```
 
-## Environment variables
+## Technology stack
 
-TODO
+### Backend
 
-This project uses environment variables loaded from `.env` (local / server) and `.env.example` (template).
+- C#
+- ASP.NET Core 8
+- Entity Framework Core
+- ASP.NET Core Identity
+- JWT Authentication
+- Google OAuth 2.0
+- PostgreSQL
+- Amazon S3 API (Hetzner Object Storage)
+- ImageSharp
+- SendGrid
+- Background Services (`IHostedService`)
 
-Create your own `.env` file based on `.env.example`.
+### Frontend
 
-### Required variables
+- React
+- Vite
+- React Router
+- Bootstrap 5
+- Bootstrap Icons
+- React Bootstrap
+- Leaflet
 
-#### PostgreSQL
-- `POSTGRES_DB` — database name (e.g. `photosdb`)
-- `POSTGRES_USER` — database user (e.g. `appuser`)
-- `POSTGRES_PASSWORD` — database password
+### Infrastructure
 
-#### Ports (host → container)
-- `POSTGRES_HOST_PORT` — local port for PostgreSQL (mapped to container `5432`)
-- `API_HOST_PORT` — local port for backend API (mapped to container `8080`)
-- `FRONTEND_HOST_PORT` — local port for frontend (mapped to container `80`)
-
-### Notes
-- Do **not** commit `.env` to GitHub. Store only `.env.example`.
-- In production, uploads are stored on the server filesystem (e.g. `/var/www/uploads/photos-storage-geo`).
-- In development, uploads are stored locally (see `docker-compose.dev.yml`).
+- Ubuntu
+- Nginx
+- systemd
+- Git
 
 ## File storage
 
-Uploaded files are stored outside containers on the host filesystem:
+PhotoMap stores uploaded files in Hetzner Object Storage using the Amazon S3 API.
 
-```text
-TODO
-/var/www/uploads/photos-storage-map/
-    └── ???/
-        └── {???Id}/            
-```
+- Original photos stored in object storage
+- Presigned URLs for direct browser uploads
+- Automatic thumbnail and resized image generation
+- ZIP archive storage
+- Background cleanup of temporary and deleted files
+- Secure private storage with time-limited access
 
-The directory is mounted in the API container:
+## API Features
 
-```text
-volumes:
-  - /var/www/uploads/?????
-```
+- User registration and authentication
+- Google Sign-In
+- Email confirmation and password recovery
+- Photo collection management
+- Direct S3 uploads using presigned URLs
+- Background image processing
+- Thumbnail and resized image generation
+- ZIP archive support
+- Interactive map with GPS coordinates
+- Secure collection sharing
+- Collection statistics
+- Automatic cleanup workers
 
-## API features
+## Background Workers
 
-- TODO
+- Photo processing
+- Original photo cleanup
+- Collection cleanup
+- Archive generation
 
-## How to run
+## Status
 
-The project uses Docker and Docker Compose for both development and production environments.
-
-### Development (local machine)
-
-Used for local development on Windows / macOS / Linux.
-
-Requirements:
-- Docker
-- Docker Compose
-
-Steps:
-1. Create a `.env` file based on `.env.example` and adjust ports if needed.
-2. Make sure the uploads directory exists:
-
-```text
-photos-storage-geo/_data/uploads
-```
-
-3. Run the project:
-```bash
-docker compose -f docker-compose.dev.yml up -d --build
-```
-
-Services will be available at:
-
-Frontend: http://localhost:<FRONTEND_HOST_PORT>
-Backend API: http://localhost:<API_HOST_PORT>
-
-To stop containers:
-
-```text
-docker compose -f docker-compose.dev.yml down
-```
-
-Uploaded files are stored locally in:
-```text
-photos-storage-geo/_data/uploads
-```
-
-
-### Production (server)
-
-Used for deployment on a Linux server with Nginx as a reverse proxy.
-
-Requirements:
-
-Docker
-
-Docker Compose
-
-Nginx (already configured on the host)
-
-Steps:
-
-Create a .env file on the server (do not commit it to Git).
-
-Make sure the uploads directory exists on the server:
-
-```text
-/var/www/uploads/photos-storage-geo
-```
-
-Run the project:
-```text
-docker compose up -d --build
-```
-
-Services run internally on the server:
-
-Frontend  127.0.0.1:<FRONTEND_HOST_PORT>
-
-Backend API  127.0.0.1:<API_HOST_PORT>
-
-PostgreSQL  127.0.0.1:<POSTGRES_HOST_PORT>
-
-Public access is handled by Nginx:
-
-/ -> frontend
-
-/api -> backend API
-
-Uploaded files are stored on the server filesystem and persist across container restarts.
-
-
-
-## Docker setup
-The backend and database run in containers, frontend is served as static files.
-```text
-docker-compose up -d --build
-```
-
-Containers:
-TODO
-- 
+The application is deployed and fully operational. New features and improvements are planned for future releases.
