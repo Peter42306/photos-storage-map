@@ -6,7 +6,7 @@ Designed to create collections, upload photos, add notes, view them on an intera
 
 ## Features
 - Photo collections
-- Interactive map powered by MapTiler
+- Interactive map
 - Notes
 - ZIP archives
 - Secure sharing
@@ -119,21 +119,18 @@ photos-storage-map/
 
 ## File storage
 
-PhotoMap stores uploaded files in Hetzner Object Storage using the Amazon S3 API.
+PhotoMap uses Hetzner Object Storage (Amazon S3 API).
 
-- Original photos stored in object storage
-- Presigned URLs for direct browser uploads
-- Automatic thumbnail and resized image generation
-- ZIP archive storage
-- Background cleanup of temporary and deleted files
-- Secure private storage with time-limited access
+- Original photos, thumbnails, resized images and ZIP archives are stored in Object Storage.
+- Presigned URLs are used for direct browser uploads.
+- Background workers clean up temporary and deleted files.
+- Private objects are protected with time-limited access.
 
 ## Backups
 
-- The application uses automated PostgreSQL backups.
-- Database backups are created with `pg_dump`
-- Backup files are stored in Hetzner Storage Box
-- Object Storage and database are separated
+- Automated PostgreSQL backups using `pg_dump`
+- Backups are stored in Hetzner Storage Box
+- Database backups are isolated from application file storage
 
 ## API Features
 
@@ -145,7 +142,7 @@ PhotoMap stores uploaded files in Hetzner Object Storage using the Amazon S3 API
 - Background image processing
 - Thumbnail and resized image generation
 - ZIP archive support
-- Interactive map with GPS coordinates
+- Interactive map with geotagged photos
 - Secure collection sharing
 - Collection statistics
 - Automatic cleanup workers
