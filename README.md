@@ -128,6 +128,13 @@ PhotoMap stores uploaded files in Hetzner Object Storage using the Amazon S3 API
 - Background cleanup of temporary and deleted files
 - Secure private storage with time-limited access
 
+## Backups
+
+- The application uses automated PostgreSQL backups.
+- Database backups are created with `pg_dump`
+- Backup files are stored in Hetzner Storage Box
+- Object Storage and database are separated
+
 ## API Features
 
 - User registration and authentication
