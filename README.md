@@ -6,7 +6,7 @@ Designed to create collections, upload photos, add notes, view them on an intera
 
 ## Features
 - Photo collections
-- Interactive map
+- Interactive map powered by MapTiler
 - Notes
 - ZIP archives
 - Secure sharing
@@ -108,7 +108,7 @@ photos-storage-map/
 - Bootstrap 5
 - Bootstrap Icons
 - React Bootstrap
-- Leaflet
+- MapTiler
 
 ### Infrastructure
 
