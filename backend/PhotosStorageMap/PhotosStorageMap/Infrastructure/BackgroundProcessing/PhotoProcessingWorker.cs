@@ -173,12 +173,10 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 {
                     var dt = takenAt.Value;
                     if(dt.Kind == DateTimeKind.Unspecified)
-                    {
-                        //dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
+                    {                        
                         dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
                     }
-
-                    //photo.TakenAt = dt.ToUniversalTime();
+                    
                     photo.TakenAt = dt;
                 }
                 else

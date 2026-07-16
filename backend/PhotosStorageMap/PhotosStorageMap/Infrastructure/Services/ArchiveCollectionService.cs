@@ -177,14 +177,8 @@ namespace PhotosStorageMap.Infrastructure.Services
 
                         continue;
                     }
-
-                    //_logger.LogInformation("ArchiveCollectionService: archieved PhotoId={PhotoId}, TotalFiles={TotalFiles}, TotalBytes={TotalBytes}",
-                    //    photo.Id,
-                    //    filesCount,
-                    //    totalBytes);
                 }
-            }
-            ;
+            };
 
             if (filesCount == 0)
             {

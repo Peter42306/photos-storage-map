@@ -41,6 +41,27 @@ footer a:hover {
     
 }
 
+.hero-use-case-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+#heroUseCasesCarousel .carousel-caption {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(
+        transparent,
+        rgba(0, 0, 0, 0.75)
+    );
+}
+
+#heroUseCasesCarousel .carousel-caption p {
+    margin-bottom: 0;
+}
+
 /* @media (max-width: 768px) {
     .faq-parallax {
         background-attachment: scroll;

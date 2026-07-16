@@ -74,13 +74,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             // 1) actual totals from DB
             var actualStats = await _statsService.SyncStoredStatsAsync(collectionId, ct);
-
-            // 2) validate limits
-            //if (actualStats.TotalPhotos >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
-            //{
-            //    return BadRequest($"Collection limit reached. Maximum collection photos: {Limits.UploadCollection.MaxPhotosPerCollectionPro}.");
-            //}
-
+                        
             // 2) validate plan limits
             var limits = await _storageLimitService.GetUserLimitsAsync(userId, ct);
 
@@ -103,16 +97,7 @@ namespace PhotosStorageMap.Api.Controllers
                 {
                     return BadRequest(storageCheck.Message);
                 }
-            }
-
-            //var currentPhotoCount = await _db.PhotoItems.CountAsync(p => p.UploadCollectionId == collectionId, ct);
-            //if (currentPhotoCount >= Limits.UploadCollection.MaxPhotosPerCollectionPro)
-            //{
-            //    return BadRequest(new
-            //    {
-            //        message = $"Collection limit reached. Maximum allowed {Limits.UploadCollection.MaxPhotosPerCollectionPro} photos per collection. From controller"
-            //    });
-            //}
+            }            
             
             var safeName = string.IsNullOrWhiteSpace(fileName) 
                 ? $"photo_{DateTime.UtcNow:yyyyMMdd_HHmmss}.jpg"

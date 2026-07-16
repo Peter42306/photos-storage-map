@@ -37,11 +37,6 @@ namespace PhotosStorageMap.Infrastructure.Images
 
             // Need to rewind for ImageSharp
             buffered.Position = 0;
-            
-            //if (!original.CanSeek)
-            //{
-            //    throw new InvalidOperationException("Original stream must be seekable.");
-            //}
 
             //original.Position = 0;
 

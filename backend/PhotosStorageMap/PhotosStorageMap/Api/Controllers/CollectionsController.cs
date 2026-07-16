@@ -533,15 +533,7 @@ namespace PhotosStorageMap.Api.Controllers
                     c.Id == id &&
                     c.OwnerUserId == userId &&
                     !c.IsDeleted,
-                    ct);
-
-            //var collection = await _db.UploadCollections
-            //    .Include(c => c.Photos)
-            //    .FirstOrDefaultAsync(c =>
-            //        c.Id == id &&
-            //        c.OwnerUserId == userId &&
-            //        !c.IsDeleted,
-            //        ct);
+                    ct);            
 
             if (!collectionExists) return NotFound();
 
@@ -550,12 +542,7 @@ namespace PhotosStorageMap.Api.Controllers
                     p.UploadCollectionId == id &&
                     p.Status == PhotoStatus.Ready && 
                     !string.IsNullOrWhiteSpace(p.StandardKey),
-                    ct);
-
-            //var totalFiles = collection.Photos
-            //    .Count(p =>
-            //        p.Status == PhotoStatus.Ready &&
-            //        !string.IsNullOrWhiteSpace(p.StandardKey));
+                    ct);                       
 
             if (totalFiles == 0) return BadRequest("No resized photos available for ZIP archive.");
 

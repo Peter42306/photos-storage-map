@@ -48,15 +48,7 @@ namespace PhotosStorageMap.Api.Controllers
             CancellationToken ct)
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
-
-            //var collection = await _db.UploadCollections
-            //    .Include(c => c.ShareLink)
-            //    .FirstOrDefaultAsync(c => 
-            //    c.Id == request.CollectionId &&
-            //    c.OwnerUserId == userId &&
-            //    !c.IsDeleted,
-            //    ct);
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();            
 
             var collection = await _db.UploadCollections
                 .FirstOrDefaultAsync(c => 
@@ -94,39 +86,12 @@ namespace PhotosStorageMap.Api.Controllers
                 shareLink.AllowSlideshowOriginals = request.AllowSlideshowOriginals;
                 shareLink.AllowDownloadResizedZip = request.AllowDownloadResizedZip;
                 shareLink.AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard;
-            }
+            }           
 
-            //if (collection.ShareLink is null)
-            //{
-            //    collection.ShareLink = new ShareLink
-            //    {
-            //        UploadCollectionId = collection.Id,
-            //        Token = token,
-            //        CreatedAtUtc = DateTime.UtcNow,
-            //        IsRevoked = false,
-            //        AllowSlideshowOriginals = request.AllowSlideshowOriginals,
-            //        AllowDownloadResizedZip = request.AllowDownloadResizedZip,
-            //        AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard
-            //    };
-            //}
-            //else 
-            //{
-            //    collection.ShareLink.Token = token;
-            //    collection.ShareLink.CreatedAtUtc = DateTime.UtcNow;
-            //    collection.ShareLink.IsRevoked = false;
-            //    collection.ShareLink.AllowSlideshowOriginals = request.AllowSlideshowOriginals;
-            //    collection.ShareLink.AllowDownloadResizedZip = request.AllowDownloadResizedZip;
-            //    collection.ShareLink.AllowDownloadOriginalFromCard = request.AllowDownloadOriginalFromCard;
-            //}
-
-            await _db.SaveChangesAsync(ct);
-
-            //var shareLink = collection.ShareLink;
+            await _db.SaveChangesAsync(ct);            
 
             var url = BuildShareLink(shareLink.Token);
-
-            //var url = $"{Request.Scheme}://{Request.Host}/shared/{shareLink.Token}";
-
+            
             return Ok(new ShareLinkResponse(
                 shareLink.Id,
                 shareLink.Token,

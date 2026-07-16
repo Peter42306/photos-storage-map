@@ -6,6 +6,7 @@ import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import FaqAccordion from "../components/faqAccordion";
 import { sendContactMessage } from "../contactFormApi";
+import { Carousel } from "react-bootstrap";
 
 export default function LandingPage(){
     const token = getToken();
@@ -21,6 +22,51 @@ export default function LandingPage(){
     const [contactFormSending, setContactFormSending] = useState(false);
     const [contactFormSuccess, setContactFormSuccess] = useState("");
     const [contactFormError, setContactFormError] = useState("");
+    const slides = [
+        {
+            title: "Memories",
+            image: "/images/landing/20250923_190110.jpg"
+        },
+        {
+            title: "Travel",
+            image: "/images/landing/20250928_111140.jpg"
+        },
+        {
+            title: "Pet Memories",
+            image: "/images/landing/Here_Carousel_Pets_20260411_100038.jpg"
+        },
+        {
+            title: "Family Memories",
+            image: "/images/landing/Hero_Carousel_Family_Screenshot_20260228_134943.jpg"
+        },
+        {
+            title: "Vehicle History",
+            image: "/images/landing/Hero_Carousel_Car_20260519_085448.jpg"
+        },
+        {
+            title: "Construction Projects",
+            image: "/images/landing/Hero_Carousel_Flat_IMG_20220523_122940.jpg"
+        },
+        {
+            title: "Reporting",
+            image: "/images/landing/Hero_Carousel_Vessel_Rotterdam_20251021_074557.jpg"
+        },
+        {
+            title: "Inspections",
+            image: "/images/landing/Hero_Carousel_Vessel_Holds_DSCN3299.JPG"
+        },
+        // Memories
+        // Travel
+        // Pet Memories
+        // Family Memories
+        // Vehicle History
+        // Utility Records
+        // Home Renovation
+        // Inspections
+        // Project Reporting
+        // Construction Prohects
+    ];
+
 
     async function handleContactFormSubmit(event) {
         event.preventDefault();
@@ -63,8 +109,33 @@ export default function LandingPage(){
                 <div className="col-12 col-lg-7">                    
                     <h1 className="display-5 fw-semibold mb-3">Store and explore your photo collections</h1>
                     <p className="lead text-muted ">Organize photos into collections, view them on a map, add notes, and share them with secure links.</p>
-                    <p className="lead text-muted">Built for travel, field work, inspections, and project documentation.</p>
+                    <p className="lead text-muted">Built for travel, field work, inspections, project documentation and much more.</p>
                     
+
+                    <Carousel 
+                        fade interval={5000}
+                        pause="hover"
+                        indicators={false}
+                        className="mb-3"
+                    >
+                        {slides.map((slide) => (
+                            <Carousel.Item key={slide.title}>
+                                <img
+                                    className="d-block w-100 hero-use-case-image"
+                                    src={slide.image}
+                                    alt={slide.title}
+                                />
+                                <Carousel.Caption className="pb-0">
+                                    <h5>{slide.title}</h5>
+                                </Carousel.Caption>                                
+                            </Carousel.Item>
+                        ))}
+                    </Carousel>
+                    {/* <img 
+                        src="/images/landing/20250923_190110.jpg" 
+                alt="Photo" 
+                className="img-fluid mb-4 mt-4"                
+                            /> */}
                     
 
                     {!token ? (

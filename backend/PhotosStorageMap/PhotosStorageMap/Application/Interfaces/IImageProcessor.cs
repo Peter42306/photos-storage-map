@@ -4,6 +4,8 @@ namespace PhotosStorageMap.Application.Interfaces
 {
     public interface IImageProcessor
     {
-        Task<ImageProcessResult> ProcessAsync(Stream original, CancellationToken ct = default);
+        Task<ImageProcessResult> ProcessAsync(
+            Stream original,
+            CancellationToken ct = default);
     }
 }

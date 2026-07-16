@@ -5,8 +5,6 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 {
     public sealed class InMemoryPhotoProcessingQueue : IPhotoProcessingQueue
     {
-        //private readonly Channel<Guid> _channel = Channel.CreateUnbounded<Guid>();
-
         private readonly Channel<Guid> _channel = Channel.CreateBounded<Guid>(
             new BoundedChannelOptions(capacity: 1000)
             {

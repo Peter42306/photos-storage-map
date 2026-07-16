@@ -36,12 +36,7 @@ namespace PhotosStorageMap.Api.Controllers
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            var photo = await LoadOwnedPhoto(userId, photoId, ct);
-
-            //if (string.IsNullOrWhiteSpace(photo.ThumbKey))
-            //{
-            //    return Conflict(new { message = "Thumbnail is not ready yet", status = photo.Status });
-            //}
+            var photo = await LoadOwnedPhoto(userId, photoId, ct);            
 
             if (photo is null) return NotFound();
 
@@ -104,35 +99,7 @@ namespace PhotosStorageMap.Api.Controllers
                 return BadRequest("Photo cannot be deleted");
             }
 
-            photo.Status = PhotoStatus.PendingDelete;
-
-            //var keysToDelete = new List<string>();
-
-            //if (!string.IsNullOrWhiteSpace(photo.OriginalKey))
-            //{
-            //    keysToDelete.Add(photo.OriginalKey);
-            //}
-            //if (!string.IsNullOrWhiteSpace(photo.StandardKey))
-            //{
-            //    keysToDelete.Add(photo.StandardKey);
-            //}
-            //if (!string.IsNullOrWhiteSpace(photo.ThumbKey))
-            //{
-            //    keysToDelete.Add(photo.ThumbKey);
-            //}
-
-            //foreach (var key in keysToDelete)
-            //{
-            //    try
-            //    {
-            //        await _storage.DeleteAsync(key, ct);
-            //        _logger.LogInformation("DELETE PHOTO: Delete from S3 PhotoId={PhotoId}, StorageKey={StorageKey}", photoId, key);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        _logger.LogWarning(ex, "DELETE PHOTO: Failed to delete from S3 PhotoId={PhotoId}, Key={StorageKey}", photoId, key);                    
-            //    }
-            //}
+            photo.Status = PhotoStatus.PendingDelete;            
 
             if (photo.TotalSizeBytes.HasValue)
             {
