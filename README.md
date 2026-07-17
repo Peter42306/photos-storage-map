@@ -154,6 +154,21 @@ PhotoMap uses Hetzner Object Storage (Amazon S3 API).
 - Collection cleanup
 - Archive generation
 
+## Administration
+
+The application includes an administration panel for managing users and monitoring system usage. 
+
+Features:
+
+- User management
+- Enable or disable Pro Storage plans
+- Activate or deactivate user accounts
+- Collection, photo and archive statistics
+- Storage usage monitoring
+- Last login tracking
+- Registration date tracking
+- System-wide totals
+ 
 ## Status
 
 The application is deployed and fully operational. New features and improvements are planned for future releases.
