@@ -149,10 +149,13 @@ PhotoMap uses Hetzner Object Storage (S3 API).
 
 ## Background Workers
 
-- Photo processing
+- Asynchronous photo processing
+- Uploading processed images to S3 Object Storage
+- Thumbnail generation
+- Resized image generation
 - Original photo cleanup
+- Individual photo deletion
 - Collection cleanup
-- Archive generation
 
 ## Administration
 
