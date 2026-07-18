@@ -10,7 +10,7 @@ Designed to create collections, upload photos, add notes, view them on an intera
 - Notes
 - ZIP archives
 - Secure sharing
-- Object Storage (S3)
+- Object Storage (S3 API)
 - JWT Authentication
 - Google Sign-In
 - Collection statistics
@@ -95,7 +95,7 @@ photos-storage-map/
 - JWT Authentication
 - Google OAuth 2.0
 - PostgreSQL
-- Amazon S3 API (Hetzner Object Storage)
+- S3 API (Hetzner Object Storage)
 - ImageSharp
 - SendGrid
 - Background Services (`IHostedService`)
@@ -119,7 +119,7 @@ photos-storage-map/
 
 ## File storage
 
-PhotoMap uses Hetzner Object Storage (Amazon S3 API).
+PhotoMap uses Hetzner Object Storage (S3 API).
 
 - Original photos, thumbnails, resized images and ZIP archives are stored in Object Storage.
 - Presigned URLs are used for direct browser uploads.
