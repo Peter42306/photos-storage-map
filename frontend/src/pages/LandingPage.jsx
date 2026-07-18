@@ -638,7 +638,7 @@ export default function LandingPage(){
                         <i className="bi bi-github fs-5 text-black"></i>
                     </a>
                     <a 
-                        href="https://github.com/Peter42306" 
+                        href="https://www.youtube.com/playlist?list=PLO3w_Jmi7YCpGQnorvV_eJu1DU3V9xrja" 
                         target="_blank" 
                         rel="noreferrer noopener">
                         <i className="bi bi-youtube fs-5 text-danger"></i>
