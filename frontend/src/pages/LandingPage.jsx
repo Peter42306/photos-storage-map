@@ -25,35 +25,39 @@ export default function LandingPage(){
     const slides = [
         {
             title: "Memories",
-            image: "/images/landing/20250923_190110.jpg"
+            image: "/images/landing/Hero_Carousel_Sunset_20250923_190110_standard.jpg"
         },
         {
             title: "Travel",
-            image: "/images/landing/20250928_111140.jpg"
+            image: "/images/landing/Hero_Carousel_Travel_20250928_111140_standard.jpg"
         },
         {
             title: "Pet Memories",
-            image: "/images/landing/Here_Carousel_Pets_20260411_100038.jpg"
+            image: "/images/landing/Here_Carousel_Pets_20260411_100038_standard.jpg"
         },
         {
             title: "Family Memories",
-            image: "/images/landing/Hero_Carousel_Family_Screenshot_20260228_134943.jpg"
+            image: "/images/landing/Hero_Carousel_Family_Screenshot_20260228_134943_standard.jpg"
         },
         {
             title: "Vehicle History",
-            image: "/images/landing/Hero_Carousel_Car_20260519_085448.jpg"
-        },
+            image: "/images/landing/Hero_Carousel_Car_20260519_085448_standard.jpg"
+        },        
         {
-            title: "Construction Projects",
-            image: "/images/landing/Hero_Carousel_Flat_IMG_20220523_122940.jpg"
-        },
-        {
-            title: "Reporting",
-            image: "/images/landing/Hero_Carousel_Vessel_Rotterdam_20251021_074557.jpg"
+            title: "Reports",
+            image: "/images/landing/Hero_Carousel_Vessel_Rotterdam_20251021_074557_standard.jpg"
         },
         {
             title: "Inspections",
-            image: "/images/landing/Hero_Carousel_Vessel_Holds_DSCN3299.JPG"
+            image: "/images/landing/Hero_Carousel_Vessel_Holds_DSCN3299_standard.jpg"
+        },
+        {
+            title: "Construction Progress",
+            image: "/images/landing/Hero_Carousel_Construction_20260716_143159_standard.jpg"
+        },
+        {
+            title: "Meter & Gauge Readings",
+            image: "/images/landing/Hero_Carousel_Utilities_Gauges_20260716_165912_standard.jpg"
         },
         // Memories
         // Travel
@@ -363,7 +367,7 @@ export default function LandingPage(){
                         {/* <p>Watch YouTube demo</p>                   */}
                         <div className="ratio ratio-16x9 mb-2 w-100 h-100">                            
                             <iframe
-                                src="https://www.youtube-nocookie.com/embed/w-mKc8zRkAc?rel=0"
+                                src="https://www.youtube-nocookie.com/embed/eq03ucog7kM?rel=0"
                                 title="Brief Application Demo"
                                 loading="lazy"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

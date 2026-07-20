@@ -34,16 +34,16 @@
         public static class PhotoCleanupWorker
         {
             public const int BatchSize = 150; // 20 photos !!!
-            public const int LoopDelay = 1; // 5 minutes
-            public const int StatusUploadingOlderThan = 1; // 3 hours
+            public const int LoopDelay = 3; // 5 minutes
+            public const int StatusUploadingOlderThan = 3; // 3 hours
             public const int StatusProcessingOlderThan = 1; // 1 hours
-            public const int StatusFailedOlderThan = 1; // 24 hours
+            public const int StatusFailedOlderThan = 24; // 24 hours
         }
 
         public static class CollectionCleanupWorker
         {
-            public const int BatchSize = 20; // 20 photos !!!
-            public const int LoopDelay = 2; // 5 minutes
+            public const int BatchSize = 10; // 20 photos !!!
+            public const int LoopDelay = 5; // 5 minutes
         }
 
         public static class OriginalPhotosCleanupWorker
