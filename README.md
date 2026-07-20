@@ -98,7 +98,7 @@ photos-storage-map/
 - S3 API (Hetzner Object Storage)
 - ImageSharp
 - SendGrid
-- Background Services (`IHostedService`)
+- Background Services
 
 ### Frontend
 
@@ -129,8 +129,8 @@ PhotoMap uses Hetzner Object Storage (S3 API).
 ## Backups
 
 - Automated PostgreSQL backups using `pg_dump`
-- Backups are stored in Hetzner Storage Box
-- Database backups are isolated from application file storage
+- Daily database backups to Hetzner Storage Box
+- Automatic backup retention, 7 days
 
 ## API Features
 
