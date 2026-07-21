@@ -55,10 +55,10 @@ export default function LandingPage(){
             title: "Construction Progress",
             image: "/images/landing/Hero_Carousel_Construction_20260716_143159_standard.jpg"
         },
-        {
-            title: "Meter & Gauge Readings",
-            image: "/images/landing/Hero_Carousel_Utilities_Gauges_20260716_165912_standard.jpg"
-        },
+        // {
+        //     title: "Meter & Gauge Readings",
+        //     image: "/images/landing/Hero_Carousel_Utilities_Gauges_20260716_165912_standard.jpg"
+        // },
         // Memories
         // Travel
         // Pet Memories
