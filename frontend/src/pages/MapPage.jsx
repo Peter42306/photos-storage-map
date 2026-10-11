@@ -35,8 +35,7 @@ export default function MapPage() {
         async function loadMapPhotos() {
             try {
                 setError("");
-                const data = await getCollectionMap(id);
-                console.log("photos for map", data);
+                const data = await getCollectionMap(id);                
                 setPhotos(data.result ?? []);                
                 setTotalDistance(data?.totalDistance ?? 0);
 
@@ -106,25 +105,33 @@ export default function MapPage() {
             //     .setLngLat(lngLat)
             //     .addTo(map.current);
 
-            let marker = new maptilersdk.Marker().setLngLat(lngLat);
+            let marker = new maptilersdk.Marker().setLngLat(lngLat);            
 
-            if (photo.thumbUrl) {
-                const popupHtml = `
-                    <div style="text-align: center; min-width:340px;">
-                        <img
-                            src="${photo.thumbUrl}"
-                            alt="${photo.originalFileName ?? "photo"}"
-                            style="width:100%; max-height:240px; object-fit:contain; border-radius: 8px; margin-bottom:6px;"
-                        />
-                        <div style="font-size:13px; word-break:break-word;">
-                            ${photo.originalFileName ?? ""}
-                        </div>
-                    </div>
-                `;
+            if(photo.thumbUrl) {
+                const container = document.createElement("div");
+                container.style.textAlign = "center";
+                container.style.minWidth = "340px";
+
+                const img = document.createElement("img");
+                img.src = photo.thumbUrl;
+                img.alt = photo.originalFileName ?? "photo";
+                img.style.width = "100%";
+                img.style.maxHeight = "240px";
+                img.style.objectFit = "contain";
+                img.style.borderRadius = "8px";
+                img.style.marginBottom = "6px";
+
+                const fileName = document.createElement("div");
+                fileName.textContent = photo.originalFileName ?? "";
+                fileName.style.fontSize = "13px";
+                fileName.style.wordBreak = "break-word";
+
+                container.appendChild(img);
+                container.appendChild(fileName);
 
                 marker = marker.setPopup(
-                    new maptilersdk.Popup({ offset: 25, maxWidth: "360px" }).setHTML(popupHtml)
-                );                
+                    new maptilersdk.Popup({ offset: 25, maxWidth: "360px" }).setDOMContent(container)
+                );
             }
 
             marker.addTo(map.current);

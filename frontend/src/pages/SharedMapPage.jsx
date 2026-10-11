@@ -100,24 +100,32 @@ export default function SharedMapPage() {
             const lngLat = [longitude, latitude];
             bounds.extend(lngLat);
 
-            let marker = new maptilersdk.Marker().setLngLat(lngLat);
+            let marker = new maptilersdk.Marker().setLngLat(lngLat);            
 
             if (thumbUrl) {
-                const popupHtml = `
-                    <div style="text-align: center; min-width:340px;">
-                        <img
-                            src="${thumbUrl}"
-                            alt="${originalFileName ?? "photo"}"
-                            style="width:100%; max-height:240px; object-fit:contain; border-radius: 8px; margin-bottom:6px;"
-                        />
-                        <div style="font-size:13px; word-break:break-word;">
-                            ${originalFileName ?? ""}
-                        </div>
-                    </div>
-                `;
+                const container = document.createElement("div");
+                container.style.textAlign = "center";
+                container.style.minWidth = "340px";
 
+                const img = document.createElement("img");
+                img.src = thumbUrl;
+                img.alt = originalFileName ?? "photo";
+                img.style.width = "100%";
+                img.style.maxHeight = "240px";
+                img.style.objectFit = "contain";
+                img.style.borderRadius = "8px";
+                img.style.marginBottom = "6px";
+
+                const fileName = document.createElement("div");
+                fileName.textContent = originalFileName ?? "";
+                fileName.style.fontSize = "13px";
+                fileName.style.wordBreak = "break-word";
+
+                container.appendChild(img);
+                container.appendChild(fileName);
+                
                 marker = marker.setPopup(
-                    new maptilersdk.Popup({ offset: 25, maxWidth: "360px" }).setHTML(popupHtml)
+                    new maptilersdk.Popup({ offset: 25, maxWidth: "360px" }).setDOMContent(container)
                 );
             }
 

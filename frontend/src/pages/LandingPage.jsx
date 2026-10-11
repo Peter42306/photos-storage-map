@@ -164,7 +164,7 @@ export default function LandingPage(){
 
                             <Link 
                                 className="btn btn-outline-success"
-                                to="https://photo-map.zalizko.site/shared/0582117753c74bc2bc876198873dfd43"
+                                to="https://photo-map.zalizko.site/shared/d6863f9e75994b44bf16b4c186a07b83"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Open Demo link of Shared Link"
@@ -194,7 +194,7 @@ export default function LandingPage(){
                             </Link>
                             <Link 
                                 className="btn btn-outline-success"
-                                to="https://photo-map.zalizko.site/shared/0582117753c74bc2bc876198873dfd43"
+                                to="https://photo-map.zalizko.site/shared/d6863f9e75994b44bf16b4c186a07b83"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Open Demo link of Shared Link"
