@@ -75,6 +75,7 @@ export default function CollectionPage() {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [viewerMode, setViewerMode] = useState("standard");
+    const [slideshowAutoplay, setSlideshowAutoplay] = useState(true);
 
     const [shareLink, setShareLink] = useState(null);
     const [allowSlideshowOriginals, setAllowSlideshowOriginals] = useState(false);
@@ -1023,6 +1024,7 @@ export default function CollectionPage() {
                                 setViewerMode("standard");
                                 setLightboxIndex(0);
                                 setLightboxOpen(true);
+                                setSlideshowAutoplay(true);
                             }}
                         >
                             Slideshow
@@ -1042,6 +1044,7 @@ export default function CollectionPage() {
                                 setViewerMode("original");
                                 setLightboxIndex(0);
                                 setLightboxOpen(true);
+                                setSlideshowAutoplay(true);
                             }}>
                             Slideshow Originals
                         </button>                        
@@ -1252,6 +1255,7 @@ export default function CollectionPage() {
                                             setViewerMode("standard");
                                             setLightboxIndex(index);
                                             setLightboxOpen(true);
+                                            setSlideshowAutoplay(false);
                                         }}
                                     />
                                 </div>
@@ -1377,8 +1381,8 @@ export default function CollectionPage() {
                         slides={slides}
                         plugins={[Slideshow, Counter, Fullscreen, Zoom]}
                         slideshow={{
-                            delay: viewerMode === "standard" ? 2000 : 4000, 
-                            autoplay: true
+                            delay: viewerMode === "standard" ? 4000 : 5000, 
+                            autoplay: slideshowAutoplay
                         }}                        
                     />
 
