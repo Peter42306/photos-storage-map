@@ -19,15 +19,15 @@ export default function FaqAccordion() {
 const faqItems = [
     {
         question: "What is PhotoMap?",
-        answer: "PhotoMap is a cloud-based application for storing, organising, exploring and sharing photo collections with maps, notes and archives."
+        answer: "PhotoMap is a cloud-based application for storing, organising, exploring and sharing photo collections with interactive maps, notes, slideshows and ZIP downloads."
     },
     {
         question: "Is PhotoMap free?",
         answer: "Yes. A Free plan is available with up to 5 GB of storage and up to 500 photos per collection. A Pro plan provides 50 GB of storage space and up to 1500 photos per collection."
     },    
     {
-        question: "What photo and archive formats are supported?",
-        answer: "PhotoMap currently supports JPG/JPEG photos and ZIP archives. ZIP archives can be uploaded to keep related files together with a collection."
+        question: "What photo formats are supported?",
+        answer: "PhotoMap currently supports JPG/JPEG photos. Uploaded photos are automatically processed to create resized versions and thumbnails. You can also download all resized photos from a collection as a single ZIP archive."
     },
     {
         question: "Do my photos need GPS information?",
@@ -41,10 +41,10 @@ const faqItems = [
         question: "Can I share my collections?",
         answer: "Yes. Collections can be shared using secure read-only links. Shared collections always display the latest version of the collection. You can disable sharing at any time."
     },
-    // {
-    //     question: "Can I delete original photos?",
-    //     answer: "Yes. Original photos can be removed after processing to reduce storage usage while keeping resized photos, maps, notes and sharing available."
-    // },    
+    {
+        question: "Can I delete original photos?",
+        answer: "Yes. Original photos can be removed after processing to reduce storage usage while keeping resized photos, maps, notes and sharing available."
+    },    
     {
         question: "Are my photos private and stored securely?",
         answer: "Yes. Your photos are private by default. Only collections that you explicitly share using a public read-only link become accessible to others. All uploaded content is securely stored in S3-compatible object storage."
@@ -59,7 +59,7 @@ const faqItems = [
     // },
     {
         question: "What happens if I reach my storage limit?",
-        answer: "You can free up storage by using the Storage Optimisation feature to remove original photos, deleting unused collections or archives, or upgrading to the Pro plan for additional storage. Original photos usually occupy most of the storage space."
+        answer: "You can free up storage by using the Storage Optimisation feature to remove original photos, deleting unused collections, or upgrading to the Pro plan for additional storage. Original photos usually occupy most of the storage space."
     },
     {
         question: "What is included in the Pro plan?",

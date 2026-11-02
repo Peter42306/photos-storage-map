@@ -35,10 +35,10 @@ export default function LandingPage(){
             title: "Pet Memories",
             image: "/images/landing/Here_Carousel_Pets_20260411_100038_standard.jpg"
         },
-        {
-            title: "Family Memories",
-            image: "/images/landing/Hero_Carousel_Family_Screenshot_20260228_134943_standard.jpg"
-        },
+        // {
+        //     title: "Family Memories",
+        //     image: "/images/landing/Hero_Carousel_Family_Screenshot_20260228_134943_standard.jpg"
+        // },
         {
             title: "Vehicle History",
             image: "/images/landing/Hero_Carousel_Car_20260519_085448_standard.jpg"
@@ -68,7 +68,7 @@ export default function LandingPage(){
         // Home Renovation
         // Inspections
         // Project Reporting
-        // Construction Prohects
+        // Construction Projects
     ];
 
 
@@ -167,7 +167,7 @@ export default function LandingPage(){
                                 to="https://photo-map.zalizko.site/shared/d6863f9e75994b44bf16b4c186a07b83"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                title="Open Demo link of Shared Link"
+                                title="Open a demo shared collection"
                             >
                                 Demo
                             </Link>
@@ -188,7 +188,7 @@ export default function LandingPage(){
                             <Link 
                                 className="btn btn-outline-primary"
                                 to="/collections"
-                                title="Go to your activities page"
+                                title="Go to your collections"
                             >
                                 Open my collections
                             </Link>
@@ -228,16 +228,16 @@ export default function LandingPage(){
                                     // linkText="Open demo shared map"
                                 />
                                 <FeatureLine 
-                                    title="Archives" 
-                                    text="Store ZIP archives together with your photo collections."
+                                    title="ZIP Downloads" 
+                                    text="Download all resized photos from a collection as a single ZIP archive."
                                 />
                                 <FeatureLine 
                                     title="Notes" 
-                                    text="Add notes to photos, archives, and collections."
+                                    text="Add descriptions to collections and notes to individual photos."
                                 />                                
                                 <FeatureLine 
                                     title="Sharing" 
-                                    text="Share collections using secure read-only links. "
+                                    text="Share collections using secure read-only links."
                                     // link="http://192.168.1.108:5173/shared/547530dbfe594b038907d65be19fd7a5"
                                     // linkText="Open demo shared collection"
                                 />
@@ -254,7 +254,7 @@ export default function LandingPage(){
                     <h2 className="display-6 text-center mb-4">ABOUT</h2>                    
                     <div className="row justify-content-center">                        
                         <div className="col-12 col-lg-8">
-                            <p className="text-muted">Photos are organised into collections for trips, inspections, projects or any other activity. Notes can be added to individual photos and archives, making collections useful for both professional reporting and personal memories. Everything stays easy to browse, manage and securely share.</p>
+                            <p className="text-muted">Photos are organised into collections for trips, inspections, projects or any other activity. Descriptions can be added to collections and notes to individual photos, making collections useful for both professional reporting and personal memories. Everything stays easy to browse, manage and securely share.</p>
                         </div>                                                
                     </div>                    
                 </div>                
@@ -275,7 +275,7 @@ export default function LandingPage(){
                         <ImageCard
                             image="/images/landing/Screenshot-2026-06-29-150857-collection-page.jpg"                            
                             title="Collection Details"
-                            text="Manage photos and archives, add notes, see slideshow, and share collection."
+                            text="Manage photos, add notes, see slideshow, and share collection."
                             onClick={() =>{
                                 setSelectedImage("/images/landing/Screenshot-2026-06-29-150857-collection-page.jpg")
                                 setLightboxOpen(true);
@@ -318,12 +318,12 @@ export default function LandingPage(){
                 <FeatureCard
                     icon="bi-card-text"
                     title="Notes"
-                    text="Add notes to individual photos, archives, and collections. Perfect for travel, inspections, reporting and project documentation."
+                    text="Add descriptions to collections and notes to individual photos. Perfect for travel, inspections, reporting, and project documentation."
                 />
                 <FeatureCard
                     icon="bi-file-earmark-zip"
-                    title="ZIP Archives"
-                    text="Upload ZIP archives, download resized photo ZIP files, and keep related project files together with your collections."
+                    title="ZIP Downloads"
+                    text="Download all resized photos from a collection as a single ZIP archive. Save time by downloading multiple photos at once, making it easy to back up, share, or transfer entire photo collections."
                 />
                 <FeatureCard
                     icon="bi-share"
@@ -353,10 +353,10 @@ export default function LandingPage(){
                                     <li>Create an account</li>
                                     <li>Create your collections</li>
                                     <li>Upload JPG photos</li>
-                                    <li>Upload ZIP archives (optional)</li>
-                                    <li>Add notes to photos, archives, collections</li>
-                                    <li>Explore the gallery, map, slideshow and statistics</li>
-                                    <li>Share your collections</li>
+                                    <li>Download resized photos as ZIP archives</li>
+                                    <li>Add notes to photos and collections</li>
+                                    <li>Explore the galleries, maps, slideshows and statistics</li>
+                                    <li>Share your collections using secure links</li>
                                     <li>Disable sharing link at any time</li>
 
                                 </ol>
@@ -408,8 +408,8 @@ export default function LandingPage(){
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>500 photos per collection</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Interactive maps</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Slideshows</li>
-                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>ZIP archives</li>
-                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Photo & archive notes</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>ZIP downloads of resized photos</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Photo & collections notes</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Secure sharing</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Storage optimisation</li>
                             </ul>                            
@@ -449,8 +449,8 @@ export default function LandingPage(){
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>1500 photos per collection</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Interactive maps</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Slideshows</li>
-                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>ZIP archives</li>
-                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Photo & archive notes</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>ZIP downloads of resized photos</li>
+                                <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Photo & collections notes</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Secure sharing</li>
                                 <li className="list-group-item"><i className="bi bi-check-lg text-success me-2"></i>Storage optimisation</li>
                             </ul>                            
@@ -500,7 +500,14 @@ export default function LandingPage(){
                         <div className="card-body p-4">                    
                         <p className="text-muted">Have a question or need assistance? Send me a message by email or using contact form.</p>                    
                         <div className="d-flex align-items-center">
-                            <i className="bi bi-envelope fs-4 text-primary me-2"></i><span className="text-muted">Email: pzalizko@gmail.com</span>
+                            {/* <i className="bi bi-envelope fs-4 text-primary me-2"></i><span className="text-muted">Email: pzalizko@gmail.com</span> */}
+                            <i className="bi bi-envelope fs-4 text-primary me-2"></i>
+                            <a 
+                                href="mailto:pzalizko@gmail.com"
+                                className="text-muted text-decoration-none"
+                            >
+                                pzalizko@gmail.com
+                            </a>
                         </div>
                         {/* <div className="d-flex align-items-center mb-3">
                             <i className="bi bi-geo-alt fs-4 text-primary me-2"></i><span className="text-muted">Location: Constanta, Romania</span>
@@ -624,8 +631,6 @@ export default function LandingPage(){
                             Feedback
                         </Link>
                     </div>
-                    
-                    
                 </div>
 
                 <div className="d-flex gap-3">

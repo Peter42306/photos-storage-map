@@ -98,7 +98,7 @@ export default function SharedCollectionPage() {
 
     const hasGeoPhotos = photos.some(p => {
         const lat = p.latitude ?? p.Latitude;
-        const lon = p.longitude ?? p.longitude;
+        const lon = p.longitude ?? p.Longitude;
 
         return lat != null && lon != null;
     })
@@ -422,7 +422,7 @@ export default function SharedCollectionPage() {
                 close={() => setLightboxOpen(false)}
                 index={lightboxIndex}
                 slides={slides}
-                plugins={[Slideshow, Counter, Fullscreen, Zoom]}
+                plugins={[Slideshow, Counter, Fullscreen, Zoom]}                
                 slideshow={{
                     delay: viewerMode === "standard" ? 2000 : 4000,
                     autoplay: true
