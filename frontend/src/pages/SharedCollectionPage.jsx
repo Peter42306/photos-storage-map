@@ -367,6 +367,8 @@ export default function SharedCollectionPage() {
                 Distance by geo tags: {formatDistance(totalDistance)}<br/>
                 Total photos: {totalPhotos}
             </div>
+    </div>
+    <div className='container-fluid py-4 py-md-3 py-xl-4'>
 
             
             {photos.length === 0 ? (
@@ -374,7 +376,7 @@ export default function SharedCollectionPage() {
             ) : (
                 <div className="row">
                     {photos.map((p, index) => (
-                        <div key={p.id ?? p.Id} className='col-12 col-md-6 col-lg-3 mb-3'>
+                        <div key={p.id ?? p.Id} className='col-12 col-sm-6 col-lg-4 col-xl-3 col-xxl-2 photo-grid-item mb-3'>
                             <SharedPhotoCard
                                 photo={p}
                                 onViewOriginal={viewOriginalHandler}
@@ -392,7 +394,7 @@ export default function SharedCollectionPage() {
                 </div>
             )}            
 
-            <hr/>
+            {/* <hr/>
 
             <h5>Archives</h5>
 
@@ -413,7 +415,7 @@ export default function SharedCollectionPage() {
                         </div>
                     ))}
                 </div>
-            )}
+            )} */}
             
             <Lightbox
                 open={lightboxOpen}
@@ -466,7 +468,7 @@ function SharedPhotoCard({
                         src={thumbUrl}
                         alt={originalFileName || "photo"}
                         loading="lazy"
-                        style={{ width: "100%", height: 160, objectFit: "cover" }}
+                        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
                     />
                 </div>
             ) : (
@@ -475,13 +477,20 @@ function SharedPhotoCard({
                 </div>
             )}
 
-            {/* Photo original name */}
+            {/* Photo date & distance to previous */}
             <div className="card-body p-2 d-flex flex-column">
                 
                 <div className="d-flex align-items-start justify-content-between">
-                    <div className="small text-truncate">
+                    
+                    {/* Photo taken */}
+                    {takenAt && (
+                        <div className="small text-truncate">
+                            {formatTakenAt(takenAt)}
+                        </div>
+                    )}
+                    {/* <div className="small text-truncate">
                         {originalFileName || "(no name)"}
-                    </div>
+                    </div> */}
 
                     {(distanceFromPrevious !== null && distanceFromPrevious > 0) && (
                         <div className="small text-truncate">
@@ -491,11 +500,11 @@ function SharedPhotoCard({
                 </div>
 
                 {/* Photo taken */}
-                {takenAt && (
+                {/* {takenAt && (
                     <div className="small text-truncate">
                         {formatTakenAt(takenAt)}
                     </div>
-                )}
+                )} */}
 
                 {/* Description */}
                 {description && (

@@ -1505,7 +1505,7 @@ const PhotoCard = React.memo(function PhotoCard({
                     </div>
                 )}
 
-                {/* Photo original name */}
+                {/* Photo date & distance to previous */}
                 <div className="card-body p-2 d-flex flex-column">
 
                     <div className='d-flex align-items-start justify-content-between'>
