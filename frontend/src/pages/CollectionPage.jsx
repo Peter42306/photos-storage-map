@@ -1,7 +1,8 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
+// import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
+import { completeUpload, createOrUpdateSharedLink, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getToken, initUpload, putToPresignedUrl, revokeSharedLink, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
 import "yet-another-react-lightbox/styles.css";
 // import { Slideshow } from 'yet-another-react-lightbox/plugins';
@@ -66,10 +67,10 @@ export default function CollectionPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState("");    
 
-    const [archives, setArchives] = useState([]);
-    const [archiveUploading, setArchiveUploading] = useState(false);
-    const [archiveUploadProgress, setArchiveUploadProgress] = useState(0);
-    const [archiveUploadStatus, setArchiveUploadStatus] = useState("");
+    // const [archives, setArchives] = useState([]);
+    // const [archiveUploading, setArchiveUploading] = useState(false);
+    // const [archiveUploadProgress, setArchiveUploadProgress] = useState(0);
+    // const [archiveUploadStatus, setArchiveUploadStatus] = useState("");
 
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -96,7 +97,7 @@ export default function CollectionPage() {
             setCollection(data);
             setTitle(data?.title ?? "");
             setDescription(data?.description ?? "");
-            setArchives(data?.archives ?? data?.Archives ?? []);
+            // setArchives(data?.archives ?? data?.Archives ?? []);
 
             const currentSharedLink = await getSharedLinkByCollectionId(id);
             setShareLink(currentSharedLink);
@@ -233,7 +234,7 @@ export default function CollectionPage() {
             let done = 0;
 
             // 1) parallel threads to S3
-            const uploaded = await runWithConcurrency(files, UPLOAD_CONCURRENCY, async(file, i) => {
+            const uploaded = await runWithConcurrency(files, UPLOAD_CONCURRENCY, async(file) => {
 
                 // init
                 const { photoId, uploadUrl } = await initUpload(id, file.name, file.size);
@@ -554,87 +555,87 @@ export default function CollectionPage() {
         }
     }
 
-    async function onArchiveSelected(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    // async function onArchiveSelected(e) {
+    // const file = e.target.files?.[0];
+    // if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith(".zip")) {
-        setError("Only .zip archives are allowed.");
-        e.target.value = "";
-        return;
-    }
+    // if (!file.name.toLowerCase().endsWith(".zip")) {
+    //     setError("Only .zip archives are allowed.");
+    //     e.target.value = "";
+    //     return;
+    // }
 
-    try {
-        setError("");
-        setArchiveUploading(true);
-        setArchiveUploadProgress(0);
-        setArchiveUploadStatus("Initializing archive upload...");
+    // try {
+    //     setError("");
+    //     setArchiveUploading(true);
+    //     setArchiveUploadProgress(0);
+    //     setArchiveUploadStatus("Initializing archive upload...");
         
-        const { archiveId, uploadUrl } = await initArchiveUploads(id, file.name, file.size);
+    //     const { archiveId, uploadUrl } = await initArchiveUploads(id, file.name, file.size);
 
-        setArchiveUploadStatus("Uploading archive...");
+    //     setArchiveUploadStatus("Uploading archive...");
 
-        await putToPresignedUrlWithProgress(uploadUrl, file, (loaded, total) => {
-            const percent = Math.round((loaded / total) * 100);
-            setArchiveUploadProgress(percent);
-            setArchiveUploadStatus(`Uploading archive: ${percent}%`);
-        });
+    //     await putToPresignedUrlWithProgress(uploadUrl, file, (loaded, total) => {
+    //         const percent = Math.round((loaded / total) * 100);
+    //         setArchiveUploadProgress(percent);
+    //         setArchiveUploadStatus(`Uploading archive: ${percent}%`);
+    //     });
 
-        setArchiveUploadStatus("Saving archive metadata...");
+    //     setArchiveUploadStatus("Saving archive metadata...");
 
-        await completeArchiveUpload(archiveId, id, file.name, file.size);
+    //     await completeArchiveUpload(archiveId, id, file.name, file.size);
 
-        await refreshCollectionData();
+    //     await refreshCollectionData();
 
-        setArchiveUploadStatus("Archive uploaded successfully.");
-        setArchiveUploadProgress(100);
-        // const archivesData = await getCollectionArchives(id);        
-        // 
+    //     setArchiveUploadStatus("Archive uploaded successfully.");
+    //     setArchiveUploadProgress(100);
+    //     // const archivesData = await getCollectionArchives(id);        
+    //     // 
         
-        } catch (err) {
-            setError(err.message);
-            setArchiveUploadStatus("");
-            setArchiveUploadProgress(0);
-        } finally {
-            setArchiveUploading(false);
-            // setArchiveUploadProgress(0);
-            e.target.value = "";
-        }
-    }
+    //     } catch (err) {
+    //         setError(err.message);
+    //         setArchiveUploadStatus("");
+    //         setArchiveUploadProgress(0);
+    //     } finally {
+    //         setArchiveUploading(false);
+    //         // setArchiveUploadProgress(0);
+    //         e.target.value = "";
+    //     }
+    // }
 
-    async function deleteArchiveHandler(archiveId, fileName) {
-        const confirmed = confirm(`Delete this archive?\n${fileName ?? "archive"}`);
-        if (!confirmed) {
-            return;
-        }
+    // async function deleteArchiveHandler(archiveId, fileName) {
+    //     const confirmed = confirm(`Delete this archive?\n${fileName ?? "archive"}`);
+    //     if (!confirmed) {
+    //         return;
+    //     }
 
-        try {
-            setError("");
-            await deleteArchive(archiveId);
-            await refreshCollectionData();
+    //     try {
+    //         setError("");
+    //         await deleteArchive(archiveId);
+    //         await refreshCollectionData();
 
-            // setArchives(prev => 
-            //     prev.filter(a => (a.id ?? a.Id) !== archiveId)
-            // );
-        } catch (err) {
-            setError(err.message);
-        }
-    }
+    //         // setArchives(prev => 
+    //         //     prev.filter(a => (a.id ?? a.Id) !== archiveId)
+    //         // );
+    //     } catch (err) {
+    //         setError(err.message);
+    //     }
+    // }
 
-    async function downloadArchiveHandler(archiveId) {
-        try {
-            setError("");
+    // async function downloadArchiveHandler(archiveId) {
+    //     try {
+    //         setError("");
 
-            const res = await getArchiveDownloadUrl(archiveId);
-            const url = typeof res === "string" ? res : res?.url;
+    //         const res = await getArchiveDownloadUrl(archiveId);
+    //         const url = typeof res === "string" ? res : res?.url;
 
-            if (url) {
-                window.location.href = url;
-            }
-        } catch (err) {
-            setError(err.message);
-        }
-    }
+    //         if (url) {
+    //             window.location.href = url;
+    //         }
+    //     } catch (err) {
+    //         setError(err.message);
+    //     }
+    // }
 
     async function refreshCollectionData() {
         try {
@@ -647,67 +648,67 @@ export default function CollectionPage() {
             setTitle(data?.title ?? "");
             setDescription(data?.description ?? "");
 
-            const archivesData = data?.archives ?? data?.Archives ?? [];
-            setArchives(archivesData ?? []);
+            // const archivesData = data?.archives ?? data?.Archives ?? [];
+            // setArchives(archivesData ?? []);
         } catch (err) {
             setError(err.message);
         }
     }
 
-    async function saveArchiveDescriptionHandler(archiveId, descriptionValue) {
-        try {
-            setError("");
-            const trimmed = descriptionValue?.trim() ?? "";
+    // async function saveArchiveDescriptionHandler(archiveId, descriptionValue) {
+    //     try {
+    //         setError("");
+    //         const trimmed = descriptionValue?.trim() ?? "";
 
-            const res = await updateArchiveDescription(
-                archiveId,
-                trimmed === "" ? null : trimmed
-            );
+    //         const res = await updateArchiveDescription(
+    //             archiveId,
+    //             trimmed === "" ? null : trimmed
+    //         );
 
-            const newDescription = res?.description ?? (trimmed === "" ? null : trimmed);
+    //         const newDescription = res?.description ?? (trimmed === "" ? null : trimmed);
 
-            setCollection(prev => {
-                if (!prev) {
-                    return prev;
-                }
+    //         setCollection(prev => {
+    //             if (!prev) {
+    //                 return prev;
+    //             }
 
-                const archives = prev.archives ?? prev.Archives ?? [];
+    //             const archives = prev.archives ?? prev.Archives ?? [];
 
-                const updatedArchives = archives.map(a => {
-                    const currentId = a.id ?? a.Id;
-                    if (currentId !== archiveId) {
-                        return a;
-                    }
+    //             const updatedArchives = archives.map(a => {
+    //                 const currentId = a.id ?? a.Id;
+    //                 if (currentId !== archiveId) {
+    //                     return a;
+    //                 }
 
-                    if (prev.archives) {
-                        return { ...a, description: newDescription };
-                    }
+    //                 if (prev.archives) {
+    //                     return { ...a, description: newDescription };
+    //                 }
 
-                    return { ...a, Description: newDescription };
-                });
+    //                 return { ...a, Description: newDescription };
+    //             });
 
-                return prev.archives 
-                    ? { ...prev, archives: updatedArchives }
-                    : { ...prev, Archives: updatedArchives }
-            });
+    //             return prev.archives 
+    //                 ? { ...prev, archives: updatedArchives }
+    //                 : { ...prev, Archives: updatedArchives }
+    //         });
 
-            setArchives(prev => 
-                prev.map(a => {
-                    const currentId = a.id ?? a.Id;
-                    if (currentId !== archiveId) {
-                        return a;
-                    }
+    //         setArchives(prev => 
+    //             prev.map(a => {
+    //                 const currentId = a.id ?? a.Id;
+    //                 if (currentId !== archiveId) {
+    //                     return a;
+    //                 }
 
-                    return a.description !== undefined
-                        ? { ...a, description: newDescription }
-                        : { ...a, Description: newDescription }
-                })
-            );
+    //                 return a.description !== undefined
+    //                     ? { ...a, description: newDescription }
+    //                     : { ...a, Description: newDescription }
+    //             })
+    //         );
 
-        } catch (err) {
-            setError(err.message)
-        }
-    }
+    //     } catch (err) {
+    //         setError(err.message)
+    //     }
+    // }
 
     async function createNewShareLinkHandler() {
         try {
@@ -734,6 +735,7 @@ export default function CollectionPage() {
 
         try {
             await navigator.clipboard.writeText(url);
+            alert("Share link copied to clipboard.");
         } catch (err) {
             setError("Failed to copy share link.", err)
         }
@@ -768,7 +770,7 @@ export default function CollectionPage() {
     async function deleteOriginalPhotosFromCollectionHandler() {
         const confirmed = confirm(
             "Delete all original photos from this collection?\n\n" + 
-            "Resized photos, thumbnails, descriptions, map view, sharing and archives will remain available.\n\n" +
+            "Resized photos, thumbnails, descriptions, map view, shared links will remain available.\n\n" +
             "This action cannot be undone."
         );
 
@@ -778,7 +780,9 @@ export default function CollectionPage() {
 
         try {
             setError("")
-            const result = await deleteOriginalPhotosFromCollection(id);
+            // const result = await deleteOriginalPhotosFromCollection(id);
+
+            await deleteOriginalPhotosFromCollection(id);
 
             // alert(`${result.queued} original photos were queued for deletion.`);
 
@@ -810,7 +814,7 @@ export default function CollectionPage() {
         p.originalDeleteRequested ?? p.OriginalDeleteRequested
     );
 
-    const originalDeleted = !hasOriginalPhotos && !originalsQueuedToDelete
+    // const originalDeleted = !hasOriginalPhotos && !originalsQueuedToDelete
 
     // const totalArchives = archives.length;
     // const totalArchivesSize = archives.reduce(
@@ -825,8 +829,8 @@ export default function CollectionPage() {
     const totalStandard = collection?.totalStandardSizeBytes ?? collection?.TotalStandardSizeBytes ?? 0;
     const totalThumb = collection?.totalThumbSizeBytes ?? collection?.TotalThumbSizeBytes ?? 0;
 
-    const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
-    const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;        
+    // const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
+    // const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;        
 
     // const slides = photos
     //     .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
@@ -884,7 +888,7 @@ export default function CollectionPage() {
                     {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
                     {/* <h5>{collection?.title}</h5> */}
-                    <p >{collection?.description || "No description of collection yet."}</p>
+                    <p style={{ whiteSpace: "pre-wrap" }}>{collection?.description || "No description of collection yet."}</p>
                     {/* <p>Collection Id: {collection?.id}</p> */}
 
                     <div className='mb-2'>
@@ -1106,7 +1110,7 @@ export default function CollectionPage() {
                                     onClick={copySharedLinkHandler}
                                     disabled={!shareLink || (shareLink.isRevoked ?? shareLink.IsRevoked)}
                                 >
-                                    Copy Existing Link
+                                    Copy Link
                                 </button>
                                 <button 
                                     className='btn btn-primary' 
@@ -1114,7 +1118,7 @@ export default function CollectionPage() {
                                     onClick={disableShareLinkHandler}
                                     disabled={!shareLink || (shareLink.isRevoked ?? shareLink.IsRevoked)}
                                 >
-                                    Disable Existing Link
+                                    Disable Link
                                 </button>                                
                             </div>                 
 
@@ -1139,10 +1143,10 @@ export default function CollectionPage() {
                                 <input className='form-check-input' type='checkbox' role='switch' id='sharePhotoCard' checked disabled/>
                                 <label className='form-check-label small' htmlFor='sharePhotoCard'>Photo Card: View Original, Location, Coordinates, Description</label>                                
                             </div>                            
-                            <div className='form-check form-switch'>                                
+                            {/* <div className='form-check form-switch'>                                
                                 <input className='form-check-input' type='checkbox' role='switch' id='shareArchiveCard' checked disabled/>
                                 <label className='form-check-label small' htmlFor='shareArchiveCard'>Archive Card: Download, Description</label>                                
-                            </div>                            
+                            </div>                             */}
 
                             <div className='small mt-3 mb-2'>
                                 Additional options for this share link:
@@ -1264,7 +1268,7 @@ export default function CollectionPage() {
                         {totalPhotos === 0 ? (
                             <p className='small'>Upload photos to this collection before using storage optimisation.</p>
                         ) : hasOriginalPhotos ? (
-                            <p className='small'>Delete original photo files to reduce storage usage. Resized photos, thumbnails, notes, map view, sharing and archives will remain available. Original photo downloads and original slideshow will no longer be available.</p>                            
+                            <p className='small'>Delete original photo files to reduce storage usage. Resized photos, thumbnails, notes, map view and sharing will remain available. Original photo downloads and original slideshow will no longer be available.</p>                            
                         ) : originalsQueuedToDelete ? (
                             <p className='small'>Original photo files have been queued for background deletion. They are no longer available in this collection and will be physically removed from storage soon. The storage statistics above show the current actual stored size and may update after background cleanup is completed.</p>
                         ) : (
@@ -1640,118 +1644,118 @@ const PhotoCard = React.memo(function PhotoCard({
 
 
 // ArchiveCard Component
-const ArchiveCard = React.memo(function ArchiveCard({
-    archive,
-    onDownload,
-    onDelete,
-    onSaveDescription
-}) {
-    const archiveId = archive.id ?? archive.Id;
-    const originalFileName = archive.originalFileName ?? archive.OriginalFileName;
-    const sizeBytes = archive.sizeBytes ?? archive.SizeBytes;
-    const createdAt = archive.createdAtUtc ?? archive.CreatedAtUtc;
-    const initialDescription = archive.description ?? archive.Description ?? "";
+// const ArchiveCard = React.memo(function ArchiveCard({
+//     archive,
+//     onDownload,
+//     onDelete,
+//     onSaveDescription
+// }) {
+//     const archiveId = archive.id ?? archive.Id;
+//     const originalFileName = archive.originalFileName ?? archive.OriginalFileName;
+//     const sizeBytes = archive.sizeBytes ?? archive.SizeBytes;
+//     const createdAt = archive.createdAtUtc ?? archive.CreatedAtUtc;
+//     const initialDescription = archive.description ?? archive.Description ?? "";
 
-    const [isEditingDescriptionArchive, setIsEditingDescriptionArchive] = useState(false);
-    const [descriptionArchive, setDescriptionArchive] = useState(initialDescription);
+//     const [isEditingDescriptionArchive, setIsEditingDescriptionArchive] = useState(false);
+//     const [descriptionArchive, setDescriptionArchive] = useState(initialDescription);
 
-    async function handleSaveDescriptionArchive() {
-        await onSaveDescription?.(archiveId, descriptionArchive);
-        setIsEditingDescriptionArchive(false);
-    }
+//     async function handleSaveDescriptionArchive() {
+//         await onSaveDescription?.(archiveId, descriptionArchive);
+//         setIsEditingDescriptionArchive(false);
+//     }
 
-    return(
-        <div className='card shadow-sm h-100 position-relative'>
-            <div
-                className="d-flex flex-column align-items-center justify-content-center bg-light"
-                style={{ width: "100%", height: 80 }}
-            >
-                <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>                                            
-            </div>
-            <div className='card-body p-2 d-flex flex-column'>
-                <div className='small text-truncate'>
-                    {originalFileName || "(no name)"}
-                </div>
-                <div className='small text-truncate'>
-                    {formatBytes(sizeBytes)}
-                </div>
-                <div className='small text-truncate'>
-                    {formatTakenAt(createdAt)}
-                </div>
+//     return(
+//         <div className='card shadow-sm h-100 position-relative'>
+//             <div
+//                 className="d-flex flex-column align-items-center justify-content-center bg-light"
+//                 style={{ width: "100%", height: 80 }}
+//             >
+//                 <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>                                            
+//             </div>
+//             <div className='card-body p-2 d-flex flex-column'>
+//                 <div className='small text-truncate'>
+//                     {originalFileName || "(no name)"}
+//                 </div>
+//                 <div className='small text-truncate'>
+//                     {formatBytes(sizeBytes)}
+//                 </div>
+//                 <div className='small text-truncate'>
+//                     {formatTakenAt(createdAt)}
+//                 </div>
 
-                {!isEditingDescriptionArchive 
-                    ? descriptionArchive 
-                        ? (
-                            <div>
-                                <hr/>
-                                <div className='small text-truncate'>
-                                    {descriptionArchive}
-                                </div>
-                            </div>
-                        ) 
-                        : null 
-                    : (
-                        <div className='mt-2'>
-                            <hr/>
-                            <TextareaAutosize
-                                className='form-control form-control-sm'
-                                minRows={2}
-                                value={descriptionArchive}
-                                style={{overflow: "hidden"}}
-                                onChange={(e) => setDescriptionArchive(e.target.value)}
-                                placeholder='Add archive description'
-                            />
-                            <div className='d-flex gap-2 mt-2'>
-                                <button
-                                    className='btn btn-outline-secondary btn-sm'
-                                    onClick={handleSaveDescriptionArchive}
-                                    title='Save description'
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    className='btn btn-outline-secondary btn-sm'
-                                    onClick={() =>{
-                                        setDescriptionArchive(initialDescription);
-                                        setIsEditingDescriptionArchive(false);
-                                    }}
-                                    title='Cancel description'
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                )}
+//                 {!isEditingDescriptionArchive 
+//                     ? descriptionArchive 
+//                         ? (
+//                             <div>
+//                                 <hr/>
+//                                 <div className='small text-truncate'>
+//                                     {descriptionArchive}
+//                                 </div>
+//                             </div>
+//                         ) 
+//                         : null 
+//                     : (
+//                         <div className='mt-2'>
+//                             <hr/>
+//                             <TextareaAutosize
+//                                 className='form-control form-control-sm'
+//                                 minRows={2}
+//                                 value={descriptionArchive}
+//                                 style={{overflow: "hidden"}}
+//                                 onChange={(e) => setDescriptionArchive(e.target.value)}
+//                                 placeholder='Add archive description'
+//                             />
+//                             <div className='d-flex gap-2 mt-2'>
+//                                 <button
+//                                     className='btn btn-outline-secondary btn-sm'
+//                                     onClick={handleSaveDescriptionArchive}
+//                                     title='Save description'
+//                                 >
+//                                     Save
+//                                 </button>
+//                                 <button
+//                                     className='btn btn-outline-secondary btn-sm'
+//                                     onClick={() =>{
+//                                         setDescriptionArchive(initialDescription);
+//                                         setIsEditingDescriptionArchive(false);
+//                                     }}
+//                                     title='Cancel description'
+//                                 >
+//                                     Cancel
+//                                 </button>
+//                             </div>
+//                         </div>
+//                 )}
 
-                {/* Archive card small buttons block */}
-                <hr/>
-                <div className='d-flex flex-wrap gap-1 mt-auto'>
-                    <button
-                        className='btn btn-outline-secondary btn-sm'
-                        onClick={() => onDownload?.(archiveId)}
-                        title='Download archive'
-                    >
-                        <i className='bi bi-download'></i>
-                    </button>
+//                 {/* Archive card small buttons block */}
+//                 <hr/>
+//                 <div className='d-flex flex-wrap gap-1 mt-auto'>
+//                     <button
+//                         className='btn btn-outline-secondary btn-sm'
+//                         onClick={() => onDownload?.(archiveId)}
+//                         title='Download archive'
+//                     >
+//                         <i className='bi bi-download'></i>
+//                     </button>
 
-                    <button
-                        className='btn btn-outline-secondary btn-sm'
-                        onClick={() => onDelete?.(archiveId, originalFileName)}
-                        title='Delete archive'
-                    >
-                        <i className='bi bi-trash'></i>
-                    </button>
+//                     <button
+//                         className='btn btn-outline-secondary btn-sm'
+//                         onClick={() => onDelete?.(archiveId, originalFileName)}
+//                         title='Delete archive'
+//                     >
+//                         <i className='bi bi-trash'></i>
+//                     </button>
 
-                    <button
-                        className='btn btn-outline-secondary btn-sm'
-                        onClick={() => setIsEditingDescriptionArchive((v) => !v)}
-                        title='Edit description'
-                    >
-                        <i className='bi bi-pencil'></i>
-                    </button>                    
-                </div>
-            </div>
+//                     <button
+//                         className='btn btn-outline-secondary btn-sm'
+//                         onClick={() => setIsEditingDescriptionArchive((v) => !v)}
+//                         title='Edit description'
+//                     >
+//                         <i className='bi bi-pencil'></i>
+//                     </button>                    
+//                 </div>
+//             </div>
             
-        </div>
-    );
-});
+//         </div>
+//     );
+// });

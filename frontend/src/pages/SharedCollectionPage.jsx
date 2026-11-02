@@ -277,7 +277,7 @@ export default function SharedCollectionPage() {
             <h2>{collection?.title ?? collection?.Title ?? "-"}</h2>
             <hr/>
             {/* <p>{collection.description ?? collection.Description ?? "No description yet."}</p> */}
-            <p>{collection?.description ?? collection?.Description ?? "No description yet."}</p>
+            <p style={{ whiteSpace: "pre-wrap"}}>{collection?.description ?? collection?.Description ?? "No description yet."}</p>
             <hr/>
             <div className="d-flex gap-2 flex-wrap">
                 {hasGeoPhotos && (
@@ -499,7 +499,7 @@ function SharedPhotoCard({
 
                 {/* Description */}
                 {description && (
-                    <div className="small">
+                    <div className="small" style={{ whiteSpace: "pre-wrap" }}>
                         <hr/>
                         {description}
                     </div>
