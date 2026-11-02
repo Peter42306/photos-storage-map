@@ -867,23 +867,20 @@ export default function CollectionPage() {
 
     return(
         <>
-        <div className="container py-4">
-        {/* <div className="container py-4" style={{ maxWidth: 900 }}> */}
-            {/* <div className="card shadow-sm"> */}
-                {/* <div className="card-body"> */}
-                    <div className="d-flex align-items-center justify-content-between">
-                        <h2 className='mb-0'>{collection?.title || "-"}</h2>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => navigate("/collections")}
-                        >
-                            Back to My Collections
-                        </button>
-                    </div>
+        <div className="container py-4">    
+            <div className="d-flex align-items-center justify-content-between">
+                <h2 className='mb-0'>{collection?.title || "-"}</h2>
+                <button
+                    className="btn btn-primary"
+                    onClick={() => navigate("/collections")}
+                >
+                    Back to My Collections
+                    </button>
+                </div>
                     
-                    <hr/>
+                <hr/>
 
-                     {error ? <div className="alert alert-danger">{error}</div> : null}
+                {error ? <div className="alert alert-danger">{error}</div> : null}
                     {/* {status ? <div className="alert alert-info">{status}</div> : null} */}
 
                     {/* <h5>{collection?.title}</h5> */}
@@ -996,8 +993,8 @@ export default function CollectionPage() {
                             
                         )}
                     </div>  
-
-                    <hr/>
+                
+                <hr/>
                     <div className='d-flex gap-2 flex-wrap'>
                         <button
                             className='btn btn-primary'
@@ -1073,9 +1070,8 @@ export default function CollectionPage() {
                             </div>
                         )}
                     </div>
-
-                    
-                    <div className='collapse' id='collapseShareLink'>                            
+                
+                <div className='collapse' id='collapseShareLink'>                            
                         <div className='card card-body mt-3'>
                             
                             {/* <div className='small'>Active share link: No active link yet</div>                                 */}
@@ -1195,13 +1191,9 @@ export default function CollectionPage() {
                                     Create New Link
                                 </button>
                             </div>                 
-                            
-
-                        </div>
-                        
+                        </div>                        
                     </div>
-                    
-                    
+
                     <hr/>
 
                     {/* <hr/>                             */}
@@ -1232,6 +1224,10 @@ export default function CollectionPage() {
                             Thumbnails: {formatBytes(totalThumb)}<br/>
                         </div>
                     </div>                    
+        </div>
+
+        <div className='container-fluid py-4 py-md-3 py-xl-4'>
+                    
 
                     {uploading ? (
                         <div className='alert alert-info'>Uploading/Processing... please wait</div>
@@ -1240,7 +1236,7 @@ export default function CollectionPage() {
                     ) : (
                         <div className='row'>
                             {photos.map((p, index) => (
-                                <div key={p.id ?? p.Id} className='col-12 col-md-6 col-lg-3 mb-3'>
+                                <div key={p.id ?? p.Id} className='col-12 col-sm-6 col-lg-4 col-xl-3 col-xxl-2 photo-grid-item mb-3'>
                                     <PhotoCard 
                                         photo={p} 
                                         onDeleted={deletePhotoHandler} 
@@ -1538,7 +1534,7 @@ const PhotoCard = React.memo(function PhotoCard({
                             src={thumbUrl}
                             alt={originalFileName || "photo"}
                             loading='lazy'
-                            style={{ width: "100%", height: 160, objectFit: "cover" }}
+                            style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
                         />
                     </div>
                     
@@ -1553,25 +1549,25 @@ const PhotoCard = React.memo(function PhotoCard({
 
                 {/* Photo original name */}
                 <div className="card-body p-2 d-flex flex-column">
-                    <div className='d-flex align-items-start justify-content-between'>
-                        <div className="small text-truncate">
-                            {originalFileName || "(no name)"}                        
-                        </div>                
-                        {(distanceFromPrevious !== null && distanceFromPrevious > 0) && (
-                        <div className="small text-truncate">
-                            + {formatDistance(distanceFromPrevious)}    
-                        </div>                        
-                    )}                   
-                    </div>
-                    
 
-                    {/* Photo taken */}
-                    {takenAt && (
-                        <div className="small text-truncate">
-                            {formatTakenAt(takenAt)}
-                        </div>
-                    )}
-                    
+                    <div className='d-flex align-items-start justify-content-between'>
+
+                        {/* Photo taken */}
+                        {takenAt && (
+                            <div className="small text-truncate">
+                                {formatTakenAt(takenAt)}
+                            </div>
+                        )}
+
+                        {/* Distance from previous */}
+                        {distanceFromPrevious !== null && distanceFromPrevious > 0 && (
+                            <div className="small text-truncate">
+                                + {formatDistance(distanceFromPrevious)}
+                            </div>
+                        )}                  
+
+
+                    </div>
                     
 
                     {/* Photo description */}
