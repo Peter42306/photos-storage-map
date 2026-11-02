@@ -1254,6 +1254,9 @@ export default function CollectionPage() {
                             ))}
                         </div>
                     )}
+        </div>
+
+        <div className="container py-4">
 
                     <section className='mt-2'>
                         <h6>Storage optimisation</h6>
@@ -1278,11 +1281,11 @@ export default function CollectionPage() {
                     </section>
 
                     
-                    <hr/>
-                    <h5>Archives</h5>
+                    {/* <hr/>
+                    <h5>Archives</h5> */}
                     
                     {/* Archives */}
-                    <label className='form-label'>Upload archive (.zip)</label>
+                    {/* <label className='form-label'>Upload archive (.zip)</label>
                     <input
                         type='file'
                         className='form-control mb-3'                        
@@ -1299,10 +1302,10 @@ export default function CollectionPage() {
                         <div className='text-end'>                        
                             Total archives size: {formatBytes(totalArchivesSize)}<br/>                            
                         </div>
-                    </div>
+                    </div> */}
                     
 
-                    {archiveUploadStatus ? (
+                    {/* {archiveUploadStatus ? (
                         <div className='alert alert-info mt-2'>
                             {archiveUploadStatus}
                             {archiveUploading &&(
@@ -1317,11 +1320,11 @@ export default function CollectionPage() {
                                 </div>
                             )}
                         </div>
-                    ) : null}
+                    ) : null} */}
 
                     {/* <hr/> */}
                     {/* Archive Cards */}
-                    {archives.length === 0 ? (
+                    {/* {archives.length === 0 ? (
                         <div className='alert alert-info'>No archives uploaded yet</div>
                     ) : (
                         <div className='row'>
@@ -1333,60 +1336,11 @@ export default function CollectionPage() {
                                         onDelete={deleteArchiveHandler}
                                         onSaveDescription={saveArchiveDescriptionHandler}
                                     />
-
-
-                                    {/* <div className='card shadow-sm h-100 position-relative'>
-                                        <div
-                                            className="d-flex flex-column align-items-center justify-content-center bg-light"
-                                            style={{ width: "100%", height: 80 }}
-                                        >
-                                            <i className="bi bi-file-earmark-zip" style={{ fontSize: 40 }}></i>                                            
-                                        </div>                                            
-
-                                        <div className='card-body p-2'>
-
-                                            
-                                            <div className='small text-truncate'>
-                                                {a.originalFileName ?? a.OriginalFileName}
-                                            </div>
-                                            <div className='small text-truncate'>
-                                                {formatBytes(a.sizeBytes ?? a.SizeBytes)}
-                                            </div>
-                                            <div className='small text-truncate'>
-                                                {formatTakenAt(a.createdAtUtc ?? a.CreatedAtUtc)}
-                                            </div>
-                                            
-                                            <hr/>
-                                            <div className='d-flex flex-wrap gap-1 mt-2'>
-                                                <button
-                                                    className='btn btn-outline-secondary btn-sm'
-                                                    onClick={() => downloadArchiveHandler(a.id ?? a.Id)}
-                                                    title='Download archive'
-                                                >
-                                                    <i className='bi bi-download'></i>
-                                                </button>
-                                                <button
-                                                    className='btn btn-outline-secondary btn-sm'
-                                                    onClick={() => deleteArchiveHandler(a.id ?? a.Id, a.originalFileName ?? a.OriginalFileName)}
-                                                    title='Delete archive'
-                                                >
-                                                    <i className='bi bi-trash'></i>
-                                                </button>
-                                                <button
-                                                    className='btn btn-outline-secondary btn-sm'
-                                                    title='Edit description'
-                                                >
-                                                    <i className='bi bi-pencil'></i>
-                                                </button>
-                                            </div>
-
-
-                                        </div>
-                                    </div> */}
+                                    
                                 </div>
                             ))}                            
                         </div>
-                    )}
+                    )} */}
 
                     
 
