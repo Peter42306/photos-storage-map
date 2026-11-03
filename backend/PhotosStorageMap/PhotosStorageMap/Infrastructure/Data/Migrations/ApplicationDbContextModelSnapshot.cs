@@ -205,6 +205,9 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ClientUploadId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -283,6 +286,9 @@ namespace PhotosStorageMap.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClientUploadId")
+                        .IsUnique();
 
                     b.HasIndex("Status");
 

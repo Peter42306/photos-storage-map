@@ -5,6 +5,7 @@ namespace PhotosStorageMap.Domain.Entities
     public class PhotoItem
     {
         public Guid Id { get; set; }
+        public Guid? ClientUploadId { get; set; } // Client-generated ID used to prevent duplicate photo records on upload retries
 
         public Guid UploadCollectionId { get; set; }
         public UploadCollection UploadCollection { get; set; } = null!;        

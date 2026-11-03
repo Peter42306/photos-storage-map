@@ -67,6 +67,7 @@ namespace PhotosStorageMap.Infrastructure.Data
             builder.Entity<PhotoItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ClientUploadId).IsUnique();
 
                 entity.Property(e => e.OriginalFileName)
                     .IsRequired()
@@ -94,7 +95,7 @@ namespace PhotosStorageMap.Infrastructure.Data
                 entity.HasIndex(e => new { e.UploadCollectionId, e.Status });
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.TakenAt);
-                entity.HasIndex(e => new { e.OriginalDeleteRequested, e.OriginalDeleteRequestedAtUtc});
+                entity.HasIndex(e => new { e.OriginalDeleteRequested, e.OriginalDeleteRequestedAtUtc});                
             });
 
             builder.Entity<ShareLink>(entity =>
