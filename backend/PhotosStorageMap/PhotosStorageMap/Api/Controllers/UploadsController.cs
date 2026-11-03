@@ -8,6 +8,7 @@ using System.Security.Claims;
 using PhotosStorageMap.Domain.Enums;
 using PhotosStorageMap.Application.Common;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace PhotosStorageMap.Api.Controllers
 {
@@ -62,6 +63,7 @@ namespace PhotosStorageMap.Api.Controllers
             [FromQuery] Guid collectionId, 
             [FromQuery] string? fileName,
             [FromQuery] long? fileSize,
+            [FromQuery] Guid? clientUploadId,
             CancellationToken ct)
         {
             var userId = GetUserId();
@@ -69,7 +71,57 @@ namespace PhotosStorageMap.Api.Controllers
 
             var collection = await _db.UploadCollections.FindAsync(new object[] { collectionId }, ct);
             if (collection is null) return NotFound();
-            if (collection.OwnerUserId != userId) return Forbid();            
+            if (collection.OwnerUserId != userId) return Forbid();
+
+            if (clientUploadId.HasValue)
+            {
+                if (clientUploadId.Value == Guid.Empty)
+                {
+                    return BadRequest("Invalid client upload ID.");
+                }
+
+                var existingPhoto = await _db.PhotoItems
+                    .FirstOrDefaultAsync(p => p.ClientUploadId == clientUploadId.Value,
+                    ct);
+
+                if (existingPhoto is not null)
+                {
+                    if (existingPhoto.UploadCollectionId != collectionId)
+                    {
+                        return Conflict("Client upload ID belongs to another collection.");
+                    }
+
+                    if (existingPhoto.OriginalFileName != fileName?.Trim() || existingPhoto.OriginalSizeBytes != fileSize)
+                    {
+                        return Conflict("Client upload ID belongs to another file.");
+                    }
+
+                    if (existingPhoto.Status != PhotoStatus.Uploading)
+                    {
+                        return Conflict($"Upload is already in status '{existingPhoto.Status}'.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(existingPhoto.OriginalKey))
+                    {
+                        return Conflict("Existing storage key is missing.");
+                    }
+
+                    var existingUploadUrl = await _fileStorage.GeneratePresignedUploadUrlAsync(
+                        existingPhoto.OriginalKey!, 
+                        TimeSpan.FromMinutes(50));
+
+                    _logger.LogInformation(
+                        "UPLOAD: InitUpload reused existing photoId={PhotoId}, clientUploadId={ClientUploadId}",
+                        existingPhoto.Id,
+                        clientUploadId);
+
+                    return Ok(new
+                    {
+                        photoId = existingPhoto.Id,
+                        uploadUrl = existingUploadUrl
+                    });
+                }
+            }
 
 
             // 1) actual totals from DB
@@ -110,6 +162,7 @@ namespace PhotosStorageMap.Api.Controllers
             var photo = new PhotoItem
             {
                 Id = photoId,
+                ClientUploadId = clientUploadId,
                 UploadCollectionId = collectionId,
                 OriginalFileName = safeName,
                 OriginalKey = storageKey,
@@ -119,7 +172,63 @@ namespace PhotosStorageMap.Api.Controllers
             };
 
             _db.PhotoItems.Add(photo);
-            await _db.SaveChangesAsync(ct);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (
+                clientUploadId.HasValue &&
+                ex.InnerException is PostgresException pgEx &&
+                pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
+                pgEx.ConstraintName == "IX_PhotoItems_ClientUploadId")
+            {
+                _db.Entry(photo).State = EntityState.Detached;
+
+                var existingPhoto = await _db.PhotoItems
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.ClientUploadId == clientUploadId.Value, ct);
+
+                if (existingPhoto is null)
+                {
+                    throw; // This should not happen, but just in case
+                }
+
+                if (existingPhoto.UploadCollectionId != collectionId)
+                {
+                    return Conflict("Client upload ID belongs to another collection.");
+                }
+
+                if (existingPhoto.OriginalFileName != fileName?.Trim() || existingPhoto.OriginalSizeBytes != fileSize)
+                {
+                    return Conflict("Client upload ID belongs to another file.");
+                }
+
+                if (existingPhoto.Status != PhotoStatus.Uploading)
+                {
+                    return Conflict($"Upload is already in status '{existingPhoto.Status}'.");
+                }
+
+                if (string.IsNullOrWhiteSpace(existingPhoto.OriginalKey))
+                {
+                    return Conflict("Existing storage key is missing.");
+                }
+
+                var existingUploadUrl = await _fileStorage.GeneratePresignedUploadUrlAsync(
+                    existingPhoto.OriginalKey!,
+                    TimeSpan.FromMinutes(50));
+
+                _logger.LogWarning(
+                    "UPLOAD: Concurrent InitUpload detected. Reusing photoId={PhotoId}, clientUploadId={ClientUploadId}",
+                    existingPhoto.Id,
+                    clientUploadId);
+
+                return Ok(new
+                {
+                    photoId = existingPhoto.Id,
+                    uploadUrl = existingUploadUrl
+                });
+            }
+            
 
             _logger.LogInformation("UPLOAD: InitUpload photoId={PhotoId}", photoId);
 
