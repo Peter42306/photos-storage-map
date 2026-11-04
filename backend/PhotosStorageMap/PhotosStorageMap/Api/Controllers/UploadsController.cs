@@ -260,14 +260,38 @@ namespace PhotosStorageMap.Api.Controllers
             {
                 await using var stream = await _fileStorage.OpenReadAsync(photo.OriginalKey, ct);
             }
+            catch(OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "UPLOADS : COMPLETE UPLOAD - original file in not available in storage.");
-                return BadRequest("Original file in not available in storage.");
-            }
+                _logger.LogWarning(ex, 
+                    "UPLOADS : Failed to varify original file in storage. PhotoId={PhotoId}.", 
+                    photoId);
 
-            photo.Status = PhotoStatus.Processing;
-            await _db.SaveChangesAsync(ct);
+                return StatusCode(503, "Failed to verify original file in storage.");
+            }            
+
+            var updated = await _db.PhotoItems
+                .Where(p => p.Id == photoId && p.Status == PhotoStatus.Uploading)
+                .ExecuteUpdateAsync(p => p.SetProperty(x => x.Status, PhotoStatus.Processing), ct);
+
+            if (updated == 0)
+            {
+                var currentStatus = await _db.PhotoItems
+                    .AsNoTracking()
+                    .Where(p => p.Id == photoId)
+                    .Select(p => p.Status)
+                    .FirstOrDefaultAsync(ct);
+
+                if (currentStatus == PhotoStatus.Processing || currentStatus == PhotoStatus.Ready)
+                {
+                    return Ok(); // already processing or ready, no need to enqueue again
+                }
+
+                return Conflict($"Cannot complete upload for photo with status {currentStatus}");
+            }
 
             await _queue.EnqueueAsync(photoId, ct);
 

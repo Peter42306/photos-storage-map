@@ -1,6 +1,6 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { data, useNavigate, useParams } from "react-router-dom";
 // import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
 import { completeUpload, createOrUpdateSharedLink, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getToken, initUpload, putToPresignedUrl, revokeSharedLink, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
@@ -156,11 +156,26 @@ export default function CollectionPage() {
         async function worker() {
             while(true){
                 const i = index++;
+                
                 if (i >= items.length) {
                     return;
                 }
+                
+                try {
+                    const result = await handler(items[i], i);
 
-                results[i] = await handler(items[i], i);
+                    results[i] = {
+                        success: true,
+                        data: result
+                    };                    
+                    
+                } catch (err) {
+                    results[i] = {
+                        success: false,
+                        error: err.message,
+                        fileName: items[i]?.name ?? items[i]?.fileName ?? "unknown"
+                    };                    
+                }                
             }
         }
 
@@ -250,21 +265,41 @@ export default function CollectionPage() {
                 return { photoId, fileName: file.name };
             });
 
-            // 2) processing files one by one
-            setUploadStatus(`Starting processing: 0 of ${uploaded.length} photos`);
+            const successfulUploads = uploaded.filter(x => x.success).map(x => x.data);
+            const failedUploads = uploaded.filter(x => !x.success);
 
-            for (let i = 0; i < uploaded.length; i++) {
-                await completeUpload(uploaded[i].photoId);
-                setUploadStatus(`Starting processing: ${i + 1} / ${uploaded.length} photos`);                
+            // 2) confirm uploads and start processing files
+            const completedUploads = [];
+            const failedCompletions = [];
+
+            setUploadStatus(`Starting processing: 0 of ${successfulUploads.length} photos`);
+            
+
+            for (let i = 0; i < successfulUploads.length; i++) {
+                const photo = successfulUploads[i];
+
+                try {
+                    await completeUpload(photo.photoId);
+                    completedUploads.push(photo);
+                } catch (err) {
+                    failedCompletions.push({
+                        ...photo,
+                        error: err.message
+                    });
+
+                    console.error(`Failed to complete upload for photoId ${photo.fileName}:`, err)
+                }                
+
+                setUploadStatus(`Starting processing: ${i + 1} / ${successfulUploads.length} photos`);                
             }
 
             // 3) Poll statuses until all done
             const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-            const total2 = uploaded.length;            
+            const total2 = completedUploads.length;            
 
             while (true) {
                 const statuses = await Promise.all(
-                    uploaded.map(async (x) => {
+                    completedUploads.map(async (x) => {
                         try {
                             return await getPhotoStatus(x.photoId);
 
