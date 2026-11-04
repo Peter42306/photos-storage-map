@@ -251,7 +251,9 @@ namespace PhotosStorageMap.Api.Controllers
                 .FirstOrDefaultAsync(p => p.Id == photoId && p.UploadCollection.OwnerUserId == userId, ct);
 
             if (photo is null) return NotFound($"Photo {photoId} not found");
-
+            if (photo.Status == PhotoStatus.Ready) return Ok(); 
+            if (photo.Status == PhotoStatus.Processing) return Ok();
+            if (photo.Status != PhotoStatus.Uploading) return Conflict($"Cannot complete upload for photo with status {photo.Status}");
             if (string.IsNullOrWhiteSpace(photo.OriginalKey)) return BadRequest("OriginalKey in missing");
 
             try
