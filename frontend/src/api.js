@@ -32,20 +32,19 @@ async function request(path, {method = "GET", body, auth = true} = {}) {
     const data = text ? tryJson(text) : null;
 
     if(!res.ok){       
-
-
-        if (res.status === 401) {
-            clearToken();
-            window.location.href = "/login";
-            return;
-        }
-
         const msg = 
             (data && (data.message || data.error || data.title)) || 
             (typeof data === "string" ? data : "") || 
             `HTTP ${res.status}`;
 
-        throw new Error(msg);
+        if (res.status === 401) {
+            clearToken();
+            window.location.href = "/login";            
+        }        
+        
+        const error = new Error(msg);
+        error.status = res.status;
+        throw error;
     }
 
     return data;
@@ -128,9 +127,9 @@ export function me() {
 
 // UploadsController (presigned flow)
 
-export function initUpload(collectionId, fileName, fileSize) {
-    const qs = new URLSearchParams({ collectionId, fileName, fileSize }).toString();
-    return request(`/api/uploads/init?${qs}`,{
+export function initUpload(collectionId, fileName, fileSize, clientUploadId) {
+    const queryString = new URLSearchParams({ collectionId, fileName, fileSize, clientUploadId }).toString();
+    return request(`/api/uploads/init?${queryString}`,{
         method: "POST",
         auth: true,
     });
@@ -155,7 +154,10 @@ export async function putToPresignedUrl(uploadUrl, file) {
 
     if (!res.ok) {
         const text = await res.text().catch(() => "");
-        throw new Error(`S3 PUT faied: ${res.status} ${text}`);
+                
+        const error = new Error(`S3 PUT failed: ${res.status} ${text}`);
+        error.status = res.status;
+        throw error;
         
     }
 

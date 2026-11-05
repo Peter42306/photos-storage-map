@@ -195,7 +195,29 @@ export default function CollectionPage() {
         await Promise.all(workers)
 
         return results;
-    }    
+    }
+
+    async function retryAsync(operation, maxAttempts = 5) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return await operation();
+            } catch (err) {
+                const isRetryable = 
+                    err.status == null || // network error, no status code
+                    err.status === 408 || // Request Timeout
+                    err.status === 429 || // Too Many Requests
+                    err.status >= 500 && err.status < 600; // Server errors (5xx)
+                    
+
+                if (!isRetryable || attempt === maxAttempts) throw err;
+
+                //const delay = 1000 * attempt; // exponential backoff: 1s, 2s, 3s, ...
+                const delay = 1000 * Math.pow(2, attempt); // exponential backoff: 2s, 4s, 8s, 16s
+
+                await new Promise(resolve => setTimeout(resolve, delay)); // try again after delay
+            }
+        }
+    }
 
     async function onFilesSelected(e) {
         const UPLOAD_CONCURRENCY = 4;
@@ -234,7 +256,7 @@ export default function CollectionPage() {
         }
 
         if (files.length > possibleToLoadToCollection) {
-            setError(`You selected ${files.length} photos, but only ${possibleToLoadToCollection} photos more can be added to this collecftion.`)
+            setError(`You selected ${files.length} photos, but only ${possibleToLoadToCollection} photos more can be added to this collection.`)
             e.target.value = "";
             return;
         }
@@ -252,14 +274,22 @@ export default function CollectionPage() {
             // 1) parallel threads to S3
             const uploaded = await runWithConcurrency(files, UPLOAD_CONCURRENCY, async(file) => {
 
+                const clientUploadId = crypto.randomUUID();
+
                 // init
-                const { photoId, uploadUrl } = await initUpload(id, file.name, file.size);
+                //const { photoId, uploadUrl } = await initUpload(id, file.name, file.size, clientUploadId, clientUploadId);
+                const { photoId, uploadUrl } = await retryAsync(async () => {
+                    return await initUpload(id, file.name, file.size, clientUploadId);
+                });
+                
 
                 // put to S3
-                await putToPresignedUrl(uploadUrl, file);
+                //await putToPresignedUrl(uploadUrl, file);                
+                await retryAsync(async () =>{
+                    return await putToPresignedUrl(uploadUrl, file);
+                });
 
-                done++;
-                // setUploadStatus(`Uploading original: ${done}/${total1} (last: ${file.name}/${file.size} MB)`);
+                done++;                
                 setUploadStatus(`Uploading originals: ${done} of ${total1} photos`);
 
                 return { photoId, fileName: file.name };
@@ -279,7 +309,7 @@ export default function CollectionPage() {
                 const photo = successfulUploads[i];
 
                 try {
-                    await completeUpload(photo.photoId);
+                    await retryAsync(async () => completeUpload(photo.photoId));
                     completedUploads.push(photo);
                 } catch (err) {
                     failedCompletions.push({
@@ -324,8 +354,21 @@ export default function CollectionPage() {
                 await sleep(1500);
             }
 
-            setUploadStatus("All done. Loading gallery...");           
+            setUploadStatus("Loading gallery...");           
             await load();
+
+            const failedUploadsCount = failedUploads.length + failedCompletions.length;
+
+            if (failedUploadsCount > 0) {
+                setError(
+                    `Upload completed with ${failedUploadsCount} failed photos. ` +
+                    `S3 upload failures: ${failedUploads.length}. ` +
+                    `Processing failures: ${failedCompletions.length}.`
+                );
+            } else{
+                setError("");
+            }
+
             setUploadStatus("");
 
         } catch (err) {
@@ -336,90 +379,8 @@ export default function CollectionPage() {
             setUploading(false);
             e.target.value = "";
         }
-    }    
-
-    // async function onFilesSelected(e) {
-    //     const files = Array.from(e.target.files || []);
-    //     if (files.length === 0) return;
-
-    //     setError("");
-    //     setUploading(true);
-
-    //     const uploaded = [];
-
-    //     try {
-    //         // 1) Upload ALL originals S3
-
-    //         for (let i = 0; i < files.length; i++) {
-    //             const file = files[i];
-    //             setUploadStatus(`Uploading ${i + 1}/${files.length}: ${file.name}`);
-
-    //             // 1) init
-    //             const { photoId, uploadUrl } = await initUpload(id, file.name);
-
-    //             // 2) PUT to S3
-    //             await putToPresignedUrl(uploadUrl, file);
-
-    //             uploaded.push({ photoId, fileName: file.name });
-
-    //             // // 3) complete (processing + queue)
-    //             // await completeUpload(photoId);                
-    //         }
-
-    //         // 2) Starting processing for ALL          
-
-    //         setUploadStatus(`Starting processing 0/${uploaded.length}`);
-
-    //         for (let i = 0; i < uploaded.length; i++) {
-    //             await completeUpload(uploaded[i].photoId);
-    //             setUploadStatus(`Starting processing: ${i + 1}/${uploaded.length}`);
-    //             // const element = uploaded[i];
-                
-    //         }
-
-    //         // 3) Poll statuses until all done
-    //         const total = uploaded.length;
-
-    //         const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-    //         while (true) {
-    //             const statuses = await Promise.all(
-    //                 uploaded.map(async (x) => {
-    //                     try {
-    //                         return await getPhotoStatus(x.photoId);
-    //                     } catch (err) {
-    //                         return{
-    //                             status: "Processing",
-    //                             error: String(err?.message || err)
-    //                         };
-    //                     }
-    //                 })
-    //             );
-
-    //             const ready = statuses.filter((s) => (s?.status || "").toLowerCase() === "ready").length;
-    //             const failed = statuses.filter((s) => (s?.status || "").toLowerCase() === "failed").length;
-
-    //             setUploadStatus(`Processing photos: Ready ${ready}/${total}, Failed ${failed}/${total}`);
-
-    //             if (ready + failed >= total) {
-    //                 break;
-    //             }
-
-    //             await sleep(1500);
-    //         }
-
-    //         setUploadStatus("All done. Loading gallery...");           
-    //         await load();
-    //         setUploadStatus("");
-
-    //     } catch (err) {
-    //         setError(err.message);
-    //         setUploadStatus("");
-    //     } finally {
-    //         setUploading(false);
-    //         e.target.value = "";
-    //     }
-    // }    
+    }
+    
 
     async function deletePhotoHandler(photoId, fileName) {
         const confirmed = confirm(`Delete this photo?\n${fileName ?? "photo"}`);
@@ -431,47 +392,14 @@ export default function CollectionPage() {
             setError("");
             await deletePhoto(photoId);
             await refreshCollectionData();
-
-            // setCollection(prev => {
-            //     if (!prev) {
-            //         return prev;
-            //     }
-
-            //     const photos = prev.photos ?? prev.Photos ?? [];
-            //     const newPhotos = photos.filter(p => (p.id ?? p.Id) !== photoId);                
-
-            //     return prev.photos ? { ...prev, photos: newPhotos } : { ...prev, Photos: newPhotos }
-                
-            // })
+            
         } catch (err) {
             setError(err.message)
         }
     }    
+    
 
-    // async function viewOriginalHandler(photoId, fileName) {
-    //     const confirmed = confirm(`View original in browser?\n${fileName ?? "photo"}`);
-    //     if (!confirmed) {
-    //         return;
-    //     }
-
-    //     try {
-    //         const res = await getOriginalUrl(photoId);
-    //         const url = typeof res === "string" ? res : res?.url;
-
-    //         if (url) {
-    //             window.open(url, "_blank");
-    //         }
-
-    //     } catch (err) {
-    //         alert(err.message);
-    //     }
-    // }
-
-    async function viewOriginalHandler(photoId) {
-        // const confirmed = confirm(`View original in browser?\n${fileName ?? "photo"}`);
-        // if (!confirmed) {
-        //     return;
-        // }
+    async function viewOriginalHandler(photoId) {        
 
         try {
             const res = await getOriginalUrl(photoId);
@@ -485,30 +413,9 @@ export default function CollectionPage() {
             alert(err.message);
         }
     }
+    
 
-    // async function downloadOriginalHandler(photoId, fileName) {
-    //     const confirmed = confirm(`Download original file?\n${fileName ?? "photo"}`);
-    //     if (!confirmed) {
-    //         return;
-    //     }
-
-    //     try {
-    //         const res = await getOriginalDownloadUrl(photoId);
-    //         const url = typeof res === "string" ? res : res?.url;
-
-    //         if (url) {
-    //             window.location.href = url;
-    //         }
-    //     } catch (err) {
-    //         alert(err.message);
-    //     }
-    // }
-
-    async function downloadOriginalHandler(photoId) {
-        // const confirmed = confirm(`Download original file?\n${fileName ?? "photo"}`);
-        // if (!confirmed) {
-        //     return;
-        // }
+    async function downloadOriginalHandler(photoId) {       
 
         try {
             const res = await getOriginalDownloadUrl(photoId);
@@ -590,161 +497,23 @@ export default function CollectionPage() {
             setError(err.message);
         }
     }
-
-    // async function onArchiveSelected(e) {
-    // const file = e.target.files?.[0];
-    // if (!file) return;
-
-    // if (!file.name.toLowerCase().endsWith(".zip")) {
-    //     setError("Only .zip archives are allowed.");
-    //     e.target.value = "";
-    //     return;
-    // }
-
-    // try {
-    //     setError("");
-    //     setArchiveUploading(true);
-    //     setArchiveUploadProgress(0);
-    //     setArchiveUploadStatus("Initializing archive upload...");
-        
-    //     const { archiveId, uploadUrl } = await initArchiveUploads(id, file.name, file.size);
-
-    //     setArchiveUploadStatus("Uploading archive...");
-
-    //     await putToPresignedUrlWithProgress(uploadUrl, file, (loaded, total) => {
-    //         const percent = Math.round((loaded / total) * 100);
-    //         setArchiveUploadProgress(percent);
-    //         setArchiveUploadStatus(`Uploading archive: ${percent}%`);
-    //     });
-
-    //     setArchiveUploadStatus("Saving archive metadata...");
-
-    //     await completeArchiveUpload(archiveId, id, file.name, file.size);
-
-    //     await refreshCollectionData();
-
-    //     setArchiveUploadStatus("Archive uploaded successfully.");
-    //     setArchiveUploadProgress(100);
-    //     // const archivesData = await getCollectionArchives(id);        
-    //     // 
-        
-    //     } catch (err) {
-    //         setError(err.message);
-    //         setArchiveUploadStatus("");
-    //         setArchiveUploadProgress(0);
-    //     } finally {
-    //         setArchiveUploading(false);
-    //         // setArchiveUploadProgress(0);
-    //         e.target.value = "";
-    //     }
-    // }
-
-    // async function deleteArchiveHandler(archiveId, fileName) {
-    //     const confirmed = confirm(`Delete this archive?\n${fileName ?? "archive"}`);
-    //     if (!confirmed) {
-    //         return;
-    //     }
-
-    //     try {
-    //         setError("");
-    //         await deleteArchive(archiveId);
-    //         await refreshCollectionData();
-
-    //         // setArchives(prev => 
-    //         //     prev.filter(a => (a.id ?? a.Id) !== archiveId)
-    //         // );
-    //     } catch (err) {
-    //         setError(err.message);
-    //     }
-    // }
-
-    // async function downloadArchiveHandler(archiveId) {
-    //     try {
-    //         setError("");
-
-    //         const res = await getArchiveDownloadUrl(archiveId);
-    //         const url = typeof res === "string" ? res : res?.url;
-
-    //         if (url) {
-    //             window.location.href = url;
-    //         }
-    //     } catch (err) {
-    //         setError(err.message);
-    //     }
-    // }
+    
 
     async function refreshCollectionData() {
         try {
             setError("");
 
-            const data = await getCollection(id);
-            // const archivesData = await getCollectionArchives(id);
+            const data = await getCollection(id);            
 
             setCollection(data);
             setTitle(data?.title ?? "");
             setDescription(data?.description ?? "");
-
-            // const archivesData = data?.archives ?? data?.Archives ?? [];
-            // setArchives(archivesData ?? []);
+            
         } catch (err) {
             setError(err.message);
         }
     }
-
-    // async function saveArchiveDescriptionHandler(archiveId, descriptionValue) {
-    //     try {
-    //         setError("");
-    //         const trimmed = descriptionValue?.trim() ?? "";
-
-    //         const res = await updateArchiveDescription(
-    //             archiveId,
-    //             trimmed === "" ? null : trimmed
-    //         );
-
-    //         const newDescription = res?.description ?? (trimmed === "" ? null : trimmed);
-
-    //         setCollection(prev => {
-    //             if (!prev) {
-    //                 return prev;
-    //             }
-
-    //             const archives = prev.archives ?? prev.Archives ?? [];
-
-    //             const updatedArchives = archives.map(a => {
-    //                 const currentId = a.id ?? a.Id;
-    //                 if (currentId !== archiveId) {
-    //                     return a;
-    //                 }
-
-    //                 if (prev.archives) {
-    //                     return { ...a, description: newDescription };
-    //                 }
-
-    //                 return { ...a, Description: newDescription };
-    //             });
-
-    //             return prev.archives 
-    //                 ? { ...prev, archives: updatedArchives }
-    //                 : { ...prev, Archives: updatedArchives }
-    //         });
-
-    //         setArchives(prev => 
-    //             prev.map(a => {
-    //                 const currentId = a.id ?? a.Id;
-    //                 if (currentId !== archiveId) {
-    //                     return a;
-    //                 }
-
-    //                 return a.description !== undefined
-    //                     ? { ...a, description: newDescription }
-    //                     : { ...a, Description: newDescription }
-    //             })
-    //         );
-
-    //     } catch (err) {
-    //         setError(err.message)
-    //     }
-    // }
+    
 
     async function createNewShareLinkHandler() {
         try {
@@ -815,13 +584,10 @@ export default function CollectionPage() {
         }
 
         try {
-            setError("")
-            // const result = await deleteOriginalPhotosFromCollection(id);
+            setError("")            
 
             await deleteOriginalPhotosFromCollection(id);
-
-            // alert(`${result.queued} original photos were queued for deletion.`);
-
+            
             await refreshCollectionData();
             
         } catch (err) {
@@ -850,30 +616,12 @@ export default function CollectionPage() {
         p.originalDeleteRequested ?? p.OriginalDeleteRequested
     );
 
-    // const originalDeleted = !hasOriginalPhotos && !originalsQueuedToDelete
-
-    // const totalArchives = archives.length;
-    // const totalArchivesSize = archives.reduce(
-    //     (sum, archive) => sum + (archive.sizeBytes ?? archive.SizeBytes ?? 0),
-    //     0
-    // );    
-
     const totalPhotos = collection?.totalPhotos ?? collection?.TotalPhotos ?? 0;
     const totalPhotosSize = collection?.totalBytes ?? collection?.TotalBytes ?? 0;
     const totalDistance = collection?.totalDistance ?? collection?.TotalDistance ?? 0;
     const totalOriginal = collection?.totalOriginalSizeBytes ?? collection?.TotalOriginalSizeBytes ?? 0;
     const totalStandard = collection?.totalStandardSizeBytes ?? collection?.TotalStandardSizeBytes ?? 0;
-    const totalThumb = collection?.totalThumbSizeBytes ?? collection?.TotalThumbSizeBytes ?? 0;
-
-    // const totalArchives = collection?.totalArchives ?? collection?.TotalArchives ?? 0;
-    // const totalArchivesSize = collection?.totalArchivesBytes ?? collection?.TotalArchivesBytes ?? 0;        
-
-    // const slides = photos
-    //     .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
-    //     .map(p => ({
-    //         src: p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl,
-    //         alt: p.originalFileName ?? p.OriginalFileName ?? "photo",
-    //     }));
+    const totalThumb = collection?.totalThumbSizeBytes ?? collection?.TotalThumbSizeBytes ?? 0;    
 
     const standardSlides = photos
         .filter(p => (p.standardUrl ?? p.StandardUrl ?? p.thumbUrl ?? p.ThumbUrl))
