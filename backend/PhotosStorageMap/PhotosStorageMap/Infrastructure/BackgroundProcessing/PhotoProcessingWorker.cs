@@ -27,6 +27,19 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
         {
             _logger.LogInformation("PhotoProcessingWorker started");
 
+            try
+            {
+                await RecoverProcessingPhotosAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to recover photos after restart.");
+            }
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 Guid photoId;
@@ -61,6 +74,28 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
             }
 
             _logger.LogInformation("PhotoProcessingWorker stopped.");
+        }
+
+        private async Task RecoverProcessingPhotosAsync(CancellationToken ct)
+        {
+            using var scope = _scopeFactory.CreateScope();
+
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var processingPhotoIds = await db.PhotoItems
+                .AsNoTracking()
+                .Where(p => p.Status == PhotoStatus.Processing)
+                .OrderBy(p => p.CreatedAtUtc)
+                .Select(p => p.Id)
+                .ToListAsync(ct);
+
+            _logger.LogInformation("Found {Count} photos to recover after restart", processingPhotoIds.Count);
+
+            foreach (var photoId in processingPhotoIds)
+            {
+                ct.ThrowIfCancellationRequested();
+                await ProcessPhotoItemAsync(photoId, ct);
+            }            
         }
 
 
@@ -197,6 +232,12 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                 _logger.LogInformation("Processed photoId={Photoid}", photoId);
                 _logger.LogInformation("Original size: {OriginalBytes}, standard size: {StandardBytes}, thumbnail size: {ThumbnailBytes}", originalBytes, standardBytes, thumbnailBytes);
                 _logger.LogInformation("Total photos {TotalPhotos}, total bytes {TotalBytes}", photo.UploadCollection.TotalPhotos, photo.UploadCollection.TotalBytes);
+            }
+            catch(OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                _logger.LogInformation("Photo processing interrupted by application shutdown. PhotoId={PhotoId}", photoId);
+
+                throw;
             }
             catch (Exception ex)
             {
