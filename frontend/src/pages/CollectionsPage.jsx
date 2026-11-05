@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCollection, deleteCollection, getCollection, getCollections, getStorageSummary, getThumbUrl, getToken, me } from "../api";
 
@@ -50,7 +50,7 @@ export default function CollectionsPage() {
     const storagePlanLimitBytes = summary?.storagePlanLimitBytes ?? summary?.StoragePlanLimitBytes ?? 0;
     const storageFreeBytes = summary?.storageFreeBytes ?? summary?.StorageFreeBytes ?? 0;
     const storageUsedPercent = summary?.storageUsedPercent ?? summary?.StorageUsedPercent ?? 0;
-    const storageFreePercent = ((storageFreeBytes / storagePlanLimitBytes) * 100).toFixed(1);
+    const storageFreePercent = ((storageFreeBytes / storagePlanLimitBytes) * 100).toFixed(1);    
 
     async function loadMe() {
             setError("");

@@ -1,5 +1,5 @@
 import TextareaAutosize from 'react-textarea-autosize';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { data, useNavigate, useParams } from "react-router-dom";
 // import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
 import { completeUpload, createOrUpdateSharedLink, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getToken, initUpload, putToPresignedUrl, revokeSharedLink, updateCollection, updatePhotoDescription } from "../api";
@@ -66,6 +66,8 @@ export default function CollectionPage() {
 
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState("");    
+    const [uploadingOriginals, setUploadingOriginals] = useState(false);
+    const cancelUploadRef = useRef(false);
 
     // const [archives, setArchives] = useState([]);
     // const [archiveUploading, setArchiveUploading] = useState(false);
@@ -80,7 +82,7 @@ export default function CollectionPage() {
     const [shareLink, setShareLink] = useState(null);
     const [allowSlideshowOriginals, setAllowSlideshowOriginals] = useState(false);
     const [allowDownloadResizedZip, setAllowDownloadResizedZip] = useState(false);
-    const [allowDownloadOriginalFromCard, setAllowDownloadOriginalFromCard] = useState(false);
+    const [allowDownloadOriginalFromCard, setAllowDownloadOriginalFromCard] = useState(false);   
     
 
     async function load() {
@@ -149,12 +151,17 @@ export default function CollectionPage() {
         setDescription(collection?.description ?? "");
     }
 
-    async function runWithConcurrency(items, concurrency, handler) {
+    async function runWithConcurrency(items, concurrency, handler, onProgress, shouldCancel) {
         const results = new Array(items.length);
         let index = 0;
+        let completed = 0;
 
         async function worker() {
             while(true){
+                if(shouldCancel?.()){
+                    return;
+                }
+
                 const i = index++;
                 
                 if (i >= items.length) {
@@ -175,7 +182,13 @@ export default function CollectionPage() {
                         error: err.message,
                         fileName: items[i]?.name ?? items[i]?.fileName ?? "unknown"
                     };                    
-                }                
+                }
+
+                completed++;
+
+                if (onProgress) {
+                    onProgress(completed, items.length);
+                }
             }
         }
 
@@ -217,6 +230,15 @@ export default function CollectionPage() {
                 await new Promise(resolve => setTimeout(resolve, delay)); // try again after delay
             }
         }
+    }
+
+    function cancelUpload() { 
+        if(!uploadingOriginals || cancelUploadRef.current) {
+            return;
+        }
+        
+        cancelUploadRef.current = true;
+        setUploadStatus("Cancelling upload...");
     }
 
     async function onFilesSelected(e) {
@@ -263,40 +285,60 @@ export default function CollectionPage() {
 
 
 
+        cancelUploadRef.current = false;
         setError("");
         setUploading(true);        
+        setUploadingOriginals(true);
 
         try {
 
-            const total1 = files.length;
-            let done = 0;
+            // const total1 = files.length;
+            // let done = 0;
 
             // 1) parallel threads to S3
-            const uploaded = await runWithConcurrency(files, UPLOAD_CONCURRENCY, async(file) => {
-
-                const clientUploadId = crypto.randomUUID();
-
-                // init
-                //const { photoId, uploadUrl } = await initUpload(id, file.name, file.size, clientUploadId, clientUploadId);
-                const { photoId, uploadUrl } = await retryAsync(async () => {
-                    return await initUpload(id, file.name, file.size, clientUploadId);
-                });
+            const uploaded = await runWithConcurrency(
+                files, 
                 
+                UPLOAD_CONCURRENCY, 
+                
+                async(file) => {
 
-                // put to S3
-                //await putToPresignedUrl(uploadUrl, file);                
-                await retryAsync(async () =>{
-                    return await putToPresignedUrl(uploadUrl, file);
-                });
+                    const clientUploadId = crypto.randomUUID();
 
-                done++;                
-                setUploadStatus(`Uploading originals: ${done} of ${total1} photos`);
+                    // init
+                    //const { photoId, uploadUrl } = await initUpload(id, file.name, file.size, clientUploadId, clientUploadId);
+                    const { photoId, uploadUrl } = await retryAsync(async () => {
+                        return await initUpload(id, file.name, file.size, clientUploadId);
+                    });
+                    
 
-                return { photoId, fileName: file.name };
-            });
+                    // put to S3
+                    //await putToPresignedUrl(uploadUrl, file);                
+                    await retryAsync(async () =>{
+                        return await putToPresignedUrl(uploadUrl, file);
+                    });
 
-            const successfulUploads = uploaded.filter(x => x.success).map(x => x.data);
-            const failedUploads = uploaded.filter(x => !x.success);
+                    // done++;                
+                    // setUploadStatus(`Uploading originals: ${done} of ${total1} photos`);
+
+                    return { photoId, fileName: file.name };
+                },
+
+                (completed, total) => {
+                    if (cancelUploadRef.current) {
+                        setUploadStatus("Cancelling upload...");
+                    } else {
+                        setUploadStatus(`Uploading originals: ${completed} of ${total} photos`);
+                    }                    
+                },
+
+                () => cancelUploadRef.current
+            );
+
+            setUploadingOriginals(false);
+
+            const successfulUploads = uploaded.filter(x => x?.success).map(x => x.data);
+            const failedUploads = uploaded.filter(x => x?.success === false);
 
             // 2) confirm uploads and start processing files
             const completedUploads = [];
@@ -359,13 +401,20 @@ export default function CollectionPage() {
 
             const failedUploadsCount = failedUploads.length + failedCompletions.length;
 
-            if (failedUploadsCount > 0) {
+            if(cancelUploadRef.current){
+                setError(
+                    `Upload cancelled. ` + 
+                    `${successfulUploads.length} photos uploaded to S3. ` + 
+                    `${failedUploadsCount} failures.`
+                );
+            }
+            else if (failedUploadsCount > 0) {
                 setError(
                     `Upload completed with ${failedUploadsCount} failed photos. ` +
                     `S3 upload failures: ${failedUploads.length}. ` +
-                    `Processing failures: ${failedCompletions.length}.`
+                    `Confirmation failures: ${failedCompletions.length}.`
                 );
-            } else{
+            } else {
                 setError("");
             }
 
@@ -377,6 +426,7 @@ export default function CollectionPage() {
 
         } finally {
             setUploading(false);
+            setUploadingOriginals(false);
             e.target.value = "";
         }
     }
@@ -987,7 +1037,25 @@ export default function CollectionPage() {
                     <hr/>
 
                     {/* <hr/>                             */}
-                    {uploadStatus ? <div className='alert alert-info'>{uploadStatus}</div> : null}
+                    {/* {uploadStatus ? <div className='alert alert-info'>{uploadStatus || "Preparing upload..."}</div> : null} */}
+                    
+                    {uploading && (
+                        <div className='alert alert-info'>
+                            <div className='mb-2'>
+                                {uploadStatus || "Preparing upload..."}                                
+                            </div>
+
+                            <button
+                                className='btn btn-danger'
+                                type='button'
+                                onClick={cancelUpload}
+                                disabled={cancelUploadRef.current || !uploadingOriginals}
+                            >
+                                {cancelUploadRef.current ? "Cancelling..." : "Cancel Upload"}
+                            </button>
+                        </div>                        
+                    )}
+                    
 
                     <h5>Photos</h5>
 
@@ -1001,7 +1069,7 @@ export default function CollectionPage() {
                             onChange={onFilesSelected}
                         />
                     {/* <hr/>                   */}
-                    
+                                        
                     <div className="d-flex align-items-start justify-content-between small mb-3">
                         <div>
                             Distance: {formatDistance(totalDistance)}<br/>

@@ -36,7 +36,7 @@
             public const int BatchSize = 150; // 20 photos !!!
             public const int LoopDelay = 3; // 5 minutes
             public const int StatusUploadingOlderThan = 3; // 3 hours
-            public const int StatusProcessingOlderThan = 1; // 1 hours
+            public const int StatusProcessingOlderThan = 4; // 4 hours
             public const int StatusFailedOlderThan = 24; // 24 hours
         }
 
