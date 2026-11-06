@@ -423,7 +423,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (totalFiles == 0) return BadRequest("No resized photos available for ZIP archive.");
 
-            var jobId = _zipJobStore.Create(totalFiles);
+            var jobId = _zipJobStore.CreateForSharedLink(totalFiles, shareLink.Id);
 
             _ = Task.Run(async () =>
             {

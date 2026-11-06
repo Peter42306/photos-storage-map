@@ -5,6 +5,8 @@ namespace PhotosStorageMap.Application.DTOs
     public sealed class ZipJobProgressDto
     {
         public Guid JobId { get; set; }
+        public string? OwnerUserId { get; set; }
+        public Guid? SharedLinkId { get; set; }
 
         public ZipJobStatus Status { get; set; } = ZipJobStatus.Running;
 

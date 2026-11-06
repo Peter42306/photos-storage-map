@@ -526,7 +526,7 @@ namespace PhotosStorageMap.Api.Controllers
             CancellationToken ct)
         {
             var userId = GetUserId();
-            if (!string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             var collectionExists = await _db.UploadCollections
                 .AnyAsync(c =>
@@ -546,7 +546,7 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (totalFiles == 0) return BadRequest("No resized photos available for ZIP archive.");
 
-            var jobId = _zipJobStore.Create(totalFiles);
+            var jobId = _zipJobStore.Create(totalFiles, userId);
 
             _ = Task.Run(async () =>
             {
@@ -584,17 +584,21 @@ namespace PhotosStorageMap.Api.Controllers
         [HttpGet("standard-zip-jobs/{jobId:guid}/status")]
         public IActionResult GetStandardZipJobStatus(Guid jobId)
         {
-            var job = _zipJobStore.Get(jobId);
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            if (job is null) return NotFound();
+            var job = _zipJobStore.Get(jobId);
+            if (job is null || job.OwnerUserId != userId) return NotFound();
 
             return Ok(new
             {
                 job.JobId,
                 Status = job.Status.ToString(),
                 job.ProcessedFiles,
+                job.ArchivedFiles,
                 job.TotalFiles,
                 job.Percent,
+                job.FailedFileNames,
                 job.Error
             });
         }
@@ -602,9 +606,12 @@ namespace PhotosStorageMap.Api.Controllers
         [HttpGet("standard-zip-jobs/{jobId:guid}/download")]
         public IActionResult DownloadStandardZipJob(Guid jobId)
         {
-            var job = _zipJobStore.Get(jobId);
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            if (job is null) return NotFound();
+            var job = _zipJobStore.Get(jobId);
+            if (job is null || job.OwnerUserId != userId) return NotFound();
+
             if (job.Status != ZipJobStatus.Ready) return BadRequest("ZIP archive is not ready yet.");
             if (string.IsNullOrWhiteSpace(job.FilePath) || !System.IO.File.Exists(job.FilePath)) return NotFound("ZIP file not found.");
 

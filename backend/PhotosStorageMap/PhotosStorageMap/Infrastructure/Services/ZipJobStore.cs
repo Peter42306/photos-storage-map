@@ -9,15 +9,34 @@ namespace PhotosStorageMap.Infrastructure.Services
     {
         private readonly ConcurrentDictionary<Guid, ZipJobProgressDto> _jobs = new();
 
-        public Guid Create(int totalFiles)
+        public Guid Create(int totalFiles, string ownerUserId)
+        {
+            var jobId = Guid.NewGuid();
+
+            _jobs[jobId] = new ZipJobProgressDto
+            {
+                JobId = jobId,                
+                OwnerUserId = ownerUserId,
+                TotalFiles = totalFiles,
+                ProcessedFiles = 0,
+                ArchivedFiles = 0,
+                Status = ZipJobStatus.Running
+            };
+
+            return jobId;
+        }
+
+        public Guid CreateForSharedLink(int totalFiles, Guid sharedLinkId)
         {
             var jobId = Guid.NewGuid();
 
             _jobs[jobId] = new ZipJobProgressDto
             {
                 JobId = jobId,
+                SharedLinkId = sharedLinkId,
                 TotalFiles = totalFiles,
                 ProcessedFiles = 0,
+                ArchivedFiles = 0,
                 Status = ZipJobStatus.Running
             };
 
@@ -36,6 +55,8 @@ namespace PhotosStorageMap.Infrastructure.Services
                 return new ZipJobProgressDto
                 {
                     JobId = job.JobId,
+                    OwnerUserId = job.OwnerUserId,
+                    SharedLinkId = job.SharedLinkId,
                     Status = job.Status,
                     ProcessedFiles = job.ProcessedFiles,
                     ArchivedFiles = job.ArchivedFiles,

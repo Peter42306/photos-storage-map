@@ -4,7 +4,13 @@ namespace PhotosStorageMap.Application.Interfaces
 {
     public interface IZipJobStore
     {
-        Guid Create(int totalFiles);
+        Guid Create(
+            int totalFiles, 
+            string ownerUserId);
+
+        Guid CreateForSharedLink(
+            int totalFiles,
+            Guid sharedLinkId);
 
         ZipJobProgressDto? Get(Guid jobId);
 
