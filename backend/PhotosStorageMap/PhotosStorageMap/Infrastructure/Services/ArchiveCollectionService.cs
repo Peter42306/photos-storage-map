@@ -72,7 +72,7 @@ namespace PhotosStorageMap.Infrastructure.Services
             var sw = Stopwatch.StartNew();
 
             var collection = await _db.UploadCollections
-                .FirstOrDefaultAsync(c => c.Id == collectionId);
+                .FirstOrDefaultAsync(c => c.Id == collectionId, ct);
 
             if (collection is null)
             {
@@ -80,7 +80,11 @@ namespace PhotosStorageMap.Infrastructure.Services
             }
 
             var photos = await _db.PhotoItems
-                .Where(p => p.UploadCollectionId == collectionId && p.Status == PhotoStatus.Ready)
+                .Where(p => 
+                    p.UploadCollectionId == collectionId && 
+                    p.Status == PhotoStatus.Ready &&
+                    p.StandardKey != null &&
+                    p.StandardKey != "")
                 .OrderBy(p => p.CreatedAtUtc)
                 .ToListAsync(ct);
 
@@ -100,85 +104,128 @@ namespace PhotosStorageMap.Infrastructure.Services
 
             var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var filesCount = 0;
+            var processedFiles = 0;
             long totalBytes = 0;
 
-            await using (var fileStream = new FileStream(
+            try
+            {
+                await using (var fileStream = new FileStream(
                 tempZipPath,
                 FileMode.Create,
                 FileAccess.ReadWrite,
                 FileShare.None))
-            {
-                using var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, leaveOpen: true);
-
-                foreach (var photo in photos)
                 {
-                    ct.ThrowIfCancellationRequested();
+                    using var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, leaveOpen: true);
 
-                    var storageKey = type == ArchiveType.Standard
-                        ? photo.StandardKey
-                        : photo.OriginalKey;
-
-                    if (string.IsNullOrWhiteSpace(storageKey))
+                    foreach (var photo in photos)
                     {
-                        continue;
+                        ct.ThrowIfCancellationRequested();
+
+                        var storageKey = type == ArchiveType.Standard
+                            ? photo.StandardKey
+                            : photo.OriginalKey;
+
+                        if (string.IsNullOrWhiteSpace(storageKey))
+                        {
+                            processedFiles++;
+
+                            if (jobId.HasValue && zipJobStore is not null)
+                            {
+                                zipJobStore.Update(jobId.Value, processedFiles,filesCount,photo.OriginalFileName ?? "photo.jpg");
+                            }
+
+                            _logger.LogWarning(
+                                "Photo skipped: storage key is empty. PhotoId={PhotoId}",
+                                photo.Id);
+
+                            continue;
+                        }
+
+                        Stream sourceStream;
+
+                        // Trying to open photo from S3
+                        try
+                        {
+                            sourceStream = await _storage.OpenReadAsync(storageKey, ct);
+                        }
+                        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            processedFiles++;
+
+                            if (jobId.HasValue && zipJobStore is not null)
+                            {
+                                zipJobStore.Update(jobId.Value, processedFiles, filesCount, photo.OriginalFileName ?? "photo.jpg");
+                            }
+
+                            _logger.LogWarning(
+                                ex,
+                                "Failed to open photo from storage. PhotoId={PhotoId},Key={StorageKey}",
+                                photo.Id,
+                                storageKey);
+
+                            continue;
+                        }
+
+                        // Photo is opened -> adding it to ZIP
+                        await using (sourceStream)
+                        {
+                            var entryName = BuildEntryName(photo.OriginalFileName, type, usedNames);
+
+                            var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
+
+                            await using (var entryStream = entry.Open())
+                            {
+                                await sourceStream.CopyToAsync(entryStream, ct);
+                            }
+
+                            filesCount++;
+                            processedFiles++;
+
+                            if (jobId.HasValue && zipJobStore is not null)
+                            {
+                                zipJobStore.Update(jobId.Value, processedFiles, filesCount);
+                            }
+
+                            _logger.LogInformation(
+                                "Archived photo to ZIP. FileNo={FileCount}, PhotoId={PhotoId}",
+                                filesCount,
+                                photo.Id);
+
+                            if (type == ArchiveType.Standard)
+                            {
+                                totalBytes += photo.StandardSizeBytes ?? 0;
+                            }
+                            else if (type == ArchiveType.Original)
+                            {
+                                totalBytes += photo.OriginalSizeBytes ?? 0;
+                            }
+                        }                        
                     }
-
-                    try
+                }                
+            }
+            catch
+            {
+                try
+                {
+                    if (File.Exists(tempZipPath))
                     {
-                        await using var sourceStream = await _storage.OpenReadAsync(storageKey, ct);
-
-                        var entryName = BuildEntryName(
-                            photo.OriginalFileName,
-                            type,
-                            usedNames);
-
-                        var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
-
-                        await using var entryStream = entry.Open();
-                        await sourceStream.CopyToAsync(entryStream, ct);
-
-                        filesCount++;
-
-                        if (jobId.HasValue && zipJobStore is not null)
-                        {
-                            zipJobStore.Update(jobId.Value, filesCount);
-                        }
-
-                        _logger.LogInformation(
-                            "Archieved photo to zip. FileNo={FileCount}, CollectionId={CollectionId}, PhotoId={PhotoId}, Type={Type}, Key={StorageKey}",
-                            filesCount,
-                            collectionId,
-                            photo.Id,
-                            type,
-                            storageKey);
-
-                        if (type == ArchiveType.Standard)
-                        {
-                            totalBytes += photo.StandardSizeBytes ?? 0;
-                        }
-                        else if (type == ArchiveType.Original)
-                        {
-                            totalBytes += photo.OriginalSizeBytes ?? 0;
-                        }
-                        else
-                        {
-                            _logger.LogWarning("ZIP ARCHIEVE: Size of PhotoId={PhotoId} was not caslculated", photo.Id);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(
-                            ex,
-                            "Failed to add photo to zip. CollectionId={CollectionId}, PhotoId={PhotoId}, Type={Type}, Key={StorageKey}",
-                            collectionId,
-                            photo.Id,
-                            type,
-                            storageKey);
-
-                        continue;
+                        File.Delete(tempZipPath);
+                        _logger.LogInformation("Partial ZIP deleted. Path={TempZipPath}", tempZipPath);
                     }
                 }
-            };
+                catch (Exception cleanupEx)
+                {
+
+                    _logger.LogWarning(cleanupEx, "Failed to delete partial ZIP. Path={Path}", tempZipPath);
+                }
+
+                throw;
+            }            
+            
 
             if (filesCount == 0)
             {

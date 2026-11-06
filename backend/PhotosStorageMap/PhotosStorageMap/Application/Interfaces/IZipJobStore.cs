@@ -10,7 +10,9 @@ namespace PhotosStorageMap.Application.Interfaces
 
         void Update(
             Guid jobId, 
-            int processedFiles);
+            int processedFiles,
+            int archivedFiles,
+            string? failedFileName = null);
 
         void MarkReady(
             Guid jobId, 

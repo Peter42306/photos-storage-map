@@ -26,14 +26,44 @@ namespace PhotosStorageMap.Infrastructure.Services
 
         public ZipJobProgressDto? Get(Guid jobId)
         {
-            return _jobs.TryGetValue(jobId, out var job) ? job : null;
+            if (!_jobs.TryGetValue(jobId, out var job))
+            {
+                return null;
+            }
+
+            lock (job)
+            {
+                return new ZipJobProgressDto
+                {
+                    JobId = job.JobId,
+                    Status = job.Status,
+                    ProcessedFiles = job.ProcessedFiles,
+                    ArchivedFiles = job.ArchivedFiles,
+                    TotalFiles = job.TotalFiles,
+                    FailedFileNames = new List<string>(job.FailedFileNames),
+                    Error = job.Error,
+                    FilePath = job.FilePath,
+                    FileName = job.FileName,
+                    ContentType = job.ContentType
+                };
+            }            
         }
 
-        public void Update(Guid jobId, int processedFiles)
+        public void Update(Guid jobId, int processedFiles, int archivedFiles, string? failedFileName = null)
         {
             if (_jobs.TryGetValue(jobId, out var job))
             {
-                job.ProcessedFiles = processedFiles;
+                lock (job)
+                {
+                    job.ProcessedFiles = processedFiles;
+                    job.ArchivedFiles = archivedFiles;
+
+                    if (failedFileName is not null)
+                    {
+                        job.FailedFileNames.Add(failedFileName);
+                    }
+                }
+                
             }
         }
 
@@ -41,11 +71,13 @@ namespace PhotosStorageMap.Infrastructure.Services
         {
             if (_jobs.TryGetValue(jobId, out var job))
             {
-                job.Status = ZipJobStatus.Ready;
-                job.ProcessedFiles = job.TotalFiles;
-                job.FilePath = filePath;
-                job.FileName = fileName;
-                job.ContentType = contentType;
+                lock (job)
+                {
+                    job.Status = ZipJobStatus.Ready;                    
+                    job.FilePath = filePath;
+                    job.FileName = fileName;
+                    job.ContentType = contentType;
+                }                
             }
         }
 
@@ -53,8 +85,11 @@ namespace PhotosStorageMap.Infrastructure.Services
         {
             if ( _jobs.TryGetValue(jobId,out var job))
             {
-                job.Status = ZipJobStatus.Failed;
-                job.Error = error;
+                lock (job)
+                {
+                    job.Status = ZipJobStatus.Failed;
+                    job.Error = error;
+                }                
             }
         }        
 
