@@ -25,6 +25,8 @@ namespace PhotosStorageMap.Application.DTOs
         public string? FilePath { get; set; }
         public string? FileName { get; set; }
 
+        public DateTime? CompletedAtUtc { get; set; }
+
         public string ContentType { get; set; } = "application/zip";
     }
 }

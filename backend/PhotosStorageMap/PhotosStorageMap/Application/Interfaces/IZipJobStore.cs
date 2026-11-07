@@ -14,6 +14,8 @@ namespace PhotosStorageMap.Application.Interfaces
 
         ZipJobProgressDto? Get(Guid jobId);
 
+        IReadOnlyList<ZipJobProgressDto> GetAll();
+
         void Update(
             Guid jobId, 
             int processedFiles,

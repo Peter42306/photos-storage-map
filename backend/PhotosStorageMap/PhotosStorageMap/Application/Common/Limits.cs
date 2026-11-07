@@ -52,6 +52,12 @@
             public const int LoopDelay = 3; // 8 minutes
         }
 
+        public static class ZipCleanupWorker
+        {
+            public const int CleanupInterval = 15; // 15 minutes
+            public const int ZipLifeTime = 24; // 24 hours
+        }
+
         public static class ArchiveItem
         {
             public const int OriginalFileName = 255;

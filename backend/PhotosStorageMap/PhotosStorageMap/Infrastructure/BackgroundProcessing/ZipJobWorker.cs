@@ -24,7 +24,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("ZIP worker started.");
+            _logger.LogInformation("ZIP JOB WORKER started.");
 
             try
             {
@@ -35,7 +35,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     try
                     {
                         _logger.LogInformation(
-                            "ZIP job {JobId} received for collection {CollectionId}",
+                            "ZIP JOB WORKER : ZIP job {JobId} received for collection {CollectionId}",
                             request.JobId,
                             request.CollectionId);
 
@@ -47,7 +47,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     {
                         _zipJobStore.MarkFailed(
                             request.JobId,
-                            "ZIP processing interrupted by application shutdown.");
+                            "ZIP JOB WORKER : ZIP processing interrupted by application shutdown.");
 
                         throw;
                     }
@@ -55,7 +55,7 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
                     {
                         _logger.LogError(
                             ex,
-                            "ZIP job {JobId} failed.",
+                            "ZIP JOB WORKER : ZIP job {JobId} failed.",
                             request.JobId);
 
                         _zipJobStore.MarkFailed(
@@ -66,13 +66,13 @@ namespace PhotosStorageMap.Infrastructure.BackgroundProcessing
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("ZIP worker stopped.");
+                _logger.LogInformation("ZIP JOB WORKER stopped.");
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(
                     ex,
-                    "ZIP worker terminated unexpectedly.");
+                    "ZIP JOB WORKER terminated unexpectedly.");
 
                 throw;
             }

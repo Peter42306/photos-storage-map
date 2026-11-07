@@ -19,7 +19,7 @@ namespace PhotosStorageMap.Infrastructure.Services
                 OwnerUserId = ownerUserId,
                 TotalFiles = totalFiles,
                 ProcessedFiles = 0,
-                ArchivedFiles = 0,
+                ArchivedFiles = 0,                
                 Status = ZipJobStatus.Running
             };
 
@@ -36,7 +36,7 @@ namespace PhotosStorageMap.Infrastructure.Services
                 SharedLinkId = sharedLinkId,
                 TotalFiles = totalFiles,
                 ProcessedFiles = 0,
-                ArchivedFiles = 0,
+                ArchivedFiles = 0,                
                 Status = ZipJobStatus.Running
             };
 
@@ -62,12 +62,21 @@ namespace PhotosStorageMap.Infrastructure.Services
                     ArchivedFiles = job.ArchivedFiles,
                     TotalFiles = job.TotalFiles,
                     FailedFileNames = new List<string>(job.FailedFileNames),
+                    CompletedAtUtc = job.CompletedAtUtc,
                     Error = job.Error,
                     FilePath = job.FilePath,
                     FileName = job.FileName,
                     ContentType = job.ContentType
                 };
             }            
+        }
+
+        public IReadOnlyList<ZipJobProgressDto> GetAll()
+        {
+            return _jobs.Keys
+                .Select(Get)
+                .OfType<ZipJobProgressDto>()                
+                .ToList();
         }
 
         public void Update(Guid jobId, int processedFiles, int archivedFiles, string? failedFileName = null)
@@ -94,7 +103,8 @@ namespace PhotosStorageMap.Infrastructure.Services
             {
                 lock (job)
                 {
-                    job.Status = ZipJobStatus.Ready;                    
+                    job.Status = ZipJobStatus.Ready;
+                    job.CompletedAtUtc = DateTime.UtcNow;
                     job.FilePath = filePath;
                     job.FileName = fileName;
                     job.ContentType = contentType;
@@ -110,6 +120,7 @@ namespace PhotosStorageMap.Infrastructure.Services
                 {
                     job.Status = ZipJobStatus.Failed;
                     job.Error = error;
+                    job.CompletedAtUtc = DateTime.UtcNow;
                 }                
             }
         }        

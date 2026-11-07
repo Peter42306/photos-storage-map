@@ -950,7 +950,7 @@ export default function CollectionPage() {
                         <button
                             className='btn btn-primary'
                             title='Download all resized photos as a ZIP archive.'
-                            disabled={totalPhotos === 0}
+                            disabled={totalPhotos === 0 || zipProgress}
                             onClick={downloadStandardZipHandler}
                         >
                             Download Resized ZIP
