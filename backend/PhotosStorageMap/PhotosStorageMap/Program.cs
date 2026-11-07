@@ -99,6 +99,8 @@ builder.Services.AddHostedService<CollectionCleanupWorker>();
 builder.Services.AddHostedService<OriginalPhotosCleanupWorker>();
 builder.Services.AddSingleton<IZipJobStore, ZipJobStore>();
 builder.Services.AddScoped<IStorageLimitService, StorageLimitService>();
+builder.Services.AddSingleton<IZipJobQueue, ZipJobQueue>();
+builder.Services.AddHostedService<ZipJobWorker>();
 
 builder.Services
     .AddControllers()

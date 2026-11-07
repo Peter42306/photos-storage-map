@@ -22,19 +22,22 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly ILogger<CollectionsController> _logger;
         private readonly IArchiveCollectionService _archiveCollectionService;
         private readonly IZipJobStore _zipJobStore;
+        private readonly IZipJobQueue _zipJobQueue;
 
         public CollectionsController(
             ApplicationDbContext db,
             IFileStorage storage,
             ILogger<CollectionsController> logger,
             IArchiveCollectionService archiveCollectionService,
-            IZipJobStore zipJobStore)
+            IZipJobStore zipJobStore,
+            IZipJobQueue zipJobQueue)
         {
             _db = db;
             _storage = storage;
             _logger = logger;            
             _archiveCollectionService = archiveCollectionService;
             _zipJobStore = zipJobStore;
+            _zipJobQueue = zipJobQueue;
         }
 
 
@@ -546,37 +549,18 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (totalFiles == 0) return BadRequest("No resized photos available for ZIP archive.");
 
-            var jobId = _zipJobStore.Create(totalFiles, userId);
+            var jobId = _zipJobStore.Create(totalFiles, userId);            
 
-            _ = Task.Run(async () =>
+            var request = new ZipJobRequest(jobId, id);
+
+            if (!_zipJobQueue.TryEnqueue(request))
             {
-                try
-                {
-                    var result = await _archiveCollectionService.BuildStandardZipAsync(
-                        id,
-                        jobId,
-                        _zipJobStore,
-                        CancellationToken.None);
+                _zipJobStore.Remove(jobId);
 
-                    if (result.Stream is FileStream fileStream)
-                    {
-                        _zipJobStore.MarkReady(
-                            jobId,
-                            fileStream.Name,
-                            result.FileName,
-                            result.ContentType);
-                    }
-                    else
-                    {
-                        _zipJobStore.MarkFailed(jobId, "ZIP stream is not a file stream.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Standard ZIP job failed. JobId={JobId}, CollectionId={CollectionId}", jobId, id);
-                    _zipJobStore.MarkFailed(jobId, ex.Message);
-                }
-            });
+                return StatusCode(
+                    StatusCodes.Status503ServiceUnavailable,
+                    "ZIP queue is full. Please try again later.");
+            }
 
             return Ok(new { jobId });
         }
