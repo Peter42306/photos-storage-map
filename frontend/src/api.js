@@ -154,7 +154,7 @@ export async function putToPresignedUrl(uploadUrl, file) {
 
     if (!res.ok) {
         const text = await res.text().catch(() => "");
-                
+
         const error = new Error(`S3 PUT failed: ${res.status} ${text}`);
         error.status = res.status;
         throw error;
@@ -519,8 +519,41 @@ export function getCollectionStandardZipJobStatus(jobId) {
     });
 }
 
-export function downloadCollectionStandardZipJob(jobId) {
-    window.location.href = `${BASE_URL}/api/collections/standard-zip-jobs/${jobId}/download`;
+export async function downloadCollectionStandardZipJob(jobId) {
+    // window.location.href = `${BASE_URL}/api/collections/standard-zip-jobs/${jobId}/download`;
+
+    const token = getToken();
+
+    const response = await fetch(
+        `${BASE_URL}/api/collections/standard-zip-jobs/${jobId}/download`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`ZIP download failed: HTTP ${response.status}`);
+    }
+
+    const blob = await response.blob();
+
+    const disposition = response.headers.get("Content-Disposition");
+    const filenameMatch = disposition?.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+    const filename = filenameMatch ? decodeURIComponent(filenameMatch[1].replace(/"$/, "")) : "collection_standard.zip";
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 

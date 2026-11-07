@@ -2,12 +2,13 @@ import TextareaAutosize from 'react-textarea-autosize';
 import React, { useEffect, useRef, useState } from "react";
 import { data, useNavigate, useParams } from "react-router-dom";
 // import { completeArchiveUpload, completeUpload, createOrUpdateSharedLink, deleteArchive, deleteCollection, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getArchiveDownloadUrl, getCollection, getCollectionArchives, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getThumbUrl, getToken, initArchiveUploads, initUpload, putToPresignedUrl, putToPresignedUrlWithProgress, revokeSharedLink, updateArchiveDescription, updateCollection, updatePhotoDescription } from "../api";
-import { completeUpload, createOrUpdateSharedLink, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, getCollection, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getToken, initUpload, putToPresignedUrl, revokeSharedLink, updateCollection, updatePhotoDescription } from "../api";
+import { completeUpload, createOrUpdateSharedLink, deleteOriginalPhotosFromCollection, deletePhoto, downloadCollectionStandardZip, downloadCollectionStandardZipJob, getCollection, getCollectionStandardZipJobStatus, getOriginalDownloadUrl, getOriginalUrl, getPhotoStatus, getSharedLinkByCollectionId, getToken, initUpload, putToPresignedUrl, revokeSharedLink, startCollectionStandardZipJob, updateCollection, updatePhotoDescription } from "../api";
 import Lightbox from 'yet-another-react-lightbox';
 import "yet-another-react-lightbox/styles.css";
 // import { Slideshow } from 'yet-another-react-lightbox/plugins';
 import { Slideshow, Counter, Fullscreen, Zoom } from 'yet-another-react-lightbox/plugins';
 import "yet-another-react-lightbox/plugins/counter.css";
+import ZipProgressBar from '../components/ZipProgressBar';
 
 
 //const S3_BASE = "https://hel1.your-objectstorage.com/photos-storage-map";
@@ -83,6 +84,9 @@ export default function CollectionPage() {
     const [allowSlideshowOriginals, setAllowSlideshowOriginals] = useState(false);
     const [allowDownloadResizedZip, setAllowDownloadResizedZip] = useState(false);
     const [allowDownloadOriginalFromCard, setAllowDownloadOriginalFromCard] = useState(false);   
+
+    const [zipJobId, setZipJobId] = useState(null);
+    const [zipProgress,  setZipProgress] = useState(null);
     
 
     async function load() {
@@ -120,19 +124,73 @@ export default function CollectionPage() {
         }
     }
 
+    // Collection uploading
     useEffect(() => {        
         const token = getToken();
 
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
+        if (!token) {
+        navigate("/login", { replace: true });
+        return;
+        }
 
-    if (!id) return; // важно, пока id не появился — не грузим
-
-    // setLoading(true);
+        if (!id) return;
+        
         load();    
+
     }, [id]);
+
+    useEffect(() => {
+        if (!zipJobId) return;
+
+        let cancelled = false;
+        let timerId;
+
+        async function checkStatus() {
+            try {
+                const progress = await getCollectionStandardZipJobStatus(zipJobId);
+
+                if (cancelled) {
+                    return;
+                }
+
+                setZipProgress(progress);
+
+                // if (progress.status === "Ready" || progress.status === "Failed") {
+                //     return;
+                // }
+
+                if (progress.status === "Ready") {
+                    try {
+                        await downloadCollectionStandardZipJob(zipJobId);
+                    } catch (err) {
+                        if (!cancelled) {
+                            setError(err.message);
+                        }
+                    }
+                    return;
+                }
+
+                if (progress.status === "Failed") {
+                    setError(progress.error || "ZIP creation failed.")
+                    return;
+                }
+
+                timerId = setTimeout(checkStatus, 250);
+
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err.message);
+                }
+            }
+        }
+
+        checkStatus();
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timerId);
+        };
+    }, [zipJobId])
 
     async function onSave() {
         try {
@@ -236,7 +294,7 @@ export default function CollectionPage() {
         if(!uploadingOriginals || cancelUploadRef.current) {
             return;
         }
-        
+
         cancelUploadRef.current = true;
         setUploadStatus("Cancelling upload...");
     }
@@ -542,7 +600,14 @@ export default function CollectionPage() {
 
         try {
             setError("");
-            await downloadCollectionStandardZip(id);
+            setZipProgress(null);
+
+            // await downloadCollectionStandardZip(id);
+            const result = await startCollectionStandardZipJob(id);
+
+            setZipJobId(result.jobId);
+            console.log("ZIP job started", result.jobId);
+
         } catch (err) {
             setError(err.message);
         }
@@ -902,7 +967,7 @@ export default function CollectionPage() {
                             aria-controls="collapseShareLink"
                         >
                             Share Collection
-                        </button>
+                        </button>                        
 
                         {!hasGeoPhotos && (
                             <div className='small text-muted w-100'>
@@ -910,6 +975,15 @@ export default function CollectionPage() {
                             </div>
                         )}
                     </div>
+                    
+                    {zipProgress && (                            
+                        <ZipProgressBar
+                            status={zipProgress.status}
+                            percent={zipProgress.percent}
+                            processedFiles={zipProgress.processedFiles}
+                            totalFiles={zipProgress.totalFiles}
+                        />                            
+                    )}
                 
                 <div className='collapse' id='collapseShareLink'>                            
                         <div className='card card-body mt-3'>
@@ -1271,7 +1345,7 @@ const PhotoCard = React.memo(function PhotoCard({
         const [descriptionPhoto, setDescriptionPhoto] = useState(photo.description ?? photo.Description ?? "");
 
         const photoId = photo.id ?? photo.Id;
-        console.log("PhotoCard render:", photoId); 
+        // console.log("PhotoCard render:", photoId); 
 
         const status = photo.status ?? photo.Status;
         const originalFileName = photo.originalFileName ?? photo.OriginalFileName;
@@ -1280,36 +1354,6 @@ const PhotoCard = React.memo(function PhotoCard({
         const distanceFromPrevious = photo.distanceFromPrevious ?? photo.DistanceFromPrevious;
         const takenAt = photo.takenAt ?? photo.TakenAt;
 
-        
-        
-
-        // useEffect(() => {
-        //     let cancelled = false;            
-
-        //     async function loadThumb() {
-        //         if (status !== "Ready") {
-        //             setThumbUrl("");
-        //             return;
-        //         }
-
-        //         try {
-        //             const res = await getThumbUrl(photoId);
-        //             const url = typeof res === "string" ? res : res?.url ?? res?.thumbUrl;
-
-        //             if (!cancelled) {
-        //                 setThumbUrl(url || "");
-        //             }
-        //         } catch (err) {
-        //             console.error("thumb error", err);
-        //         }
-        //     }
-
-        //     loadThumb();
-
-        //     return () => {
-        //         cancelled = true;
-        //     };
-        // }, [photoId, status]);        
 
         async function handleSaveDescription() {
             await onSaveDescription?.(photoId, descriptionPhoto);
