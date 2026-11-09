@@ -23,6 +23,7 @@ namespace PhotosStorageMap.Api.Controllers
         private readonly IConfiguration _configuration;
         private readonly IArchiveCollectionService _archiveCollectionService;
         private readonly IZipJobStore _zipJobStore;
+        private readonly IZipJobQueue _zipJobQueue;
         private readonly ILogger<ShareLinksController> _logger;
         
         public ShareLinksController(
@@ -31,6 +32,7 @@ namespace PhotosStorageMap.Api.Controllers
             IConfiguration configuration,
             IArchiveCollectionService archiveCollectionService,
             IZipJobStore zipJobStore,
+            IZipJobQueue zipJobQueue,
             ILogger<ShareLinksController> logger)
         {
             _db = db;
@@ -38,6 +40,7 @@ namespace PhotosStorageMap.Api.Controllers
             _configuration = configuration;
             _archiveCollectionService = archiveCollectionService;
             _zipJobStore = zipJobStore;
+            _zipJobQueue = zipJobQueue;
             _logger = logger;
         }
 
@@ -397,21 +400,13 @@ namespace PhotosStorageMap.Api.Controllers
             string token,
             CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(token)) return NotFound();
+            var shareLink = await FindAllowedZipShareLinkAsync(token, ct);            
 
-            var shareLink = await _db.ShareLinks
-                .AsNoTracking()
-                .Include(s => s.UploadCollection)
-                .SingleOrDefaultAsync(s =>
-                    s.Token == token &&
-                    !s.IsRevoked &&
-                    !s.UploadCollection.IsDeleted, 
-                    ct);
-
-            if (shareLink == null) return NotFound();
-            if (shareLink.ExpiresAtUtc.HasValue && shareLink.ExpiresAtUtc.Value < DateTime.UtcNow) return NotFound();
-            if(!shareLink.AllowDownloadResizedZip) return Forbid();
-
+            if (shareLink == null) 
+            { 
+                return NotFound(); 
+            }
+            
             var collectionId = shareLink.UploadCollectionId;
 
             var totalFiles = await _db.PhotoItems
@@ -423,75 +418,92 @@ namespace PhotosStorageMap.Api.Controllers
 
             if (totalFiles == 0) return BadRequest("No resized photos available for ZIP archive.");
 
-            var jobId = _zipJobStore.CreateForSharedLink(totalFiles, shareLink.Id);
+            var jobId = _zipJobStore.CreateForSharedLink(totalFiles, shareLink.Id);            
 
-            _ = Task.Run(async () =>
+            var request = new ZipJobRequest(jobId, collectionId);
+
+            if (!_zipJobQueue.TryEnqueue(request))
             {
-                try
-                {
-                    var result = await _archiveCollectionService.BuildStandardZipAsync(
-                        collectionId,
-                        jobId,
-                        _zipJobStore,
-                        CancellationToken.None);
+                _zipJobStore.Remove(jobId);
 
-                    if (result.Stream is FileStream fileStream)
-                    {
-                        _zipJobStore.MarkReady(
-                            jobId,
-                            fileStream.Name,
-                            result.FileName,
-                            result.ContentType);
-                    }
-                    else
-                    {
-                        _zipJobStore.MarkFailed(jobId, "ZIP stream is not a file stream.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Shared standard ZIP job failed. JobId={JobId}, CollectionId={CollectionId}, ShareLinkId={ShareLinkId}",
-                        jobId,
-                        collectionId,
-                        shareLink.Id);
-
-                    _zipJobStore.MarkFailed(jobId, ex.Message);
-                }
-            });
+                return StatusCode(
+                    StatusCodes.Status503ServiceUnavailable,
+                    "ZIP queue is full on server. Please try again later.");
+            }
 
             return Ok(new { jobId });
         }
 
         [AllowAnonymous]
-        [HttpGet("public/standard-zip-jobs/{jobId:guid}/status")]
-        public IActionResult GetSharedStandardZipJobStatus(Guid jobId)
+        [HttpGet("public/{token}/standard-zip-jobs/{jobId:guid}/status")]
+        public async Task<IActionResult> GetSharedStandardZipJobStatus(
+            string token, 
+            Guid jobId, 
+            CancellationToken ct)
         {
+            var shareLink = await FindAllowedZipShareLinkAsync(token, ct);
+
+            if (shareLink is null)
+            {
+                return NotFound();
+            }
+
             var job = _zipJobStore.Get(jobId);
 
-            if (job is null) return NotFound();
+            if (job is null || 
+                job.OwnerUserId is not null || 
+                job.SharedLinkId != shareLink.Id)
+            {
+                return NotFound();
+            }
+                
 
             return Ok(new 
             { 
                 job.JobId,
                 Status = job.Status.ToString(),
                 job.ProcessedFiles,
+                job.ArchivedFiles,
                 job.TotalFiles,
                 job.Percent,
+                job.FailedFileNames,
                 job.Error
             });
         }
 
         [AllowAnonymous]
-        [HttpGet("public/standard-zip-jobs/{jobId:guid}/download")]
-        public IActionResult DownloadSharedStandardZipJob(Guid jobId)
+        [HttpGet("public/{token}/standard-zip-jobs/{jobId:guid}/download")]
+        public async Task<IActionResult> DownloadSharedStandardZipJob(
+            string token, 
+            Guid jobId, 
+            CancellationToken ct)
         {
+            var shareLink = await FindAllowedZipShareLinkAsync(token, ct);
+
+            if (shareLink is null)
+            {
+                return NotFound();
+            }
+
             var job = _zipJobStore.Get(jobId);
 
-            if (job is null) return NotFound();
-            if (job.Status != ZipJobStatus.Ready) return BadRequest("ZIP archive is not ready yet.");
-            if (string.IsNullOrWhiteSpace(job.FilePath) || !System.IO.File.Exists(job.FilePath)) return NotFound("ZIP file not found.");
+            if (job is null ||
+                job.OwnerUserId is not null ||
+                job.SharedLinkId != shareLink.Id)
+            {
+                return NotFound();
+            }
+
+            if (job.Status != ZipJobStatus.Ready)
+            {
+                return BadRequest("ZIP archive is not ready yet.");
+            }
+
+            if (string.IsNullOrWhiteSpace(job.FilePath) ||
+                !System.IO.File.Exists(job.FilePath))
+            {
+                return NotFound("ZIP file not found.");
+            }
 
             var stream = new FileStream(
                 job.FilePath,
@@ -531,7 +543,7 @@ namespace PhotosStorageMap.Api.Controllers
 
 
         //-------------------------------------------------------
-        // Helper
+        // Helpers
         //-------------------------------------------------------
         private string? GetUserId()
         {
@@ -546,6 +558,28 @@ namespace PhotosStorageMap.Api.Controllers
 
             //return $"{frontendBaseUrl}://{Request.Host}/shared/{token}";
             return $"{frontendBaseUrl}/shared/{token}";
+        }
+
+        private async Task<ShareLink?> FindAllowedZipShareLinkAsync(
+            string token,
+            CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            var now = DateTime.UtcNow;
+
+            return await _db.ShareLinks
+                .AsNoTracking()
+                .SingleOrDefaultAsync(s =>
+                    s.Token == token &&
+                    !s.IsRevoked &&
+                    !s.UploadCollection.IsDeleted &&
+                    s.AllowDownloadResizedZip &&
+                    (!s.ExpiresAtUtc.HasValue || s.ExpiresAtUtc.Value > now),
+                    ct);
         }
     }
 }
