@@ -37,7 +37,7 @@ async function request(path, {method = "GET", body, auth = true} = {}) {
             (typeof data === "string" ? data : "") || 
             `HTTP ${res.status}`;
 
-        if (res.status === 401) {
+        if (res.status === 401 && auth) {
             clearToken();
             window.location.href = "/login";            
         }        
@@ -565,15 +565,19 @@ export function startSharedStandardZipJob(token) {
     });
 }
 
-export function getSharedStandardZipJobStatus(jobId) {
-    return request(`/api/share-links/public/standard-zip-jobs/${jobId}/status`,{
+export function getSharedStandardZipJobStatus(token, jobId) {
+    return request(`/api/share-links/public/${encodeURIComponent(token)}/standard-zip-jobs/${jobId}/status`,{
         method: "GET",
         auth: false
     });
 }
 
-export function downloadSharedStandardZipJob(jobId) {
-    window.location.href = `${BASE_URL}/api/share-links/public/standard-zip-jobs/${jobId}/download`;
+export function downloadSharedStandardZipJob(token, jobId) {
+    window.location.href = `${BASE_URL}/api/share-links/public/${encodeURIComponent(token)}/standard-zip-jobs/${jobId}/download`;
+    // return request(`/api/share-links/public/${token}/standard-zip-jobs`,{
+    //     method:"POST",
+    //     auth: false
+    // });
 }
 
 export async function getAdminUsers() {

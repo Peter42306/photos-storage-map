@@ -13,7 +13,7 @@ export default function ZipProgressBar({
                 {totalFiles > 0 && (
                     <>
                         {" "}
-                        ({processedFiles} / {totalFiles} files)
+                        ({processedFiles} of {totalFiles} files)
                     </>
                 )}
             </div>

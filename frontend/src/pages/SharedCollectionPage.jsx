@@ -62,6 +62,8 @@ export default function SharedCollectionPage() {
     const [zipProcessedFiles, setZipProcessedFiles] = useState(0);
     const [zipTotalFiles, setZipTotalFiles] = useState(0);
 
+    const [zipError, setZipError] = useState("");
+
 
     async function load() {
         try {
@@ -160,23 +162,85 @@ export default function SharedCollectionPage() {
         if (url) window.location.href = url;
     }
 
+    
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
     async function downloadResizedZipHandler() {
-        const confirmed = confirm("Download all resized photos as ZIP archive?");
+        if (zipPreparing) {
+            return;
+        }
+
+        const confirmed = window.confirm("Download all resized photos as ZIP archives?");
+
         if (!confirmed) {
             return;
         }
-        
-        // setError("");
-        // setZipPreparing(true);
 
-        // downloadSharedCollectionStandardZip(token);        
+        setZipPreparing(true);
+        // setError("");
+        setZipError("");
+        setZipStatus("Starting ZIP archive...");
+        setZipProgress(0);
+        setZipProcessedFiles(0);
+        setZipTotalFiles(0);
 
         try {
-            setError("");
-            await downloadSharedCollectionStandardZip(token);
+            const started = await startSharedStandardZipJob(token);
+            const jobId = started.jobId ?? started.JobId;
+
+            if (!jobId) {
+                throw new Error("ZIP job ID was not returned.");
+            }
+
+            while (true) {
+                const status = await getSharedStandardZipJobStatus(token, jobId);
+
+                const currentStatus = status.status ?? status.Status;
+                const percent = status.percent ?? status.Percent ?? 0;
+                const processedFiles = status.processedFiles ?? status.ProcessedFiles ?? 0;
+                const totalFiles = status.totalFiles ?? status.TotalFiles ?? 0;
+
+                setZipProgress(percent);
+                setZipProcessedFiles(processedFiles);
+                setZipTotalFiles(totalFiles);
+
+                if (currentStatus === "Ready") {
+                    setZipProgress(100);
+                    setZipStatus("ZIP archive is ready. Starting download...");
+
+                    downloadSharedStandardZipJob(token, jobId);
+                    break;
+                }
+
+                if (currentStatus === "Failed") {
+                    throw new Error(status.error ?? status.Error ?? "ZIP archive creation failed.");
+                }
+
+                setZipStatus(`Preparing ZIP archive: ${percent}%`);
+
+                await sleep(250);
+            }
         } catch (err) {
-            setError(err.message);
+            // setError(err.message);
+            setZipError(err.message);
+            setZipStatus("");
+        } finally {
+            setZipPreparing(false);
         }
+
+
+
+        // const confirmed = confirm("Download all resized photos as ZIP archive?");
+        // if (!confirmed) {
+        //     return;
+        // }        
+
+        // try {
+        //     setError("");
+        //     await downloadSharedCollectionStandardZip(token);
+        // } catch (err) {
+        //     setError(err.message);
+        // }
     }
 
     // const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -330,6 +394,7 @@ export default function SharedCollectionPage() {
                     <button
                         className="btn btn-primary"
                         onClick={downloadResizedZipHandler}
+                        disabled={zipPreparing}
                     >
                         Download Resized ZIP
                     </button>
@@ -349,6 +414,12 @@ export default function SharedCollectionPage() {
                     </div>                    
                 </div>
             )} */}
+
+            {zipError && (
+                <div className="alert alert-danger mt-3">
+                    {zipError}
+                </div>
+            )}
 
             <ZipProgressBar
                 status={zipStatus}
