@@ -217,7 +217,9 @@ namespace PhotosStorageMap.Api.Controllers
                 {
                     standardUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.StandardKey, TimeSpan.FromHours(2));
                 }
-                if (!string.IsNullOrWhiteSpace(p.OriginalKey))
+                if (!string.IsNullOrWhiteSpace(p.OriginalKey) && 
+                    !p.OriginalDeleteRequested &&
+                    (shareLink.AllowSlideshowOriginals || shareLink.AllowDownloadOriginalFromCard))
                 {
                     originalUrl = await _storage.GeneratePresignedDownloadUrlAsync(p.OriginalKey, TimeSpan.FromHours(2));
                 }
